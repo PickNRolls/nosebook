@@ -1,33 +1,33 @@
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
-  firstName VARCHAR(64),
-  lastName VARCHAR(64)
+  first_name VARCHAR(64),
+  last_name VARCHAR(64)
 );
 
 CREATE TABLE friendship_requests (
-  requesterId INT REFERENCES users (id),
-  responderId INT REFERENCES users (id),
+  requester_id INT REFERENCES users (id),
+  responder_id INT REFERENCES users (id),
   accepted BOOLEAN,
   viewed BOOLEAN
 );
 
 CREATE TABLE posts (
   id SERIAL PRIMARY KEY,
-  authorId INTEGER REFERENCES users (id),
+  author_id INTEGER REFERENCES users (id),
   message VARCHAR(4096)
 );
 
 CREATE TABLE post_likes (
-  authorId INTEGER REFERENCES users (id),
-  postId INTEGER REFERENCES posts (id)
+  author_id INTEGER REFERENCES users (id),
+  post_id INTEGER REFERENCES posts (id)
 );
 
 CREATE TABLE comments (
   id SERIAL PRIMARY KEY,
-  authorId INTEGER REFERENCES users (id)
+  author_id INTEGER REFERENCES users (id)
 );
 
 CREATE TABLE comment_likes (
-  authorId INTEGER REFERENCES users (id),
-  commentId INTEGER REFERENCES comments (id)
+  author_id INTEGER REFERENCES users (id),
+  comment_id INTEGER REFERENCES comments (id)
 );
