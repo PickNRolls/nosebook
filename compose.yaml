@@ -12,6 +12,10 @@ services:
     build:
       context: .
       target: final
+    develop:
+      watch:
+        - action: rebuild
+          path: ./src
     ports:
       - 8080:8080
 

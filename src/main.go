@@ -19,6 +19,8 @@ func main() {
 	users := []User{
 		{"1", "Ilya", "Blinkov"},
 		{"2", "Ilya", "Olegblinkov"},
+		{"3", "Ilya", "Olegblinkov"},
+		{"3", "Ilya", "Olegblinkov"},
 	}
 
 	router := gin.Default()
