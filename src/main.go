@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -19,9 +20,16 @@ type User struct {
 func main() {
 	users := []User{}
 
-	db, err := sqlx.Connect("pgx", "postgres://postgres:123@database:5432/nosebook")
-	if err != nil {
-		log.Fatalln(err)
+	postgresPasswordBytes, passwordErr := os.ReadFile(os.Getenv("POSTGRES_PASSWORD_FILE"))
+	if passwordErr != nil {
+		log.Fatalln(passwordErr)
+	}
+	postgresPassword := string(postgresPasswordBytes[:len(postgresPasswordBytes)-1])
+	fmt.Printf(postgresPassword)
+
+	db, dbErr := sqlx.Connect("pgx", fmt.Sprintf("postgres://postgres:%s@db:5432/%s", postgresPassword, os.Getenv("POSTGRES_DB")))
+	if dbErr != nil {
+		log.Fatalln(dbErr)
 	}
 
 	pingErr := db.Ping()
