@@ -1,3 +1,4 @@
+-- Definitions
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   first_name VARCHAR(64),
@@ -31,3 +32,13 @@ CREATE TABLE comment_likes (
   author_id INTEGER REFERENCES users (id),
   comment_id INTEGER REFERENCES comments (id)
 );
+
+-- Data samples
+INSERT INTO
+  users (first_name, last_name)
+VALUES
+  ('Ilya', 'Blinkov'),
+  ('Marina', 'Graf'),
+  ('Sasha', 'Provodnikov'),
+  ('Tolber', 'Ovcharenko'),
+  ('Sanal', 'Mandjiev');
