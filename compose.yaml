@@ -9,6 +9,9 @@
 # https://github.com/docker/awesome-compose
 services:
   server:
+    depends_on:
+      db:
+        condition: service_healthy
     build:
       context: .
       target: final
@@ -27,6 +30,7 @@ services:
 # a password of your choosing to it before running `docker compose up`.
   db:
     image: nosebook-postgres
+    container_name: database
     restart: always
     user: postgres
     secrets:
@@ -36,6 +40,8 @@ services:
     environment:
       - POSTGRES_DB=nosebook
       - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+    ports:
+      - 5432:5432
     expose:
       - 5432
     healthcheck:
