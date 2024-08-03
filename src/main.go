@@ -4,22 +4,19 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"nosebook/src/domain/users"
 	"os"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
+
+	"nosebook/src/infra/postgres"
+	"nosebook/src/services/user_authentication"
+	"nosebook/src/services/user_authentication/commands"
 )
 
-type User struct {
-	ID        string `json:"id" db:"id"`
-	FirstName string `json:"firstName" db:"first_name"`
-	LastName  string `json:"lastName" db:"last_name"`
-}
-
 func main() {
-	users := []User{}
-
 	postgresPasswordBytes, passwordErr := os.ReadFile(os.Getenv("POSTGRES_PASSWORD_FILE"))
 	if passwordErr != nil {
 		log.Fatalln(passwordErr)
@@ -39,10 +36,33 @@ func main() {
 
 	fmt.Println("Connected to postgres database!")
 
+	userRepository := postgres.NewUserRepository(db)
+	userAuthenticationService := services.NewUserAuthenticationService(userRepository)
+
 	router := gin.Default()
+	userList := []users.User{}
 	router.GET("/", func(ctx *gin.Context) {
-		db.Select(&users, "SELECT * FROM users")
-		ctx.IndentedJSON(http.StatusOK, users)
+		if err := db.Select(&userList, "SELECT * FROM users"); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.IndentedJSON(http.StatusOK, userList)
+	})
+
+	router.POST("/register", func(ctx *gin.Context) {
+		var command commands.RegisterUserCommand
+		if err := ctx.ShouldBindJSON(&command); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		user, err := userAuthenticationService.RegisterUser(&command)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, user)
 	})
 
 	router.Run("0.0.0.0:8080")
