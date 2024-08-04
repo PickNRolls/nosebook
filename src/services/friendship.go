@@ -50,7 +50,7 @@ func (s *FriendshipService) AcceptFriendRequest(c *commands.AcceptFriendRequestC
 	return friendRequest, nil
 }
 
-func (s *FriendshipService) DenyFriendRequest(c *commands.DenyFriendRequestCommand, a *auth.Auth) (interface{}, error) {
+func (s *FriendshipService) DenyFriendRequest(c *commands.DenyFriendRequestCommand, a *auth.Auth) (*friendship.FriendRequest, error) {
 	friendRequest := s.userFriendsRepo.FindByBoth(c.RequesterId, a.UserId)
 	if friendRequest == nil {
 		return nil, errors.New("No such friend request.")
@@ -67,6 +67,26 @@ func (s *FriendshipService) DenyFriendRequest(c *commands.DenyFriendRequestComma
 	return friendRequest, nil
 }
 
-func (s *FriendshipService) RemoveFriend(c *commands.SendFriendRequestCommand, a *auth.Auth) (interface{}, error) {
-	return nil, nil
+func (s *FriendshipService) RemoveFriend(c *commands.RemoveFriendCommand, a *auth.Auth) (*friendship.FriendRequest, error) {
+	friendRequest := s.userFriendsRepo.FindByBothAccepted(c.FriendId, a.UserId)
+	if friendRequest == nil {
+		friendRequest = s.userFriendsRepo.FindByBothAccepted(a.UserId, c.FriendId)
+	}
+	if friendRequest == nil {
+		return nil, errors.New("No such friend request.")
+	}
+
+	friendRequest.Accepted = false
+	if friendRequest.RequesterId == a.UserId {
+		tmp := friendRequest.ResponderId
+		friendRequest.ResponderId = friendRequest.RequesterId
+		friendRequest.RequesterId = tmp
+	}
+
+	_, err := s.userFriendsRepo.Update(friendRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return friendRequest, nil
 }

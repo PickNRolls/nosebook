@@ -75,3 +75,25 @@ func (repo *UserFriendsRepository) FindByBoth(requesterId uuid.UUID, responderId
 
 	return &request
 }
+
+func (repo *UserFriendsRepository) FindByBothAccepted(requesterId uuid.UUID, responderId uuid.UUID) *friendship.FriendRequest {
+	request := friendship.FriendRequest{}
+	err := repo.db.Get(&request, `SELECT
+		requester_id,
+		responder_id,
+		message,
+		accepted,
+		viewed,
+		created_at
+			FROM friendship_requests WHERE
+		requester_id = $1 AND
+		responder_id = $2 AND
+		accepted = true
+	`, requesterId, responderId)
+
+	if err != nil {
+		return nil
+	}
+
+	return &request
+}

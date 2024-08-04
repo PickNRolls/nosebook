@@ -41,6 +41,7 @@ func main() {
 		group.POST("/add", friendship.NewHandlerAdd(friendshipService))
 		group.POST("/accept", friendship.NewHandlerAccept(friendshipService))
 		group.POST("/deny", friendship.NewHandlerDeny(friendshipService))
+		group.POST("/remove", friendship.NewHandlerRemove(friendshipService))
 	}
 
 	router.Run("0.0.0.0:8080")
