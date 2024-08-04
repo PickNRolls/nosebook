@@ -3,9 +3,16 @@ CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
   first_name VARCHAR(64) NOT NULL,
   last_name VARCHAR(64) NOT NULL,
-  nick VARCHAR(64) NOT NULL,
+  nick VARCHAR(64) NOT NULL UNIQUE,
   passhash VARCHAR(64) NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_sessions (
+  user_id UUID REFERENCES users (id) UNIQUE,
+  session UUID NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE friendship_requests (

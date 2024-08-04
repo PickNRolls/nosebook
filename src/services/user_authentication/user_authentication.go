@@ -2,25 +2,31 @@ package services
 
 import (
 	"errors"
+	"fmt"
+	"nosebook/src/domain/sessions"
 	"nosebook/src/domain/users"
 	"nosebook/src/services/user_authentication/commands"
 	"nosebook/src/services/user_authentication/interfaces"
+	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserAuthenticationService struct {
-	repo interfaces.UserRepository
+	userRepo    interfaces.UserRepository
+	sessionRepo interfaces.SessionRepository
 }
 
-func NewUserAuthenticationService(repo interfaces.UserRepository) *UserAuthenticationService {
+func NewUserAuthenticationService(userRepo interfaces.UserRepository, sessionRepo interfaces.SessionRepository) *UserAuthenticationService {
 	return &UserAuthenticationService{
-		repo: repo,
+		userRepo:    userRepo,
+		sessionRepo: sessionRepo,
 	}
 }
 
 func (s *UserAuthenticationService) RegisterUser(c *commands.RegisterUserCommand) (*users.User, error) {
-	existingUser := s.repo.FindByNick(c.Nick)
+	existingUser := s.userRepo.FindByNick(c.Nick)
 	if existingUser != nil {
 		return nil, errors.New("Can't register user with such nickname.")
 	}
@@ -31,12 +37,7 @@ func (s *UserAuthenticationService) RegisterUser(c *commands.RegisterUserCommand
 	}
 
 	user := users.NewUser(c.FirstName, c.LastName, c.Nick, string(passhash))
-	user, err = s.repo.Create(user)
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
+	return s.userRepo.Create(user)
 }
 
 func (s *UserAuthenticationService) LoginUser() (*users.User, error) {
@@ -45,4 +46,26 @@ func (s *UserAuthenticationService) LoginUser() (*users.User, error) {
 
 func (s *UserAuthenticationService) LogoutUser() (*users.User, error) {
 	return users.NewUser("", "", "", ""), nil
+}
+
+func (s *UserAuthenticationService) RegenerateSession(c *commands.RegenerateSessionCommand) (*sessions.Session, error) {
+	existingSession := s.sessionRepo.FindByUserId(c.UserId)
+	fmt.Println(existingSession)
+	if existingSession != nil {
+		existingSession.UpdatedAt = time.Now()
+		existingSession.Value = uuid.New()
+		return s.sessionRepo.Update(existingSession)
+	}
+
+	session := sessions.NewSession(c.UserId)
+	return s.sessionRepo.Create(session)
+}
+
+func (s *UserAuthenticationService) TryGetUserBySessionId(c *commands.TryGetUserBySessionIdCommand) (*users.User, error) {
+	session := s.sessionRepo.FindById(c.SessionId)
+	if session == nil {
+		return nil, errors.New("Invalid session id.")
+	}
+
+	return s.userRepo.FindById(session.UserId), nil
 }

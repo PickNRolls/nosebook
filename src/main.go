@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
+	"nosebook/src/infra/middlewares"
 
 	"nosebook/src/infra/postgres"
 	"nosebook/src/services/user_authentication"
@@ -35,16 +36,20 @@ func main() {
 	}
 
 	userRepository := postgres.NewUserRepository(db)
-	userAuthenticationService := services.NewUserAuthenticationService(userRepository)
+	sessionRepository := postgres.NewSessionRepository(db)
+	userAuthenticationService := services.NewUserAuthenticationService(userRepository, sessionRepository)
 
 	router := gin.Default()
-	userList := []users.User{}
+
+	router.Use(middlewares.NewSessionMiddleware(userAuthenticationService))
+
 	router.GET("/", func(ctx *gin.Context) {
-		if err := db.Select(&userList, "SELECT * FROM users"); err != nil {
+		u := []users.User{}
+		if err := db.Select(&u, "SELECT * FROM users"); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		ctx.IndentedJSON(http.StatusOK, userList)
+		ctx.IndentedJSON(http.StatusOK, u)
 	})
 
 	router.POST("/register", func(ctx *gin.Context) {
@@ -56,10 +61,19 @@ func main() {
 
 		user, err := userAuthenticationService.RegisterUser(&command)
 		if err != nil {
+			ctx.Error(err)
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
+		session, err := userAuthenticationService.RegenerateSession(&commands.RegenerateSessionCommand{
+			UserId: user.ID,
+		})
+		if err != nil {
+			ctx.Error(err)
+		} else {
+			ctx.SetCookie("nosebook_session", session.Value.String(), 60*60, "/", "localhost", true, true)
+		}
 		ctx.JSON(http.StatusOK, user)
 	})
 
