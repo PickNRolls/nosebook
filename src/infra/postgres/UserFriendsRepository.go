@@ -41,11 +41,27 @@ func (repo *UserFriendsRepository) Create(request *friendship.FriendRequest) (*f
 	return request, nil
 }
 
+func (repo *UserFriendsRepository) Update(request *friendship.FriendRequest) (*friendship.FriendRequest, error) {
+	_, err := repo.db.NamedExec(`UPDATE friendship_requests SET
+		accepted = :accepted,
+		viewed = :viewed
+			WHERE
+		requester_id = :requester_id AND
+		responder_id = :responder_id
+	`, request)
+	if err != nil {
+		return nil, err
+	}
+
+	return request, nil
+}
+
 func (repo *UserFriendsRepository) FindByBoth(requesterId uuid.UUID, responderId uuid.UUID) *friendship.FriendRequest {
 	request := friendship.FriendRequest{}
 	err := repo.db.Get(&request, `SELECT
 		requester_id,
 		responder_id,
+		message,
 		accepted,
 		viewed,
 		created_at

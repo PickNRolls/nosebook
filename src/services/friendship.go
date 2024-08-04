@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"nosebook/src/domain/friendship"
 	"nosebook/src/services/auth"
 	"nosebook/src/services/friendship/commands"
@@ -32,14 +33,27 @@ func (s *FriendshipService) SendFriendRequest(c *commands.SendFriendRequestComma
 	return nil, nil
 }
 
-func (s *FriendshipService) AcceptFriendRequest(c *commands.SendFriendRequestCommand, a auth.Auth) (interface{}, error) {
+func (s *FriendshipService) AcceptFriendRequest(c *commands.AcceptFriendRequestCommand, a *auth.Auth) (*friendship.FriendRequest, error) {
+	friendRequest := s.userFriendsRepo.FindByBoth(c.RequesterId, a.UserId)
+	if friendRequest == nil {
+		return nil, errors.New("No such friend request.")
+	}
+
+	friendRequest.Accepted = true
+	friendRequest.Viewed = true
+
+	_, err := s.userFriendsRepo.Update(friendRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return friendRequest, nil
+}
+
+func (s *FriendshipService) DenyFriendRequest(c *commands.SendFriendRequestCommand, a *auth.Auth) (interface{}, error) {
 	return nil, nil
 }
 
-func (s *FriendshipService) DenyFriendRequest(c *commands.SendFriendRequestCommand, a auth.Auth) (interface{}, error) {
-	return nil, nil
-}
-
-func (s *FriendshipService) RemoveFriend(c *commands.SendFriendRequestCommand, a auth.Auth) (interface{}, error) {
+func (s *FriendshipService) RemoveFriend(c *commands.SendFriendRequestCommand, a *auth.Auth) (interface{}, error) {
 	return nil, nil
 }
