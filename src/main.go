@@ -5,16 +5,17 @@ import (
 	"log"
 	"net/http"
 	"nosebook/src/domain/users"
+	"nosebook/src/handlers"
 	"os"
+
+	"nosebook/src/infra/middlewares"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
-	"nosebook/src/infra/middlewares"
 
 	"nosebook/src/infra/postgres"
 	"nosebook/src/services/user_authentication"
-	"nosebook/src/services/user_authentication/commands"
 )
 
 func main() {
@@ -52,31 +53,7 @@ func main() {
 		ctx.IndentedJSON(http.StatusOK, u)
 	})
 
-	router.POST("/register", func(ctx *gin.Context) {
-		var command commands.RegisterUserCommand
-		if err := ctx.ShouldBindJSON(&command); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		user, err := userAuthenticationService.RegisterUser(&command)
-		if err != nil {
-			ctx.Error(err)
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		ctx.JSON(http.StatusOK, user)
-
-		session, err := userAuthenticationService.RegenerateSession(&commands.RegenerateSessionCommand{
-			UserId: user.ID,
-		})
-		if err != nil {
-			ctx.Error(err)
-		} else {
-			ctx.SetCookie("nosebook_session", session.Value.String(), 60*60, "/", "localhost", true, true)
-		}
-	})
+	router.POST("/register", handlers.NewHandlerRegister(userAuthenticationService))
 
 	router.Run("0.0.0.0:8080")
 }
