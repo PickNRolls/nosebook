@@ -66,6 +66,8 @@ func main() {
 			return
 		}
 
+		ctx.JSON(http.StatusOK, user)
+
 		session, err := userAuthenticationService.RegenerateSession(&commands.RegenerateSessionCommand{
 			UserId: user.ID,
 		})
@@ -74,7 +76,6 @@ func main() {
 		} else {
 			ctx.SetCookie("nosebook_session", session.Value.String(), 60*60, "/", "localhost", true, true)
 		}
-		ctx.JSON(http.StatusOK, user)
 	})
 
 	router.Run("0.0.0.0:8080")

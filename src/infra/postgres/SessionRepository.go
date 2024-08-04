@@ -23,12 +23,12 @@ func (repo *SessionRepository) Create(session *sessions.Session) (*sessions.Sess
 	  session,
 	  user_id,
 	  created_at,
-	  updated_at
+	  last_activity_at
 	) VALUES (
 	  :session,
 	  :user_id,
 	  :created_at,
-	  :updated_at
+	  :last_activity_at
 	)`, session)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (repo *SessionRepository) Create(session *sessions.Session) (*sessions.Sess
 func (repo *SessionRepository) Update(session *sessions.Session) (*sessions.Session, error) {
 	_, err := repo.db.NamedExec(`UPDATE user_sessions SET
 		session = :session,
-		updated_at = :updated_at
+		last_activity_at = :last_activity_at
 			WHERE
 		user_id = :user_id
 	`, session)
@@ -57,7 +57,7 @@ func (repo *SessionRepository) FindByUserId(userId uuid.UUID) *sessions.Session 
 		session,
 		user_id,
 		created_at,
-		updated_at
+		last_activity_at
 			FROM user_sessions WHERE
 		user_id = $1
 	`, userId)
@@ -75,7 +75,7 @@ func (repo *SessionRepository) FindById(id uuid.UUID) *sessions.Session {
 		session,
 		user_id,
 		created_at,
-		updated_at
+		last_activity_at
 			FROM user_sessions WHERE
 		session = $1
 	`, id)

@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"fmt"
 	"nosebook/src/domain/sessions"
 	"nosebook/src/domain/users"
 	"nosebook/src/services/user_authentication/commands"
@@ -50,9 +49,8 @@ func (s *UserAuthenticationService) LogoutUser() (*users.User, error) {
 
 func (s *UserAuthenticationService) RegenerateSession(c *commands.RegenerateSessionCommand) (*sessions.Session, error) {
 	existingSession := s.sessionRepo.FindByUserId(c.UserId)
-	fmt.Println(existingSession)
 	if existingSession != nil {
-		existingSession.UpdatedAt = time.Now()
+		existingSession.LastActivityAt = time.Now()
 		existingSession.Value = uuid.New()
 		return s.sessionRepo.Update(existingSession)
 	}
@@ -68,4 +66,15 @@ func (s *UserAuthenticationService) TryGetUserBySessionId(c *commands.TryGetUser
 	}
 
 	return s.userRepo.FindById(session.UserId), nil
+}
+
+func (s *UserAuthenticationService) MarkSessionActive(sessionId uuid.UUID) error {
+	session := s.sessionRepo.FindById(sessionId)
+	if session == nil {
+		return errors.New("Invalid session id")
+	}
+
+	session.LastActivityAt = time.Now()
+	_, err := s.sessionRepo.Update(session)
+	return err
 }
