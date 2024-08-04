@@ -18,8 +18,10 @@ CREATE TABLE user_sessions (
 CREATE TABLE friendship_requests (
   requester_id UUID REFERENCES users (id),
   responder_id UUID REFERENCES users (id),
-  accepted BOOLEAN,
-  viewed BOOLEAN
+  message VARCHAR(256),
+  accepted BOOLEAN NOT NULL DEFAULT FALSE,
+  viewed BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE posts (

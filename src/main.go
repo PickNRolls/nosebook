@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"nosebook/src/domain/users"
 	"nosebook/src/handlers"
+	"nosebook/src/handlers/friendship"
 
 	"nosebook/src/infra/middlewares"
 
@@ -11,15 +12,14 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"nosebook/src/infra/postgres"
-	"nosebook/src/services/user_authentication"
+	"nosebook/src/services"
 )
 
 func main() {
 	db := postgres.Connect()
 
-	userRepository := postgres.NewUserRepository(db)
-	sessionRepository := postgres.NewSessionRepository(db)
-	userAuthenticationService := services.NewUserAuthenticationService(userRepository, sessionRepository)
+	userAuthenticationService := services.NewUserAuthenticationService(postgres.NewUserRepository(db), postgres.NewSessionRepository(db))
+	friendshipService := services.NewFriendshipService(postgres.NewUserFriendsRepository(db))
 
 	router := gin.Default()
 
@@ -35,6 +35,11 @@ func main() {
 	})
 
 	router.POST("/register", handlers.NewHandlerRegister(userAuthenticationService))
+
+	{
+		group := router.Group("/friendship")
+		group.POST("/add", friendship.NewHandlerAdd(friendshipService))
+	}
 
 	router.Run("0.0.0.0:8080")
 }

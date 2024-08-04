@@ -1,8 +1,9 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
-	"nosebook/src/services/user_authentication"
+	"nosebook/src/services"
 	"nosebook/src/services/user_authentication/commands"
 
 	"github.com/gin-gonic/gin"
@@ -23,15 +24,18 @@ func NewHandlerRegister(userAuthenticationService *services.UserAuthenticationSe
 			return
 		}
 
-		ctx.JSON(http.StatusOK, user)
-
 		session, err := userAuthenticationService.RegenerateSession(&commands.RegenerateSessionCommand{
 			UserId: user.ID,
 		})
+		fmt.Println(session)
+		fmt.Println("ERROR")
+		fmt.Println(err)
 		if err != nil {
 			ctx.Error(err)
 		} else {
 			ctx.SetCookie("nosebook_session", session.Value.String(), 60*60, "/", "localhost", true, true)
 		}
+
+		ctx.JSON(http.StatusOK, user)
 	}
 }

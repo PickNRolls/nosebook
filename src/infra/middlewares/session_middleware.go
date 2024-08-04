@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"nosebook/src/services/user_authentication"
+	"nosebook/src/services"
 	"nosebook/src/services/user_authentication/commands"
 
 	"github.com/gin-gonic/gin"
