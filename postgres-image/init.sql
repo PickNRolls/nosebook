@@ -44,6 +44,11 @@ CREATE TABLE comments (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE post_comments (
+  post_id UUID REFERENCES posts (id),
+  comment_id UUID REFERENCES comments (id)
+);
+
 CREATE TABLE comment_likes (
   author_id UUID REFERENCES users (id),
   comment_id UUID REFERENCES comments (id)

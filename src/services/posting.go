@@ -1,7 +1,6 @@
 package services
 
 import (
-	// "errors"
 	"errors"
 	"nosebook/src/domain/posts"
 	"nosebook/src/services/auth"
