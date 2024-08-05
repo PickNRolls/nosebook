@@ -39,7 +39,9 @@ CREATE TABLE post_likes (
 
 CREATE TABLE comments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
-  author_id UUID REFERENCES users (id)
+  author_id UUID REFERENCES users (id),
+  message VARCHAR(4096),
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE comment_likes (
