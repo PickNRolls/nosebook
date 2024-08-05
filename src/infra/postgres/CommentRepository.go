@@ -61,3 +61,31 @@ func (repo *CommentRepository) CreateForPost(postId uuid.UUID, comment *comments
 
 	return comment, nil
 }
+
+func (repo *CommentRepository) Remove(id uuid.UUID) (*comments.Comment, error) {
+	_, err := repo.db.Exec(`UPDATE comments SET
+		removed_at = NOW()
+			WHERE
+		id = $1
+	`, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var comment comments.Comment
+	err = repo.db.Get(&comment, `SELECT
+		id,
+		author_id,
+		message,
+		created_at,
+		removed_at
+	FROM comments WHERE
+		id = $1`, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &comment, nil
+}

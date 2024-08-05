@@ -12,6 +12,7 @@ type Post struct {
 	OwnerId   uuid.UUID `json:"ownerId" db:"owner_id"`
 	Message   string    `json:"message" db:"message"`
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
+	RemovedAt time.Time `json:"removedAt" db:"removed_at"`
 }
 
 func NewPost(authorId uuid.UUID, ownerId uuid.UUID, message string) *Post {
@@ -21,5 +22,6 @@ func NewPost(authorId uuid.UUID, ownerId uuid.UUID, message string) *Post {
 		OwnerId:   ownerId,
 		Message:   message,
 		CreatedAt: time.Now(),
+		RemovedAt: time.Time{},
 	}
 }

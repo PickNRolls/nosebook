@@ -26,3 +26,12 @@ func (s *CommentService) PublishOnPost(c *commands.PublishPostCommentCommand, a 
 
 	return comment, nil
 }
+
+func (s *CommentService) Remove(c *commands.RemoveCommentCommand, a *auth.Auth) (*comments.Comment, error) {
+	comment, err := s.commentRepo.Remove(c.CommentId)
+	if err != nil {
+		return nil, err
+	}
+
+	return comment, err
+}

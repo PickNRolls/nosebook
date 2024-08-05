@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"nosebook/src/domain/users"
 	"nosebook/src/handlers"
+	"nosebook/src/handlers/comments"
 	"nosebook/src/handlers/friendship"
 	"nosebook/src/handlers/posts"
 
@@ -55,6 +56,11 @@ func main() {
 		group.POST("/publish", posts.NewHandlerPublish(postingService))
 		group.POST("/remove", posts.NewHandlerRemove(postingService))
 		group.POST("/comment", posts.NewHandlerComment(commentService))
+	}
+
+	{
+		group := authRouter.Group("/comments")
+		group.POST("/remove", comments.NewHandlerRemove(commentService))
 	}
 
 	router.Run("0.0.0.0:8080")

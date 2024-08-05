@@ -29,7 +29,8 @@ CREATE TABLE posts (
   author_id UUID REFERENCES users (id),
   owner_id UUID REFERENCES users (id),
   message VARCHAR(4096),
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  removed_at TIMESTAMP
 );
 
 CREATE TABLE post_likes (
@@ -41,7 +42,8 @@ CREATE TABLE comments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
   author_id UUID REFERENCES users (id),
   message VARCHAR(4096),
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  removed_at TIMESTAMP
 );
 
 CREATE TABLE post_comments (

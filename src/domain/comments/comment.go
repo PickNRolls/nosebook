@@ -11,6 +11,7 @@ type Comment struct {
 	AuthorId  uuid.UUID `json:"authorId" db:"author_id"`
 	Message   string    `json:"message" db:"message"`
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
+	RemovedAt time.Time `json:"removedAt" db:"removed_at"`
 }
 
 func NewComment(authorId uuid.UUID, message string) *Comment {
@@ -19,5 +20,6 @@ func NewComment(authorId uuid.UUID, message string) *Comment {
 		AuthorId:  authorId,
 		Message:   message,
 		CreatedAt: time.Now(),
+		RemovedAt: time.Time{},
 	}
 }
