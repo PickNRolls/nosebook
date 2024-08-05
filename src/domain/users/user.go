@@ -11,7 +11,7 @@ type User struct {
 	LastName  string    `json:"lastName" db:"last_name"`
 	Nick      string    `json:"nick" db:"nick"`
 	Passhash  string    `json:"passhash" db:"passhash"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	CreatedAt time.Time `json:"createdAt" db:"created_at"`
 }
 
 func NewUser(firstName string, lastName string, nick string, passhash string) *User {

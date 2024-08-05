@@ -27,7 +27,9 @@ CREATE TABLE friendship_requests (
 CREATE TABLE posts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
   author_id UUID REFERENCES users (id),
-  message VARCHAR(4096)
+  owner_id UUID REFERENCES users (id),
+  message VARCHAR(4096),
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE post_likes (

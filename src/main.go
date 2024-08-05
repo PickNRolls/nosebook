@@ -5,6 +5,7 @@ import (
 	"nosebook/src/domain/users"
 	"nosebook/src/handlers"
 	"nosebook/src/handlers/friendship"
+	"nosebook/src/handlers/posts"
 
 	"nosebook/src/infra/middlewares"
 
@@ -20,6 +21,7 @@ func main() {
 
 	userAuthenticationService := services.NewUserAuthenticationService(postgres.NewUserRepository(db), postgres.NewSessionRepository(db))
 	friendshipService := services.NewFriendshipService(postgres.NewUserFriendsRepository(db))
+	postingService := services.NewPostingService(postgres.NewPostsRepository(db))
 
 	router := gin.Default()
 
@@ -42,6 +44,11 @@ func main() {
 		group.POST("/accept", friendship.NewHandlerAccept(friendshipService))
 		group.POST("/deny", friendship.NewHandlerDeny(friendshipService))
 		group.POST("/remove", friendship.NewHandlerRemove(friendshipService))
+	}
+
+	{
+		group := router.Group("/posts")
+		group.POST("/publish", posts.NewHandlerPublish(postingService))
 	}
 
 	router.Run("0.0.0.0:8080")

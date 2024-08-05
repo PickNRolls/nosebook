@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"nosebook/src/services"
 	"nosebook/src/services/user_authentication/commands"
@@ -27,9 +26,7 @@ func NewHandlerRegister(userAuthenticationService *services.UserAuthenticationSe
 		session, err := userAuthenticationService.RegenerateSession(&commands.RegenerateSessionCommand{
 			UserId: user.ID,
 		})
-		fmt.Println(session)
-		fmt.Println("ERROR")
-		fmt.Println(err)
+
 		if err != nil {
 			ctx.Error(err)
 		} else {
