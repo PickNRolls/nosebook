@@ -1,11 +1,13 @@
 package interfaces
 
-import "nosebook/src/domain/posts"
+import (
+	"nosebook/src/domain/posts"
 
-// "nosebook/src/domain/friendship"
-//
-// "github.com/google/uuid"
+	"github.com/google/uuid"
+)
 
 type PostsRepository interface {
+	FindById(id uuid.UUID) *posts.Post
 	Create(post *posts.Post) (*posts.Post, error)
+	Remove(post *posts.Post) (*posts.Post, error)
 }

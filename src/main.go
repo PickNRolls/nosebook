@@ -52,6 +52,7 @@ func main() {
 	{
 		group := authRouter.Group("/posts")
 		group.POST("/publish", posts.NewHandlerPublish(postingService))
+		group.POST("/remove", posts.NewHandlerRemove(postingService))
 	}
 
 	router.Run("0.0.0.0:8080")
