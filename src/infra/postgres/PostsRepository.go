@@ -12,7 +12,7 @@ type PostsRepository struct {
 	db *sqlx.DB
 }
 
-func NewPostsRepository(db *sqlx.DB) interfaces.PostsRepository {
+func NewPostsRepository(db *sqlx.DB) interfaces.PostRepository {
 	return &PostsRepository{
 		db: db,
 	}

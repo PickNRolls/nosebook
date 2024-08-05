@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type PostsRepository interface {
+type PostRepository interface {
 	FindById(id uuid.UUID) *posts.Post
 	Create(post *posts.Post) (*posts.Post, error)
 	Remove(post *posts.Post) (*posts.Post, error)
