@@ -12,10 +12,7 @@ import (
 
 func NewHandlerAccept(friendshipService *services.FriendshipService) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
-		user, ok := helpers.GetUserOrBadRequest(ctx)
-		if !ok {
-			return
-		}
+		user := helpers.GetUserOrBadRequest(ctx)
 
 		var command commands.AcceptFriendRequestCommand
 		if err := ctx.ShouldBindJSON(&command); err != nil {

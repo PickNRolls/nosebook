@@ -12,10 +12,7 @@ import (
 
 func NewHandlerDeny(friendshipService *services.FriendshipService) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
-		user, ok := helpers.GetUserOrBadRequest(ctx)
-		if !ok {
-			return
-		}
+		user := helpers.GetUserOrBadRequest(ctx)
 
 		var command commands.DenyFriendRequestCommand
 		if err := ctx.ShouldBindJSON(&command); err != nil {

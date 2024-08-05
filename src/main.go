@@ -38,8 +38,11 @@ func main() {
 
 	router.POST("/register", handlers.NewHandlerRegister(userAuthenticationService))
 
+	authRouter := router.Group("/")
+	authRouter.Use(middlewares.NewAuthMiddleware())
+
 	{
-		group := router.Group("/friendship")
+		group := authRouter.Group("/friendship")
 		group.POST("/add", friendship.NewHandlerAdd(friendshipService))
 		group.POST("/accept", friendship.NewHandlerAccept(friendshipService))
 		group.POST("/deny", friendship.NewHandlerDeny(friendshipService))
@@ -47,7 +50,7 @@ func main() {
 	}
 
 	{
-		group := router.Group("/posts")
+		group := authRouter.Group("/posts")
 		group.POST("/publish", posts.NewHandlerPublish(postingService))
 	}
 
