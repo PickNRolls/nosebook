@@ -18,6 +18,24 @@ func NewCommentRepository(db *sqlx.DB) interfaces.CommentRepository {
 	}
 }
 
+func (repo *CommentRepository) FindById(id uuid.UUID) *comments.Comment {
+	comment := comments.Comment{}
+	err := repo.db.Get(&comment, `SELECT
+		id,
+		author_id,
+		message,
+		created_at
+			FROM comments WHERE
+		id = $1
+	`, id)
+
+	if err != nil {
+		return nil
+	}
+
+	return &comment
+}
+
 func (repo *CommentRepository) CreateForPost(postId uuid.UUID, comment *comments.Comment) (*comments.Comment, error) {
 	tx, err := repo.db.Begin()
 	if err != nil {

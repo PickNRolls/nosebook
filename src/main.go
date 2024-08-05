@@ -23,7 +23,7 @@ func main() {
 	userAuthenticationService := services.NewUserAuthenticationService(postgres.NewUserRepository(db), postgres.NewSessionRepository(db))
 	friendshipService := services.NewFriendshipService(postgres.NewUserFriendsRepository(db))
 	postingService := services.NewPostingService(postgres.NewPostsRepository(db), postgres.NewPostLikesRepository(db))
-	commentService := services.NewCommentService(postgres.NewCommentRepository(db))
+	commentService := services.NewCommentService(postgres.NewCommentRepository(db), postgres.NewCommentLikesRepository(db))
 
 	router := gin.Default()
 
@@ -62,6 +62,7 @@ func main() {
 	{
 		group := authRouter.Group("/comments")
 		group.POST("/remove", comments.NewHandlerRemove(commentService))
+		group.POST("/like", comments.NewHandlerLike(commentService))
 	}
 
 	router.Run("0.0.0.0:8080")
