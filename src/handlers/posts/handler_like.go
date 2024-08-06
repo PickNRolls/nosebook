@@ -20,7 +20,7 @@ func NewHandlerLike(postingService *services.PostingService) func(ctx *gin.Conte
 			return
 		}
 
-		request, err := postingService.Like(&command, &auth.Auth{
+		post, err := postingService.Like(&command, &auth.Auth{
 			UserId: user.ID,
 		})
 		if err != nil {
@@ -29,6 +29,6 @@ func NewHandlerLike(postingService *services.PostingService) func(ctx *gin.Conte
 			return
 		}
 
-		ctx.JSON(http.StatusOK, request)
+		ctx.JSON(http.StatusOK, post)
 	}
 }

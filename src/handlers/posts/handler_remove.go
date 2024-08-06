@@ -20,7 +20,7 @@ func NewHandlerRemove(postingService *services.PostingService) func(ctx *gin.Con
 			return
 		}
 
-		request, err := postingService.Remove(&command, &auth.Auth{
+		post, err := postingService.Remove(&command, &auth.Auth{
 			UserId: user.ID,
 		})
 		if err != nil {
@@ -29,6 +29,6 @@ func NewHandlerRemove(postingService *services.PostingService) func(ctx *gin.Con
 			return
 		}
 
-		ctx.JSON(http.StatusOK, request)
+		ctx.JSON(http.StatusOK, post)
 	}
 }

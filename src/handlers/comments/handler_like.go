@@ -20,7 +20,7 @@ func NewHandlerLike(commentService *services.CommentService) func(ctx *gin.Conte
 			return
 		}
 
-		request, err := commentService.Like(&command, &auth.Auth{
+		comment, err := commentService.Like(&command, &auth.Auth{
 			UserId: user.ID,
 		})
 		if err != nil {
@@ -29,6 +29,6 @@ func NewHandlerLike(commentService *services.CommentService) func(ctx *gin.Conte
 			return
 		}
 
-		ctx.JSON(http.StatusOK, request)
+		ctx.JSON(http.StatusOK, comment)
 	}
 }

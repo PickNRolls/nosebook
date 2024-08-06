@@ -2,7 +2,7 @@ package postgres
 
 import (
 	"nosebook/src/domain/users"
-	"nosebook/src/services/user_authentication/interfaces"
+	"nosebook/src/services/common/interfaces"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -48,9 +48,29 @@ func (repo *UserRepository) Create(user *users.User) (*users.User, error) {
 	return user, nil
 }
 
+func (repo *UserRepository) FindAll() ([]*users.User, error) {
+	var all []*users.User
+	err := repo.db.Select(&all, `SELECT
+		id,
+		first_name,
+		last_name,
+		nick,
+		passhash,
+		created_at
+			FROM users
+	`)
+
+	if err != nil {
+		return make([]*users.User, 0), nil
+	}
+
+	return all, nil
+}
+
 func (repo *UserRepository) FindByNick(nick string) *users.User {
 	user := users.User{}
 	err := repo.db.Get(&user, `SELECT
+		id,
 	  first_name,
 	  last_name,
 	  nick,

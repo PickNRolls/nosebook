@@ -1,12 +1,11 @@
 package main
 
 import (
-	"net/http"
-	"nosebook/src/domain/users"
 	"nosebook/src/handlers"
 	"nosebook/src/handlers/comments"
 	"nosebook/src/handlers/friendship"
 	"nosebook/src/handlers/posts"
+	users_handlers "nosebook/src/handlers/users"
 
 	"nosebook/src/infra/middlewares"
 
@@ -24,19 +23,11 @@ func main() {
 	friendshipService := services.NewFriendshipService(postgres.NewUserFriendsRepository(db))
 	postingService := services.NewPostingService(postgres.NewPostsRepository(db), postgres.NewPostLikesRepository(db))
 	commentService := services.NewCommentService(postgres.NewCommentRepository(db), postgres.NewCommentLikesRepository(db))
+	userService := services.NewUserService(postgres.NewUserRepository(db))
 
 	router := gin.Default()
 
 	router.Use(middlewares.NewSessionMiddleware(userAuthenticationService))
-
-	router.GET("/", func(ctx *gin.Context) {
-		u := []users.User{}
-		if err := db.Select(&u, "SELECT * FROM users"); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		ctx.IndentedJSON(http.StatusOK, u)
-	})
 
 	router.POST("/register", handlers.NewHandlerRegister(userAuthenticationService))
 
@@ -63,6 +54,12 @@ func main() {
 		group := authRouter.Group("/comments")
 		group.POST("/remove", comments.NewHandlerRemove(commentService))
 		group.POST("/like", comments.NewHandlerLike(commentService))
+	}
+
+	{
+		group := authRouter.Group("/users")
+		group.GET("/", users_handlers.NewHandlerGetAll(userService))
+		group.GET("/:id", users_handlers.NewHandlerGet(userService))
 	}
 
 	router.Run("0.0.0.0:8080")

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"nosebook/src/domain/sessions"
 	"nosebook/src/domain/users"
+	common_interfaces "nosebook/src/services/common/interfaces"
 	"nosebook/src/services/user_authentication/commands"
 	"nosebook/src/services/user_authentication/interfaces"
 	"time"
@@ -13,11 +14,11 @@ import (
 )
 
 type UserAuthenticationService struct {
-	userRepo    interfaces.UserRepository
+	userRepo    common_interfaces.UserRepository
 	sessionRepo interfaces.SessionRepository
 }
 
-func NewUserAuthenticationService(userRepo interfaces.UserRepository, sessionRepo interfaces.SessionRepository) *UserAuthenticationService {
+func NewUserAuthenticationService(userRepo common_interfaces.UserRepository, sessionRepo interfaces.SessionRepository) *UserAuthenticationService {
 	return &UserAuthenticationService{
 		userRepo:    userRepo,
 		sessionRepo: sessionRepo,

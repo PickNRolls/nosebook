@@ -20,7 +20,7 @@ func NewHandlerRemove(commentService *services.CommentService) func(ctx *gin.Con
 			return
 		}
 
-		request, err := commentService.Remove(&command, &auth.Auth{
+		comment, err := commentService.Remove(&command, &auth.Auth{
 			UserId: user.ID,
 		})
 		if err != nil {
@@ -29,6 +29,6 @@ func NewHandlerRemove(commentService *services.CommentService) func(ctx *gin.Con
 			return
 		}
 
-		ctx.JSON(http.StatusOK, request)
+		ctx.JSON(http.StatusOK, comment)
 	}
 }

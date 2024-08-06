@@ -20,7 +20,7 @@ func NewHandlerComment(commentService *services.CommentService) func(ctx *gin.Co
 			return
 		}
 
-		request, err := commentService.PublishOnPost(&command, &auth.Auth{
+		comment, err := commentService.PublishOnPost(&command, &auth.Auth{
 			UserId: user.ID,
 		})
 		if err != nil {
@@ -29,6 +29,6 @@ func NewHandlerComment(commentService *services.CommentService) func(ctx *gin.Co
 			return
 		}
 
-		ctx.JSON(http.StatusOK, request)
+		ctx.JSON(http.StatusOK, comment)
 	}
 }

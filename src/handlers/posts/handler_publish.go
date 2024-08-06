@@ -20,7 +20,7 @@ func NewHandlerPublish(postingService *services.PostingService) func(ctx *gin.Co
 			return
 		}
 
-		request, err := postingService.Publish(&command, &auth.Auth{
+		post, err := postingService.Publish(&command, &auth.Auth{
 			UserId: user.ID,
 		})
 		if err != nil {
@@ -29,6 +29,6 @@ func NewHandlerPublish(postingService *services.PostingService) func(ctx *gin.Co
 			return
 		}
 
-		ctx.JSON(http.StatusOK, request)
+		ctx.JSON(http.StatusOK, post)
 	}
 }
