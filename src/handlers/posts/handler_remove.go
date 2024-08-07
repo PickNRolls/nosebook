@@ -3,14 +3,14 @@ package posts
 import (
 	"net/http"
 	"nosebook/src/infra/helpers"
-	"nosebook/src/services"
+	"nosebook/src/presenters"
 	"nosebook/src/services/auth"
 	"nosebook/src/services/posting/commands"
 
 	"github.com/gin-gonic/gin"
 )
 
-func NewHandlerRemove(postingService *services.PostingService) func(ctx *gin.Context) {
+func NewHandlerRemove(postPresenter *presenters.PostPresenter) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		user := helpers.GetUserOrBadRequest(ctx)
 
@@ -20,7 +20,7 @@ func NewHandlerRemove(postingService *services.PostingService) func(ctx *gin.Con
 			return
 		}
 
-		post, err := postingService.Remove(&command, &auth.Auth{
+		post, err := postPresenter.Remove(&command, &auth.Auth{
 			UserId: user.ID,
 		})
 		if err != nil {

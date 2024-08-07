@@ -47,7 +47,7 @@ func (s *PostingService) Remove(c *commands.RemovePostCommand, a *auth.Auth) (*p
 }
 
 func (s *PostingService) Like(c *commands.LikePostCommand, a *auth.Auth) (*posts.Post, error) {
-	post := s.postRepo.FindById(c.PostId)
+	post := s.postRepo.FindById(c.Id)
 	if post == nil {
 		return nil, errors.New("No such post.")
 	}

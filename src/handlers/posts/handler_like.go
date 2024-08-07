@@ -3,14 +3,14 @@ package posts
 import (
 	"net/http"
 	"nosebook/src/infra/helpers"
-	"nosebook/src/services"
+	"nosebook/src/presenters"
 	"nosebook/src/services/auth"
 	"nosebook/src/services/posting/commands"
 
 	"github.com/gin-gonic/gin"
 )
 
-func NewHandlerLike(postingService *services.PostingService) func(ctx *gin.Context) {
+func NewHandlerLike(postPresenter *presenters.PostPresenter) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		user := helpers.GetUserOrBadRequest(ctx)
 
@@ -20,7 +20,7 @@ func NewHandlerLike(postingService *services.PostingService) func(ctx *gin.Conte
 			return
 		}
 
-		post, err := postingService.Like(&command, &auth.Auth{
+		post, err := postPresenter.Like(&command, &auth.Auth{
 			UserId: user.ID,
 		})
 		if err != nil {

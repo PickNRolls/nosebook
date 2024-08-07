@@ -69,7 +69,7 @@ func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) structs.Qu
 		message,
 		created_at
 			FROM posts WHERE
-		%v
+		removed_at IS NULL AND %v
 			ORDER BY created_at DESC, id DESC
 			LIMIT %v
 	`, where, limit), args...)
@@ -97,7 +97,7 @@ func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) structs.Qu
 		err = repo.db.Get(&remainingCount, fmt.Sprintf(`SELECT
 			COUNT(*)
 				FROM posts WHERE
-			%v
+			removed_at IS NULL AND %v
 		`, whereWithNextCursor), args...)
 
 		if err != nil {
@@ -199,7 +199,7 @@ func (repo *PostsRepository) FindById(id uuid.UUID) *posts.Post {
 		message,
 		created_at
 			FROM posts WHERE
-		id = $1
+		id = $1 AND removed_at IS NULL
 	`, id)
 
 	if err != nil {
@@ -248,12 +248,16 @@ func (repo *PostsRepository) Create(post *posts.Post) (*posts.Post, error) {
 }
 
 func (repo *PostsRepository) Remove(post *posts.Post) (*posts.Post, error) {
-	_, err := repo.db.NamedExec(`DELETE FROM posts WHERE
+	_, err := repo.db.NamedExec(`UPDATE posts SET
+		removed_at = NOW()
+			WHERE
 		id = :id	
 	`, post)
 	if err != nil {
 		return nil, err
 	}
+
+	post.RemovedAt = time.Now()
 
 	return post, nil
 }
