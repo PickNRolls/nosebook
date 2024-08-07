@@ -6,6 +6,7 @@ import (
 	"nosebook/src/services/auth"
 	"nosebook/src/services/posting/commands"
 	"nosebook/src/services/posting/interfaces"
+	"nosebook/src/services/posting/structs"
 )
 
 type PostingService struct {
@@ -16,6 +17,10 @@ func NewPostingService(postRepo interfaces.PostRepository) *PostingService {
 	return &PostingService{
 		postRepo: postRepo,
 	}
+}
+
+func (s *PostingService) FindByFilter(c *commands.FindPostsCommand, a *auth.Auth) structs.QueryResult {
+	return s.postRepo.FindByFilter(c.Filter)
 }
 
 func (s *PostingService) Publish(c *commands.PublishPostCommand, a *auth.Auth) (*posts.Post, error) {

@@ -1,8 +1,12 @@
 package postgres
 
 import (
+	"errors"
+	"fmt"
 	"nosebook/src/domain/posts"
 	"nosebook/src/services/posting/interfaces"
+	"nosebook/src/services/posting/structs"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -16,6 +20,50 @@ func NewPostsRepository(db *sqlx.DB) interfaces.PostRepository {
 	return &PostsRepository{
 		db: db,
 	}
+}
+
+func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) structs.QueryResult {
+	var result structs.QueryResult
+	whereClause := make([]string, 0)
+	args := make([]any, 0)
+
+	if filter.OwnerId != uuid.Nil {
+		whereClause = append(whereClause, fmt.Sprintf("owner_id = $%v", len(args)+1))
+		args = append(args, filter.OwnerId)
+	}
+
+	if filter.AuthorId != uuid.Nil {
+		whereClause = append(whereClause, fmt.Sprintf("author_id = $%v", len(args)+1))
+		args = append(args, filter.AuthorId)
+	}
+
+	if filter.OwnerId == uuid.Nil && filter.AuthorId == uuid.Nil {
+		result.Err = errors.New("You must specify either ownerId or authorId at least.")
+		return result
+	}
+
+	where := strings.Join(whereClause, " AND ")
+
+	var posts []*posts.Post
+	err := repo.db.Select(&posts, fmt.Sprintf(`SELECT
+		id,
+		author_id,
+		owner_id,
+		message,
+		created_at
+			FROM posts WHERE
+		%v
+			ORDER BY created_at DESC
+	`, where), args...)
+
+	if err != nil {
+		result.Err = err
+		return result
+	}
+
+	result.Data = posts
+
+	return result
 }
 
 func (repo *PostsRepository) Save(post *posts.Post) (*posts.Post, error) {

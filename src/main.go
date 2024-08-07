@@ -44,6 +44,8 @@ func main() {
 
 	{
 		group := authRouter.Group("/posts")
+		group.GET("/", posts.NewHandlerFind(postingService))
+
 		group.POST("/publish", posts.NewHandlerPublish(postingService))
 		group.POST("/remove", posts.NewHandlerRemove(postingService))
 		group.POST("/like", posts.NewHandlerLike(postingService))

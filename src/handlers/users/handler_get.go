@@ -1,7 +1,6 @@
 package users
 
 import (
-	"fmt"
 	"net/http"
 	"nosebook/src/services"
 	"nosebook/src/services/user_service/commands"
@@ -18,7 +17,6 @@ func NewHandlerGet(userService *services.UserService) func(ctx *gin.Context) {
 			return
 		}
 		uuid, err := uuid.Parse(id)
-		fmt.Println(uuid)
 
 		user, err := userService.GetUser(&commands.GetUserCommand{
 			Id: uuid,
