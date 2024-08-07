@@ -7,6 +7,7 @@ import (
 	"nosebook/src/services/posting/interfaces"
 	"nosebook/src/services/posting/structs"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -42,7 +43,23 @@ func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) structs.Qu
 		return result
 	}
 
+	if filter.Cursor != "" {
+		substrings := strings.Split(filter.Cursor, "/")
+		id := substrings[0]
+		createdAt := substrings[1]
+
+		timestamp, err := time.Parse(time.RFC3339, createdAt)
+		if err != nil {
+			result.Err = errors.New("Invalid cursor.")
+			return result
+		}
+
+		whereClause = append(whereClause, fmt.Sprintf("(created_at, id) < ($%v, $%v)", len(args)+1, len(args)+2))
+		args = append(args, timestamp, id)
+	}
+
 	where := strings.Join(whereClause, " AND ")
+	limit := 10
 
 	var posts []*posts.Post
 	err := repo.db.Select(&posts, fmt.Sprintf(`SELECT
@@ -53,15 +70,44 @@ func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) structs.Qu
 		created_at
 			FROM posts WHERE
 		%v
-			ORDER BY created_at DESC
-	`, where), args...)
+			ORDER BY created_at DESC, id DESC
+			LIMIT %v
+	`, where, limit), args...)
 
 	if err != nil {
 		result.Err = err
 		return result
 	}
 
+	if filter.Cursor != "" {
+		whereClause = whereClause[:len(whereClause)-2]
+		args = args[:len(args)-2]
+	}
+
 	result.Data = posts
+
+	if len(posts) == limit {
+		var remainingCount struct {
+			Count int `db:"count"`
+		}
+		lastPost := posts[len(posts)-1]
+		whereWithNextCursor := fmt.Sprintf(`%v AND (created_at, id) < ($%v, $%v)`, where, len(args)+1, len(args)+2)
+		args = append(args, lastPost.CreatedAt)
+		args = append(args, lastPost.Id)
+		err = repo.db.Get(&remainingCount, fmt.Sprintf(`SELECT
+			COUNT(*)
+				FROM posts WHERE
+			%v
+		`, whereWithNextCursor), args...)
+
+		if err != nil {
+			result.Err = err
+			return result
+		}
+
+		result.RemainingCount = remainingCount.Count
+		result.Next = fmt.Sprintf(`%v/%v`, lastPost.Id, lastPost.CreatedAt.Format(time.RFC3339))
+	}
 
 	return result
 }

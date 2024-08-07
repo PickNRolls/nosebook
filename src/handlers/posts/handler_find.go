@@ -38,6 +38,11 @@ func NewHandlerFind(postingService *services.PostingService) func(ctx *gin.Conte
 			}
 		}
 
+		cursor := ctx.Query("cursor")
+		if cursor != "" {
+			command.Filter.Cursor = cursor
+		}
+
 		result := postingService.FindByFilter(&command, &auth.Auth{
 			UserId: user.ID,
 		})
