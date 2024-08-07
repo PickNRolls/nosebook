@@ -5,7 +5,7 @@ import (
 	"nosebook/src/handlers/comments"
 	"nosebook/src/handlers/friendship"
 	"nosebook/src/handlers/posts"
-	users_handlers "nosebook/src/handlers/users"
+	"nosebook/src/handlers/users"
 
 	"nosebook/src/infra/middlewares"
 
@@ -58,8 +58,8 @@ func main() {
 
 	{
 		group := authRouter.Group("/users")
-		group.GET("/", users_handlers.NewHandlerGetAll(userService))
-		group.GET("/:id", users_handlers.NewHandlerGet(userService))
+		group.GET("/", users.NewHandlerGetAll(userService))
+		group.GET("/:id", users.NewHandlerGet(userService))
 	}
 
 	router.Run("0.0.0.0:8080")
