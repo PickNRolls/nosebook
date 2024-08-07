@@ -11,7 +11,7 @@ type Comment struct {
 	AuthorId  uuid.UUID   `json:"authorId" db:"author_id"`
 	Message   string      `json:"message" db:"message"`
 	CreatedAt time.Time   `json:"createdAt" db:"created_at"`
-	RemovedAt time.Time   `json:"removedAt" db:"removed_at"`
+	RemovedAt time.Time   `json:"-" db:"removed_at"`
 	PostId    uuid.UUID   `json:"-"`
 	LikedBy   []uuid.UUID `json:"-"`
 

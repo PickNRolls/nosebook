@@ -3,24 +3,24 @@ package posts
 import (
 	"net/http"
 	"nosebook/src/infra/helpers"
-	"nosebook/src/services"
+	"nosebook/src/presenters"
+	"nosebook/src/presenters/post_presenter/dto"
 	"nosebook/src/services/auth"
-	"nosebook/src/services/posting/commands"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
-func NewHandlerFind(postingService *services.PostingService) func(ctx *gin.Context) {
+func NewHandlerFind(postPresenter *presenters.PostPresenter) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		user := helpers.GetUserOrBadRequest(ctx)
 
-		command := commands.FindPostsCommand{}
+		filter := dto.QueryFilterDTO{}
 		var err error
 
 		ownerId := ctx.Query("ownerId")
 		if ownerId != "" {
-			command.Filter.OwnerId, err = uuid.Parse(ownerId)
+			filter.OwnerId, err = uuid.Parse(ownerId)
 			if err != nil {
 				ctx.Error(err)
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -30,7 +30,7 @@ func NewHandlerFind(postingService *services.PostingService) func(ctx *gin.Conte
 
 		authorId := ctx.Query("authorId")
 		if authorId != "" {
-			command.Filter.AuthorId, err = uuid.Parse(authorId)
+			filter.AuthorId, err = uuid.Parse(authorId)
 			if err != nil {
 				ctx.Error(err)
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -40,15 +40,15 @@ func NewHandlerFind(postingService *services.PostingService) func(ctx *gin.Conte
 
 		cursor := ctx.Query("cursor")
 		if cursor != "" {
-			command.Filter.Cursor = cursor
+			filter.Cursor = cursor
 		}
 
-		result := postingService.FindByFilter(&command, &auth.Auth{
+		result := postPresenter.FindByFilter(filter, &auth.Auth{
 			UserId: user.ID,
 		})
 		if result.Err != nil {
 			ctx.Error(result.Err)
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": result.Err.Error()})
+			ctx.JSON(http.StatusBadRequest, result)
 			return
 		}
 

@@ -6,6 +6,7 @@ import (
 	"nosebook/src/handlers/friendship"
 	"nosebook/src/handlers/posts"
 	"nosebook/src/handlers/users"
+	"nosebook/src/presenters"
 
 	"nosebook/src/infra/middlewares"
 
@@ -24,6 +25,8 @@ func main() {
 	postingService := services.NewPostingService(postgres.NewPostsRepository(db))
 	commentService := services.NewCommentService(postgres.NewCommentRepository(db))
 	userService := services.NewUserService(postgres.NewUserRepository(db))
+
+	postPresenter := presenters.NewPostPresenter().WithPostingService(postingService).WithPostRepository(postgres.NewPostPresenterRepository(db))
 
 	router := gin.Default()
 
@@ -44,7 +47,7 @@ func main() {
 
 	{
 		group := authRouter.Group("/posts")
-		group.GET("/", posts.NewHandlerFind(postingService))
+		group.GET("/", posts.NewHandlerFind(postPresenter))
 
 		group.POST("/publish", posts.NewHandlerPublish(postingService))
 		group.POST("/remove", posts.NewHandlerRemove(postingService))
