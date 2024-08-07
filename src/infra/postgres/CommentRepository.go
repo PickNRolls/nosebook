@@ -33,13 +33,71 @@ func (repo *CommentRepository) FindById(id uuid.UUID) *comments.Comment {
 		return nil
 	}
 
+	var likes []struct {
+		UserId uuid.UUID `db:"user_id"`
+	}
+	err = repo.db.Select(&likes, `SELECT
+		user_id
+			FROM comment_likes WHERE
+		comment_id = $1
+	`, id)
+
+	if err != nil {
+		return nil
+	}
+
+	for _, like := range likes {
+		comment.LikedBy = append(comment.LikedBy, like.UserId)
+	}
+
 	return &comment
 }
 
-func (repo *CommentRepository) CreateForPost(postId uuid.UUID, comment *comments.Comment) (*comments.Comment, error) {
+func (repo *CommentRepository) Save(comment *comments.Comment) (*comments.Comment, error) {
+	tx, err := repo.db.Beginx()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, event := range comment.Events {
+		switch event.Type() {
+		case comments.LIKED:
+			likeEvent := event.(*comments.CommentLikeEvent)
+			_, err := tx.Exec(`INSERT INTO comment_likes (
+				user_id,
+				comment_id
+			) VALUES (
+				$1,
+				$2
+			)`, likeEvent.UserId, comment.Id)
+			if err != nil {
+				tx.Rollback()
+				return nil, err
+			}
+
+		case comments.UNLIKED:
+			unlikeEvent := event.(*comments.CommentUnlikeEvent)
+			_, err := tx.Exec(`DELETE FROM comment_likes WHERE
+				user_id = $1 AND comment_id = $2
+			`, unlikeEvent.UserId, comment.Id)
+			if err != nil {
+				tx.Rollback()
+				return nil, err
+			}
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	return comment, nil
+}
+
+func (repo *CommentRepository) Create(comment *comments.Comment) (*comments.Comment, error) {
 	tx, err := repo.db.Begin()
 	if err != nil {
-		tx.Rollback()
 		return nil, err
 	}
 
@@ -60,17 +118,19 @@ func (repo *CommentRepository) CreateForPost(postId uuid.UUID, comment *comments
 		return nil, err
 	}
 
-	_, err = tx.Exec(`INSERT INTO post_comments (
-    post_id,
-    comment_id
-	) VALUES (
-    $1,
-    $2
-	)`, postId, comment.Id)
+	if comment.PostId != uuid.Nil {
+		_, err = tx.Exec(`INSERT INTO post_comments (
+    	post_id,
+    	comment_id
+		) VALUES (
+    	$1,
+    	$2
+		)`, comment.PostId, comment.Id)
 
-	if err != nil {
-		tx.Rollback()
-		return nil, err
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
 	}
 
 	if err := tx.Commit(); err != nil {

@@ -34,8 +34,9 @@ CREATE TABLE posts (
 );
 
 CREATE TABLE post_likes (
-  author_id UUID REFERENCES users (id),
-  post_id UUID REFERENCES posts (id)
+  user_id UUID REFERENCES users (id),
+  post_id UUID REFERENCES posts (id),
+  UNIQUE (user_id, post_id)
 );
 
 CREATE TABLE comments (
@@ -48,12 +49,13 @@ CREATE TABLE comments (
 
 CREATE TABLE post_comments (
   post_id UUID REFERENCES posts (id),
-  comment_id UUID REFERENCES comments (id)
+  comment_id UUID REFERENCES comments (id) UNIQUE
 );
 
 CREATE TABLE comment_likes (
-  author_id UUID REFERENCES users (id),
-  comment_id UUID REFERENCES comments (id)
+  user_id UUID REFERENCES users (id),
+  comment_id UUID REFERENCES comments (id),
+  UNIQUE (user_id, comment_id)
 );
 
 -- Data samples

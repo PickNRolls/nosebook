@@ -9,14 +9,12 @@ import (
 )
 
 type PostingService struct {
-	postRepo      interfaces.PostRepository
-	postLikesRepo interfaces.PostLikesRepository
+	postRepo interfaces.PostRepository
 }
 
-func NewPostingService(postRepo interfaces.PostRepository, postLikesRepo interfaces.PostLikesRepository) *PostingService {
+func NewPostingService(postRepo interfaces.PostRepository) *PostingService {
 	return &PostingService{
-		postRepo:      postRepo,
-		postLikesRepo: postLikesRepo,
+		postRepo: postRepo,
 	}
 }
 
@@ -49,17 +47,11 @@ func (s *PostingService) Like(c *commands.LikePostCommand, a *auth.Auth) (*posts
 		return nil, errors.New("No such post.")
 	}
 
-	like := s.postLikesRepo.Find(c.PostId, a.UserId)
-	if like == nil {
-		_, err := s.postLikesRepo.Create(posts.NewPostLike(c.PostId, a.UserId))
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		_, err := s.postLikesRepo.Remove(like)
-		if err != nil {
-			return nil, err
-		}
+	post.Like(a.UserId)
+	post, err := s.postRepo.Save(post)
+
+	if err != nil {
+		return nil, err
 	}
 
 	return post, nil

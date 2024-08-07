@@ -1,4 +1,4 @@
-package posts
+package comments
 
 import (
 	"net/http"
@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewHandlerComment(commentService *services.CommentService) func(ctx *gin.Context) {
+func NewHandlerPublishOnPost(commentService *services.CommentService) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		user := helpers.GetUserOrBadRequest(ctx)
 

@@ -9,20 +9,19 @@ import (
 )
 
 type CommentService struct {
-	commentRepo      interfaces.CommentRepository
-	commentLikesRepo interfaces.CommentLikesRepository
+	commentRepo interfaces.CommentRepository
 }
 
-func NewCommentService(commentRepo interfaces.CommentRepository, commentLikesRepo interfaces.CommentLikesRepository) *CommentService {
+func NewCommentService(commentRepo interfaces.CommentRepository) *CommentService {
 	return &CommentService{
-		commentRepo:      commentRepo,
-		commentLikesRepo: commentLikesRepo,
+		commentRepo: commentRepo,
 	}
 }
 
 func (s *CommentService) PublishOnPost(c *commands.PublishPostCommentCommand, a *auth.Auth) (*comments.Comment, error) {
-	comment := comments.NewComment(a.UserId, c.Message)
-	comment, err := s.commentRepo.CreateForPost(c.PostId, comment)
+	comment, err := s.commentRepo.Create(
+		comments.NewComment(a.UserId, c.Message).WithPost(c.PostId),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -45,17 +44,10 @@ func (s *CommentService) Like(c *commands.LikeCommentCommand, a *auth.Auth) (*co
 		return nil, errors.New("No such comment.")
 	}
 
-	like := s.commentLikesRepo.Find(c.CommentId, a.UserId)
-	if like == nil {
-		_, err := s.commentLikesRepo.Create(comments.NewCommentLike(c.CommentId, a.UserId))
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		_, err := s.commentLikesRepo.Remove(like)
-		if err != nil {
-			return nil, err
-		}
+	comment.Like(a.UserId)
+	comment, err := s.commentRepo.Save(comment)
+	if err != nil {
+		return nil, err
 	}
 
 	return comment, nil
