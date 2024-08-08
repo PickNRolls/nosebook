@@ -3,6 +3,7 @@ package postgres
 import (
 	"nosebook/src/domain/users"
 	"nosebook/src/services/common/interfaces"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -49,6 +50,16 @@ func (repo *UserRepository) Create(user *users.User) (*users.User, error) {
 	}
 
 	return user, nil
+}
+
+func (repo *UserRepository) UpdateActivity(userId uuid.UUID, t time.Time) error {
+	_, err := repo.db.Exec(`UPDATE users SET
+		last_activity_at = $1
+			WHERE
+		id = $2
+	`, t, userId)
+
+	return err
 }
 
 func (repo *UserRepository) FindAll() ([]*users.User, error) {

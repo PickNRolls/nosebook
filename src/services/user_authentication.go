@@ -7,6 +7,7 @@ import (
 	common_interfaces "nosebook/src/services/common/interfaces"
 	"nosebook/src/services/user_authentication/commands"
 	"nosebook/src/services/user_authentication/interfaces"
+	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -72,8 +73,16 @@ func (s *UserAuthenticationService) MarkSessionActive(sessionId uuid.UUID) error
 		return errors.New("Invalid session id")
 	}
 
-	session.Refresh()
+	err := session.Refresh()
+	if err != nil {
+		return err
+	}
 
-	_, err := s.sessionRepo.Update(session)
+	_, err = s.sessionRepo.Update(session)
+	if err != nil {
+		return nil
+	}
+
+	err = s.userRepo.UpdateActivity(session.UserId, time.Now())
 	return err
 }

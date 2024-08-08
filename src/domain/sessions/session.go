@@ -25,13 +25,13 @@ func NewSession(userId uuid.UUID) *Session {
 	}
 }
 
-func (s *Session) Refresh() (*Session, error) {
+func (s *Session) Refresh() error {
 	now := time.Now()
 
 	if s.ExpiresAt.Before(now) {
-		return nil, errors.New("Can't refresh session, it is expired.")
+		return errors.New("Can't refresh session, it is expired.")
 	}
 
 	s.ExpiresAt = now.Add(1 * time.Hour)
-	return s, nil
+	return nil
 }
