@@ -6,21 +6,23 @@ import (
 )
 
 type User struct {
-	ID        uuid.UUID `json:"id" db:"id"`
-	FirstName string    `json:"firstName" db:"first_name"`
-	LastName  string    `json:"lastName" db:"last_name"`
-	Nick      string    `json:"nick" db:"nick"`
-	Passhash  string    `json:"passhash" db:"passhash"`
-	CreatedAt time.Time `json:"createdAt" db:"created_at"`
+	ID             uuid.UUID `json:"id" db:"id"`
+	FirstName      string    `json:"firstName" db:"first_name"`
+	LastName       string    `json:"lastName" db:"last_name"`
+	Nick           string    `json:"nick" db:"nick"`
+	Passhash       string    `json:"passhash" db:"passhash"`
+	CreatedAt      time.Time `json:"createdAt" db:"created_at"`
+	LastActivityAt time.Time `json:"lastActivityAt" db:"last_activity_at"`
 }
 
 func NewUser(firstName string, lastName string, nick string, passhash string) *User {
 	return &User{
-		ID:        uuid.New(),
-		FirstName: firstName,
-		LastName:  lastName,
-		Nick:      nick,
-		Passhash:  passhash,
-		CreatedAt: time.Now(),
+		ID:             uuid.New(),
+		FirstName:      firstName,
+		LastName:       lastName,
+		Nick:           nick,
+		Passhash:       passhash,
+		CreatedAt:      time.Now(),
+		LastActivityAt: time.Now(),
 	}
 }

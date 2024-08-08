@@ -7,7 +7,6 @@ import (
 	common_interfaces "nosebook/src/services/common/interfaces"
 	"nosebook/src/services/user_authentication/commands"
 	"nosebook/src/services/user_authentication/interfaces"
-	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -48,16 +47,14 @@ func (s *UserAuthenticationService) LogoutUser() (*users.User, error) {
 	return users.NewUser("", "", "", ""), nil
 }
 
-func (s *UserAuthenticationService) RegenerateSession(c *commands.RegenerateSessionCommand) (*sessions.Session, error) {
-	existingSession := s.sessionRepo.FindByUserId(c.UserId)
-	if existingSession != nil {
-		existingSession.LastActivityAt = time.Now()
-		existingSession.Value = uuid.New()
-		return s.sessionRepo.Update(existingSession)
+func (s *UserAuthenticationService) CreateSession(c *commands.CreateSessionCommand) (*sessions.Session, error) {
+	session := sessions.NewSession(c.UserId)
+	session, err := s.sessionRepo.Create(session)
+	if err != nil {
+		return nil, err
 	}
 
-	session := sessions.NewSession(c.UserId)
-	return s.sessionRepo.Create(session)
+	return session, nil
 }
 
 func (s *UserAuthenticationService) TryGetUserBySessionId(c *commands.TryGetUserBySessionIdCommand) (*users.User, error) {
@@ -75,7 +72,8 @@ func (s *UserAuthenticationService) MarkSessionActive(sessionId uuid.UUID) error
 		return errors.New("Invalid session id")
 	}
 
-	session.LastActivityAt = time.Now()
+	session.Refresh()
+
 	_, err := s.sessionRepo.Update(session)
 	return err
 }

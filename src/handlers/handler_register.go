@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"net/http"
+	"nosebook/src/domain/sessions"
+	"nosebook/src/domain/users"
 	"nosebook/src/services"
 	"nosebook/src/services/user_authentication/commands"
 
@@ -23,16 +25,21 @@ func NewHandlerRegister(userAuthenticationService *services.UserAuthenticationSe
 			return
 		}
 
-		session, err := userAuthenticationService.RegenerateSession(&commands.RegenerateSessionCommand{
+		session, err := userAuthenticationService.CreateSession(&commands.CreateSessionCommand{
 			UserId: user.ID,
 		})
 
 		if err != nil {
 			ctx.Error(err)
-		} else {
-			ctx.SetCookie("nosebook_session", session.Value.String(), 60*60, "/", "localhost", true, true)
 		}
 
-		ctx.JSON(http.StatusOK, user)
+		result := &struct {
+			User    *users.User       `json:"user"`
+			Session *sessions.Session `json:"session"`
+		}{
+			User:    user,
+			Session: session,
+		}
+		ctx.JSON(http.StatusOK, result)
 	}
 }

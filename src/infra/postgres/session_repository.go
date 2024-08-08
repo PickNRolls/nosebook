@@ -20,15 +20,15 @@ func NewSessionRepository(db *sqlx.DB) interfaces.SessionRepository {
 
 func (repo *SessionRepository) Create(session *sessions.Session) (*sessions.Session, error) {
 	_, err := repo.db.NamedExec(`INSERT INTO user_sessions (
-	  session,
+	  session_id,
 	  user_id,
 	  created_at,
-	  last_activity_at
+	  expires_at
 	) VALUES (
-	  :session,
+	  :session_id,
 	  :user_id,
 	  :created_at,
-	  :last_activity_at
+	  :expires_at
 	)`, session)
 	if err != nil {
 		return nil, err
@@ -39,10 +39,9 @@ func (repo *SessionRepository) Create(session *sessions.Session) (*sessions.Sess
 
 func (repo *SessionRepository) Update(session *sessions.Session) (*sessions.Session, error) {
 	_, err := repo.db.NamedExec(`UPDATE user_sessions SET
-		session = :session,
-		last_activity_at = :last_activity_at
+		expires_at = :expires_at
 			WHERE
-		user_id = :user_id
+		user_id = :user_id AND session_id = :session_id
 	`, session)
 	if err != nil {
 		return nil, err
@@ -54,10 +53,10 @@ func (repo *SessionRepository) Update(session *sessions.Session) (*sessions.Sess
 func (repo *SessionRepository) FindByUserId(userId uuid.UUID) *sessions.Session {
 	session := sessions.Session{}
 	err := repo.db.Get(&session, `SELECT
-		session,
+		session_id,
 		user_id,
 		created_at,
-		last_activity_at
+		expires_at
 			FROM user_sessions WHERE
 		user_id = $1
 	`, userId)
@@ -72,12 +71,12 @@ func (repo *SessionRepository) FindByUserId(userId uuid.UUID) *sessions.Session 
 func (repo *SessionRepository) FindById(id uuid.UUID) *sessions.Session {
 	session := sessions.Session{}
 	err := repo.db.Get(&session, `SELECT
-		session,
+		session_id,
 		user_id,
 		created_at,
-		last_activity_at
+		expires_at
 			FROM user_sessions WHERE
-		session = $1
+		session_id = $1
 	`, id)
 
 	if err != nil {

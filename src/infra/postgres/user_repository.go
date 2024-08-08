@@ -25,21 +25,24 @@ func (repo *UserRepository) Create(user *users.User) (*users.User, error) {
 	  last_name,
 	  passhash,
 	  nick,
-	  created_at
+	  created_at,
+	  last_activity_at
 	) VALUES (
 		:id,
 	  :first_name,
 	  :last_name,
 	  :passhash,
 	  :nick,
-	  :created_at
+	  :created_at,
+	  :last_activity_at
 	) RETURNING (
 		id,
 		first_name,
 		last_name,
 		passhash,
 		nick,
-		created_at
+		created_at,
+		last_activity_at
 	)`, user)
 	if err != nil {
 		return nil, err
@@ -56,7 +59,8 @@ func (repo *UserRepository) FindAll() ([]*users.User, error) {
 		last_name,
 		nick,
 		passhash,
-		created_at
+		created_at,
+		last_activity_at
 			FROM users
 	`)
 
@@ -75,7 +79,8 @@ func (repo *UserRepository) FindByNick(nick string) *users.User {
 	  last_name,
 	  nick,
 	  passhash,
-	  created_at
+	  created_at,
+	  last_activity_at
 	    FROM users WHERE
     nick = $1
 	`, nick)
@@ -95,7 +100,8 @@ func (repo *UserRepository) FindById(id uuid.UUID) *users.User {
 		last_name,
 		nick,
 		passhash,
-		created_at
+		created_at,
+		last_activity_at
 			FROM users WHERE
 		id = $1
 	`, id)

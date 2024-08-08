@@ -12,12 +12,12 @@ func NewSessionMiddleware(userAuthenticationService *services.UserAuthentication
 	return func(ctx *gin.Context) {
 		defer ctx.Next()
 
-		sessionCookie, err := ctx.Cookie("nosebook_session")
-		if err != nil {
+		sessionHeader := ctx.GetHeader("X-Auth-Session-Id")
+		if sessionHeader == "" {
 			return
 		}
 
-		sessionId, err := uuid.Parse(sessionCookie)
+		sessionId, err := uuid.Parse(sessionHeader)
 		if err != nil {
 			return
 		}
@@ -34,6 +34,5 @@ func NewSessionMiddleware(userAuthenticationService *services.UserAuthentication
 		if err := userAuthenticationService.MarkSessionActive(sessionId); err != nil {
 			ctx.Error(err)
 		}
-		ctx.SetCookie("nosebook_session", sessionId.String(), 60*60, "/", "localhost", true, true)
 	}
 }

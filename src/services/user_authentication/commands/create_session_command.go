@@ -2,6 +2,6 @@ package commands
 
 import "github.com/google/uuid"
 
-type RegenerateSessionCommand struct {
+type CreateSessionCommand struct {
 	UserId uuid.UUID
 }
