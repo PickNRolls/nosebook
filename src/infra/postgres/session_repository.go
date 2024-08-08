@@ -37,6 +37,23 @@ func (repo *SessionRepository) Create(session *sessions.Session) (*sessions.Sess
 	return session, nil
 }
 
+func (repo *SessionRepository) Remove(id uuid.UUID) (*sessions.Session, error) {
+	var session sessions.Session
+	err := repo.db.Get(&session, `DELETE FROM user_sessions WHERE
+		session_id = $1
+			RETURNING
+		session_id,
+		user_id,
+		created_at,
+		expires_at
+	`, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &session, nil
+}
+
 func (repo *SessionRepository) Update(session *sessions.Session) (*sessions.Session, error) {
 	_, err := repo.db.NamedExec(`UPDATE user_sessions SET
 		expires_at = :expires_at

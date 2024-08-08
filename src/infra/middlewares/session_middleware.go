@@ -30,6 +30,7 @@ func NewSessionMiddleware(userAuthenticationService *services.UserAuthentication
 		}
 
 		ctx.Set("user", user)
+		ctx.Set("sessionId", sessionId)
 
 		if err := userAuthenticationService.MarkSessionActive(sessionId); err != nil {
 			ctx.Error(err)

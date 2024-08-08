@@ -4,6 +4,7 @@ import (
 	"errors"
 	"nosebook/src/domain/sessions"
 	"nosebook/src/domain/users"
+	"nosebook/src/services/auth"
 	common_interfaces "nosebook/src/services/common/interfaces"
 	"nosebook/src/services/user_authentication/commands"
 	"nosebook/src/services/user_authentication/interfaces"
@@ -40,12 +41,22 @@ func (s *UserAuthenticationService) RegisterUser(c *commands.RegisterUserCommand
 	return s.userRepo.Create(user)
 }
 
-func (s *UserAuthenticationService) LoginUser() (*users.User, error) {
+func (s *UserAuthenticationService) Login() (*users.User, error) {
 	return users.NewUser("", "", "", ""), nil
 }
 
-func (s *UserAuthenticationService) LogoutUser() (*users.User, error) {
-	return users.NewUser("", "", "", ""), nil
+func (s *UserAuthenticationService) Logout(a *auth.Auth) (*sessions.Session, error) {
+	session := s.sessionRepo.FindById(a.SessionId)
+	if session == nil {
+		return nil, errors.New("Can't logout, session does not exist.")
+	}
+
+	session, err := s.sessionRepo.Remove(a.SessionId)
+	if err != nil {
+		return nil, err
+	}
+
+	return session, nil
 }
 
 func (s *UserAuthenticationService) CreateSession(c *commands.CreateSessionCommand) (*sessions.Session, error) {
