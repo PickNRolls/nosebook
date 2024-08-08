@@ -13,5 +13,6 @@ type PostDTO struct {
 	Message          string     `json:"message"`
 	CreatedAt        time.Time  `json:"createdAt"`
 	LikesCount       int        `json:"likesCount"`
+	LikedByUser      bool       `json:"likedByUser"`
 	RandomFiveLikers []*UserDTO `json:"randomFiveLikers"`
 }

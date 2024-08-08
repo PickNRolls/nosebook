@@ -33,7 +33,7 @@ func (p *PostPresenter) WithPostRepository(repo interfaces.PostRepository) *Post
 	return p
 }
 
-func (p *PostPresenter) mapPosts(posts []*posts.Post) ([]*dto.PostDTO, error) {
+func (p *PostPresenter) mapPosts(posts []*posts.Post, a *auth.Auth) ([]*dto.PostDTO, error) {
 	if len(posts) == 0 {
 		return make([]*dto.PostDTO, 0), nil
 	}
@@ -96,6 +96,7 @@ func (p *PostPresenter) mapPosts(posts []*posts.Post) ([]*dto.PostDTO, error) {
 		postDTO.Id = post.Id
 		postDTO.Message = post.Message
 		postDTO.CreatedAt = post.CreatedAt
+		postDTO.LikedByUser = slices.Contains(post.LikedBy, a.UserId)
 
 		for _, author := range authors {
 			if post.AuthorId == author.Id {
@@ -140,7 +141,7 @@ func (p *PostPresenter) FindByFilter(filter dto.QueryFilterDTO, a *auth.Auth) *d
 		RemainingCount: result.RemainingCount,
 	}
 
-	resultDTO.Data, resultDTO.Err = p.mapPosts(result.Data)
+	resultDTO.Data, resultDTO.Err = p.mapPosts(result.Data, a)
 	return resultDTO
 }
 
@@ -150,7 +151,7 @@ func (p *PostPresenter) Publish(c *commands.PublishPostCommand, a *auth.Auth) (*
 		return nil, err
 	}
 
-	DTOs, err := p.mapPosts([]*posts.Post{post})
+	DTOs, err := p.mapPosts([]*posts.Post{post}, a)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +165,7 @@ func (p *PostPresenter) Remove(c *commands.RemovePostCommand, a *auth.Auth) (*dt
 		return nil, err
 	}
 
-	DTOs, err := p.mapPosts([]*posts.Post{post})
+	DTOs, err := p.mapPosts([]*posts.Post{post}, a)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +179,7 @@ func (p *PostPresenter) Like(c *commands.LikePostCommand, a *auth.Auth) (*dto.Po
 		return nil, err
 	}
 
-	DTOs, err := p.mapPosts([]*posts.Post{post})
+	DTOs, err := p.mapPosts([]*posts.Post{post}, a)
 	if err != nil {
 		return nil, err
 	}
