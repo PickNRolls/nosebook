@@ -13,7 +13,7 @@ import (
 
 func NewHandlerFind(postPresenter *presenters.PostPresenter) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
-		user := helpers.GetUserOrBadRequest(ctx)
+		user := helpers.GetUserOrForbidden(ctx)
 
 		filter := dto.QueryFilterDTO{}
 		var err error

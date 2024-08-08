@@ -12,7 +12,7 @@ import (
 
 func NewHandlerLike(postPresenter *presenters.PostPresenter) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
-		user := helpers.GetUserOrBadRequest(ctx)
+		user := helpers.GetUserOrForbidden(ctx)
 
 		var command commands.LikePostCommand
 		if err := ctx.ShouldBindJSON(&command); err != nil {

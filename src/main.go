@@ -37,6 +37,8 @@ func main() {
 	authRouter := router.Group("/")
 	authRouter.Use(middlewares.NewAuthMiddleware())
 
+	authRouter.GET("/whoami", handlers.NewHandlerWhoAmI())
+
 	{
 		group := authRouter.Group("/friendship")
 		group.POST("/add", friendship.NewHandlerAdd(friendshipService))

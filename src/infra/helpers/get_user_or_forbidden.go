@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetUserOrBadRequest(ctx *gin.Context) *users.User {
+func GetUserOrForbidden(ctx *gin.Context) *users.User {
 	user, _ := GetUserOr(ctx, func() {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "No user"})
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "You are not authorized"})
 	})
 
 	return user

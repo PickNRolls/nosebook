@@ -12,7 +12,7 @@ import (
 
 func NewHandlerRemove(postPresenter *presenters.PostPresenter) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
-		user := helpers.GetUserOrBadRequest(ctx)
+		user := helpers.GetUserOrForbidden(ctx)
 
 		var command commands.RemovePostCommand
 		if err := ctx.ShouldBindJSON(&command); err != nil {

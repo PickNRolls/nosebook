@@ -12,7 +12,7 @@ import (
 
 func NewHandlerLike(commentService *services.CommentService) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
-		user := helpers.GetUserOrBadRequest(ctx)
+		user := helpers.GetUserOrForbidden(ctx)
 
 		var command commands.LikeCommentCommand
 		if err := ctx.ShouldBindJSON(&command); err != nil {
