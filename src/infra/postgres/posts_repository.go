@@ -48,7 +48,7 @@ func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) structs.Qu
 		id := substrings[0]
 		createdAt := substrings[1]
 
-		timestamp, err := time.Parse(time.RFC3339, createdAt)
+		timestamp, err := time.Parse(time.RFC3339Nano, createdAt)
 		if err != nil {
 			result.Err = errors.New("Invalid cursor.")
 			return result
@@ -106,7 +106,7 @@ func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) structs.Qu
 		}
 
 		result.RemainingCount = remainingCount.Count
-		result.Next = fmt.Sprintf(`%v/%v`, lastPost.Id, lastPost.CreatedAt.Format(time.RFC3339))
+		result.Next = fmt.Sprintf(`%v/%v`, lastPost.Id, lastPost.CreatedAt.Format(time.RFC3339Nano))
 	}
 
 	postIds := make([]uuid.UUID, 0)
