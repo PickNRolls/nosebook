@@ -32,7 +32,9 @@ func main() {
 
 	router.Use(middlewares.NewSessionMiddleware(userAuthenticationService))
 
-	router.POST("/register", handlers.NewHandlerRegister(userAuthenticationService))
+	unauthRouter := router.Group("/", middlewares.NewNotAuthMiddleware())
+	unauthRouter.POST("/register", handlers.NewHandlerRegister(userAuthenticationService))
+	unauthRouter.POST("/login", handlers.NewHandlerLogin(userAuthenticationService))
 
 	authRouter := router.Group("/")
 	authRouter.Use(middlewares.NewAuthMiddleware())

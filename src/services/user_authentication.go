@@ -26,7 +26,7 @@ func NewUserAuthenticationService(userRepo common_interfaces.UserRepository, ses
 	}
 }
 
-func (s *UserAuthenticationService) RegisterUser(c *commands.RegisterUserCommand) (*users.User, error) {
+func (s *UserAuthenticationService) RegisterUser(c *commands.RegisterUserCommand) (*auth.AuthResult, error) {
 	existingUser := s.userRepo.FindByNick(c.Nick)
 	if existingUser != nil {
 		return nil, errors.New("Can't register user with such nickname.")
@@ -38,11 +38,46 @@ func (s *UserAuthenticationService) RegisterUser(c *commands.RegisterUserCommand
 	}
 
 	user := users.NewUser(c.FirstName, c.LastName, c.Nick, string(passhash))
-	return s.userRepo.Create(user)
+	user, err = s.userRepo.Create(user)
+	if err != nil {
+		return nil, err
+	}
+
+	session, err := s.CreateSession(&commands.CreateSessionCommand{
+		UserId: user.ID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &auth.AuthResult{
+		User:    user,
+		Session: session,
+	}, nil
 }
 
-func (s *UserAuthenticationService) Login() (*users.User, error) {
-	return users.NewUser("", "", "", ""), nil
+func (s *UserAuthenticationService) Login(c *commands.LoginCommand) (*auth.AuthResult, error) {
+	existingUser := s.userRepo.FindByNick(c.Nick)
+	if existingUser == nil {
+		return nil, errors.New("There is no user with such nickname.")
+	}
+
+	err := bcrypt.CompareHashAndPassword([]byte(existingUser.Passhash), []byte(c.Password))
+	if err != nil {
+		return nil, errors.New("Incorrect password.")
+	}
+
+	session, err := s.CreateSession(&commands.CreateSessionCommand{
+		UserId: existingUser.ID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &auth.AuthResult{
+		User:    existingUser,
+		Session: session,
+	}, nil
 }
 
 func (s *UserAuthenticationService) Logout(a *auth.Auth) (*sessions.Session, error) {

@@ -8,15 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewHandlerRegister(userAuthenticationService *services.UserAuthenticationService) func(ctx *gin.Context) {
+func NewHandlerLogin(userAuthenticationService *services.UserAuthenticationService) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
-		var command commands.RegisterUserCommand
+		var command commands.LoginCommand
 		if err := ctx.ShouldBindJSON(&command); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		authResult, err := userAuthenticationService.RegisterUser(&command)
+		authResult, err := userAuthenticationService.Login(&command)
 		if err != nil {
 			ctx.Error(err)
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

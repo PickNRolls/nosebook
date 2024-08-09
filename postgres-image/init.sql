@@ -10,8 +10,8 @@ CREATE TABLE users (
 );
 
 CREATE TABLE user_sessions (
-  user_id UUID REFERENCES users (id) UNIQUE,
-  session_id UUID NOT NULL,
+  user_id UUID REFERENCES users (id),
+  session_id UUID NOT NULL UNIQUE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   expires_at TIMESTAMP NOT NULL
 );
