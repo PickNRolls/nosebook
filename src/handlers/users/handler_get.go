@@ -11,7 +11,7 @@ import (
 
 func NewHandlerGet(userService *services.UserService) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
-		id := ctx.GetString("id")
+		id := ctx.Param("id")
 		if id == "" {
 			ctx.Error(errors.New("No user id"))
 			ctx.Abort()
