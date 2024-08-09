@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"net/http"
 	"nosebook/src/infra/helpers"
 	"nosebook/src/services"
 
@@ -15,10 +14,9 @@ func NewHandlerLogout(userAuthenticationService *services.UserAuthenticationServ
 		session, err := userAuthenticationService.Logout(auth)
 		if err != nil {
 			ctx.Error(err)
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		ctx.JSON(http.StatusOK, session)
+		ctx.Set("data", session)
 	}
 }

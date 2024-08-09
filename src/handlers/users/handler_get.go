@@ -1,7 +1,7 @@
 package users
 
 import (
-	"net/http"
+	"errors"
 	"nosebook/src/services"
 	"nosebook/src/services/user_service/commands"
 
@@ -11,22 +11,28 @@ import (
 
 func NewHandlerGet(userService *services.UserService) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
-		id := ctx.Param("id")
+		id := ctx.GetString("id")
 		if id == "" {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "no user id"})
+			ctx.Error(errors.New("No user id"))
+			ctx.Abort()
 			return
 		}
 		uuid, err := uuid.Parse(id)
+		if err != nil {
+			ctx.Error(err)
+			ctx.Abort()
+			return
+		}
 
 		user, err := userService.GetUser(&commands.GetUserCommand{
 			Id: uuid,
 		})
 		if err != nil {
 			ctx.Error(err)
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			ctx.Abort()
 			return
 		}
 
-		ctx.JSON(http.StatusOK, user)
+		ctx.Set("data", user)
 	}
 }

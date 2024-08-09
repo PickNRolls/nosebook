@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"net/http"
+	"errors"
 	"nosebook/src/infra/helpers"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +14,8 @@ func NewNotAuthMiddleware() func(ctx *gin.Context) {
 		})
 
 		if ok {
-			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Only unauthorized users can do it"})
+			ctx.Error(errors.New("Only unauthorized users can do it"))
+			ctx.Abort()
 		}
 	}
 }

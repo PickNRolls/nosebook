@@ -140,6 +140,9 @@ func (p *PostPresenter) FindByFilter(filter dto.QueryFilterDTO, a *auth.Auth) *d
 		Next:           result.Next,
 		RemainingCount: result.RemainingCount,
 	}
+	if resultDTO.Err != nil {
+		return resultDTO
+	}
 
 	resultDTO.Data, resultDTO.Err = p.mapPosts(result.Data, a)
 	return resultDTO

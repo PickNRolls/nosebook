@@ -1,7 +1,7 @@
 package helpers
 
 import (
-	"net/http"
+	"errors"
 	"nosebook/src/services/auth"
 
 	"github.com/gin-gonic/gin"
@@ -9,7 +9,8 @@ import (
 
 func GetAuthOrForbidden(ctx *gin.Context) *auth.Auth {
 	a, _ := GetAuthOr(ctx, func() {
-		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "You are not authorized"})
+		ctx.Error(errors.New("You are not authorized"))
+		ctx.Abort()
 	})
 
 	return a

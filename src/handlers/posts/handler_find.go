@@ -1,7 +1,7 @@
 package posts
 
 import (
-	"net/http"
+	"fmt"
 	"nosebook/src/infra/helpers"
 	"nosebook/src/presenters"
 	"nosebook/src/presenters/post_presenter/dto"
@@ -23,7 +23,6 @@ func NewHandlerFind(postPresenter *presenters.PostPresenter) func(ctx *gin.Conte
 			filter.OwnerId, err = uuid.Parse(ownerId)
 			if err != nil {
 				ctx.Error(err)
-				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 				return
 			}
 		}
@@ -33,7 +32,6 @@ func NewHandlerFind(postPresenter *presenters.PostPresenter) func(ctx *gin.Conte
 			filter.AuthorId, err = uuid.Parse(authorId)
 			if err != nil {
 				ctx.Error(err)
-				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 				return
 			}
 		}
@@ -46,12 +44,12 @@ func NewHandlerFind(postPresenter *presenters.PostPresenter) func(ctx *gin.Conte
 		result := postPresenter.FindByFilter(filter, &auth.Auth{
 			UserId: user.ID,
 		})
+		fmt.Println(result)
 		if result.Err != nil {
 			ctx.Error(result.Err)
-			ctx.JSON(http.StatusBadRequest, result)
 			return
 		}
 
-		ctx.JSON(http.StatusOK, result)
+		ctx.Set("data", result)
 	}
 }

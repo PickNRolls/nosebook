@@ -1,7 +1,6 @@
 package posts
 
 import (
-	"net/http"
 	"nosebook/src/infra/helpers"
 	"nosebook/src/presenters"
 	"nosebook/src/services/auth"
@@ -16,7 +15,8 @@ func NewHandlerLike(postPresenter *presenters.PostPresenter) func(ctx *gin.Conte
 
 		var command commands.LikePostCommand
 		if err := ctx.ShouldBindJSON(&command); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			ctx.Error(err)
+			ctx.Abort()
 			return
 		}
 
@@ -25,10 +25,10 @@ func NewHandlerLike(postPresenter *presenters.PostPresenter) func(ctx *gin.Conte
 		})
 		if err != nil {
 			ctx.Error(err)
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			ctx.Abort()
 			return
 		}
 
-		ctx.JSON(http.StatusOK, post)
+		ctx.Set("data", post)
 	}
 }

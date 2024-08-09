@@ -1,6 +1,6 @@
 package commands
 
 type LoginCommand struct {
-	Nick     string `json:"nick"`
-	Password string `json:"password"`
+	Nick     string `json:"nick" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }

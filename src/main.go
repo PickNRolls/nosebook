@@ -30,6 +30,8 @@ func main() {
 
 	router := gin.Default()
 
+	router.Use(middlewares.NewPresenterMiddleware())
+	router.Use(middlewares.NewErrorHandlerMiddleware())
 	router.Use(middlewares.NewSessionMiddleware(userAuthenticationService))
 
 	unauthRouter := router.Group("/", middlewares.NewNotAuthMiddleware())
