@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"errors"
+	"nosebook/src/infra/errors"
 	"nosebook/src/infra/helpers"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +14,7 @@ func NewNotAuthMiddleware() func(ctx *gin.Context) {
 		})
 
 		if ok {
-			ctx.Error(errors.New("Only unauthorized users can do it"))
+			ctx.Error(errors.NewAuthorizedError())
 			ctx.Abort()
 		}
 	}

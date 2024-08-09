@@ -1,6 +1,8 @@
 package dto
 
+import "nosebook/src/errors"
+
 type ResponseDTO struct {
-	Errors []error `json:"errors"`
-	Data   any     `json:"data"`
+	Errors []*errors.Error `json:"errors"`
+	Data   any             `json:"data"`
 }

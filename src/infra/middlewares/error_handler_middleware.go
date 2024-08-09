@@ -1,21 +1,20 @@
 package middlewares
 
 import (
-	"fmt"
-
 	"github.com/gin-gonic/gin"
+	"nosebook/src/errors"
 )
 
 func NewErrorHandlerMiddleware() func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		ctx.Next()
 
-		errors := []error{}
-		for _, err := range ctx.Errors {
-			fmt.Println(err)
-			errors = append(errors, err)
+		errList := []*errors.Error{}
+		for _, ginErr := range ctx.Errors {
+			err := errors.From(ginErr.Err)
+			errList = append(errList, err)
 		}
 
-		ctx.Set("errors", errors)
+		ctx.Set("errors", errList)
 	}
 }

@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"net/http"
+	"nosebook/src/errors"
 	"nosebook/src/infra/middlewares/presenter_middleware/dto"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +21,7 @@ func NewPresenterMiddleware() func(ctx *gin.Context) {
 
 		errorsAny, exists := ctx.Get("errors")
 		if exists {
-			errors, ok := errorsAny.([]error)
+			errors, ok := errorsAny.([]*errors.Error)
 			if !ok {
 				ctx.AbortWithStatusJSON(http.StatusInternalServerError, responseDTO)
 				return
