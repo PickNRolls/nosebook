@@ -81,7 +81,7 @@ func (s *UserAuthenticationService) TryGetUserBySessionId(c *commands.TryGetUser
 func (s *UserAuthenticationService) MarkSessionActive(sessionId uuid.UUID) error {
 	session := s.sessionRepo.FindById(sessionId)
 	if session == nil {
-		return errors.New("Invalid session id")
+		return errors.New("Invalid session id.")
 	}
 
 	err := session.Refresh()
