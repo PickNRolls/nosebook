@@ -1,7 +1,6 @@
 package posts
 
 import (
-	"fmt"
 	"nosebook/src/infra/helpers"
 	"nosebook/src/presenters"
 	"nosebook/src/presenters/post_presenter/dto"
@@ -44,7 +43,6 @@ func NewHandlerFind(postPresenter *presenters.PostPresenter) func(ctx *gin.Conte
 		result := postPresenter.FindByFilter(filter, &auth.Auth{
 			UserId: user.ID,
 		})
-		fmt.Println(result)
 		if result.Err != nil {
 			ctx.Error(result.Err)
 			return

@@ -114,33 +114,35 @@ func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) structs.Qu
 		postIds = append(postIds, post.Id)
 	}
 
-	var likes []struct {
-		UserId uuid.UUID `db:"user_id"`
-		PostId uuid.UUID `db:"post_id"`
-	}
+	if len(postIds) > 0 {
+		var likes []struct {
+			UserId uuid.UUID `db:"user_id"`
+			PostId uuid.UUID `db:"post_id"`
+		}
 
-	query, args, err := sqlx.In(`SELECT
+		query, args, err := sqlx.In(`SELECT
 		user_id,
 		post_id
 		  FROM post_likes WHERE
 		post_id IN (?)
 	`, postIds)
-	if err != nil {
-		result.Err = err
-		return result
-	}
+		if err != nil {
+			result.Err = err
+			return result
+		}
 
-	query = repo.db.Rebind(query)
-	err = repo.db.Select(&likes, query, args...)
-	if err != nil {
-		result.Err = err
-		return result
-	}
+		query = repo.db.Rebind(query)
+		err = repo.db.Select(&likes, query, args...)
+		if err != nil {
+			result.Err = err
+			return result
+		}
 
-	for _, like := range likes {
-		for _, post := range result.Data {
-			if like.PostId == post.Id {
-				post.LikedBy = append(post.LikedBy, like.UserId)
+		for _, like := range likes {
+			for _, post := range result.Data {
+				if like.PostId == post.Id {
+					post.LikedBy = append(post.LikedBy, like.UserId)
+				}
 			}
 		}
 	}
