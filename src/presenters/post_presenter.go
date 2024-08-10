@@ -97,6 +97,7 @@ func (p *PostPresenter) mapPosts(posts []*posts.Post, a *auth.Auth) ([]*dto.Post
 		postDTO.Message = post.Message
 		postDTO.CreatedAt = post.CreatedAt
 		postDTO.LikedByUser = slices.Contains(post.LikedBy, a.UserId)
+		postDTO.CanBeRemovedByUser = post.CanBeRemovedBy(a.UserId)
 
 		for _, author := range authors {
 			if post.AuthorId == author.Id {

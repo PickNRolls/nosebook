@@ -46,3 +46,7 @@ func (post *Post) Like(userId uuid.UUID) *Post {
 	post.Events = append(post.Events, NewPostLikeEvent(userId))
 	return post
 }
+
+func (post *Post) CanBeRemovedBy(userId uuid.UUID) bool {
+	return post.OwnerId == userId || post.AuthorId == userId
+}

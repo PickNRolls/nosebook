@@ -4,4 +4,5 @@
 
 - Presenters
 
-- Whoami endpoint
+- posts.Post CanBeRemovedBy - кажется логика должна лежать в сервисе, например, если начнут добавляться более сложные правила,
+  для которых нужен будет data access layer
