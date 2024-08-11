@@ -1,9 +1,9 @@
 package services
 
 import (
-	"errors"
 	"nosebook/src/domain/sessions"
 	"nosebook/src/domain/users"
+	"nosebook/src/errors"
 	"nosebook/src/services/auth"
 	common_interfaces "nosebook/src/services/common/interfaces"
 	"nosebook/src/services/user_authentication/commands"
@@ -29,7 +29,7 @@ func NewUserAuthenticationService(userRepo common_interfaces.UserRepository, ses
 func (s *UserAuthenticationService) RegisterUser(c *commands.RegisterUserCommand) (*auth.AuthResult, error) {
 	existingUser := s.userRepo.FindByNick(c.Nick)
 	if existingUser != nil {
-		return nil, errors.New("Can't register user with such nickname.")
+		return nil, errors.New("NickError", "Логин занят")
 	}
 
 	passhash, err := bcrypt.GenerateFromPassword([]byte(c.Password), bcrypt.MinCost)
@@ -59,12 +59,12 @@ func (s *UserAuthenticationService) RegisterUser(c *commands.RegisterUserCommand
 func (s *UserAuthenticationService) Login(c *commands.LoginCommand) (*auth.AuthResult, error) {
 	existingUser := s.userRepo.FindByNick(c.Nick)
 	if existingUser == nil {
-		return nil, errors.New("There is no user with such nickname.")
+		return nil, errors.New("NickError", "Пользователь с таким логином отсутствует")
 	}
 
 	err := bcrypt.CompareHashAndPassword([]byte(existingUser.Passhash), []byte(c.Password))
 	if err != nil {
-		return nil, errors.New("Incorrect password.")
+		return nil, errors.New("PasswordError", "Некорректный пароль")
 	}
 
 	session, err := s.CreateSession(&commands.CreateSessionCommand{
@@ -83,7 +83,7 @@ func (s *UserAuthenticationService) Login(c *commands.LoginCommand) (*auth.AuthR
 func (s *UserAuthenticationService) Logout(a *auth.Auth) (*sessions.Session, error) {
 	session := s.sessionRepo.FindById(a.SessionId)
 	if session == nil {
-		return nil, errors.New("Can't logout, session does not exist.")
+		return nil, errors.New("LogoutError", "Сессии не существует")
 	}
 
 	session, err := s.sessionRepo.Remove(a.SessionId)
@@ -107,7 +107,7 @@ func (s *UserAuthenticationService) CreateSession(c *commands.CreateSessionComma
 func (s *UserAuthenticationService) TryGetUserBySessionId(c *commands.TryGetUserBySessionIdCommand) (*users.User, error) {
 	session := s.sessionRepo.FindById(c.SessionId)
 	if session == nil {
-		return nil, errors.New("Invalid session id.")
+		return nil, errors.New("SessionError", "Сессия не существует")
 	}
 
 	return s.userRepo.FindById(session.UserId), nil
@@ -116,7 +116,7 @@ func (s *UserAuthenticationService) TryGetUserBySessionId(c *commands.TryGetUser
 func (s *UserAuthenticationService) MarkSessionActive(sessionId uuid.UUID) error {
 	session := s.sessionRepo.FindById(sessionId)
 	if session == nil {
-		return errors.New("Invalid session id.")
+		return errors.New("SessionError", "Сессия не существует")
 	}
 
 	err := session.Refresh()
