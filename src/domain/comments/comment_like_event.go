@@ -7,7 +7,7 @@ type CommentLikeEvent struct {
 }
 
 func (event *CommentLikeEvent) Type() CommentEventType {
-	return "LIKED"
+	return LIKED
 }
 
 func NewCommentLikeEvent(userId uuid.UUID) *CommentLikeEvent {

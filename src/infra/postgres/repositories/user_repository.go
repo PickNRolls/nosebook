@@ -1,4 +1,4 @@
-package postgres
+package repos
 
 import (
 	"nosebook/src/domain/users"

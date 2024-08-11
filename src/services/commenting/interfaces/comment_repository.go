@@ -7,8 +7,7 @@ import (
 )
 
 type CommentRepository interface {
-	FindById(id uuid.UUID) *comments.Comment
+	FindById(id uuid.UUID, includeRemoved bool) *comments.Comment
 	Create(comment *comments.Comment) (*comments.Comment, error)
 	Save(comment *comments.Comment) (*comments.Comment, error)
-	Remove(id uuid.UUID) (*comments.Comment, error)
 }

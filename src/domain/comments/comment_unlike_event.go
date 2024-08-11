@@ -7,7 +7,7 @@ type CommentUnlikeEvent struct {
 }
 
 func (event *CommentUnlikeEvent) Type() CommentEventType {
-	return "UNLIKED"
+	return UNLIKED
 }
 
 func NewCommentUnlikeEvent(userId uuid.UUID) *CommentUnlikeEvent {

@@ -14,19 +14,20 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"nosebook/src/infra/postgres"
+	"nosebook/src/infra/postgres/repositories"
 	"nosebook/src/services"
 )
 
 func main() {
 	db := postgres.Connect()
 
-	userAuthenticationService := services.NewUserAuthenticationService(postgres.NewUserRepository(db), postgres.NewSessionRepository(db))
-	friendshipService := services.NewFriendshipService(postgres.NewUserFriendsRepository(db))
-	postingService := services.NewPostingService(postgres.NewPostsRepository(db))
-	commentService := services.NewCommentService(postgres.NewCommentRepository(db))
-	userService := services.NewUserService(postgres.NewUserRepository(db))
+	userAuthenticationService := services.NewUserAuthenticationService(repos.NewUserRepository(db), repos.NewSessionRepository(db))
+	friendshipService := services.NewFriendshipService(repos.NewUserFriendsRepository(db))
+	postingService := services.NewPostingService(repos.NewPostsRepository(db))
+	commentService := services.NewCommentService(repos.NewCommentRepository(db))
+	userService := services.NewUserService(repos.NewUserRepository(db))
 
-	postPresenter := presenters.NewPostPresenter().WithPostingService(postingService).WithPostRepository(postgres.NewPostPresenterRepository(db))
+	postPresenter := presenters.NewPostPresenter().WithPostingService(postingService).WithPostRepository(repos.NewPostPresenterRepository(db))
 
 	router := gin.Default()
 
