@@ -32,14 +32,14 @@ func NewCommentRepository(db *sqlx.DB) interfaces.CommentRepository {
 	}
 }
 
-func (repo *CommentRepository) FindByFilter(filter structs.QueryFilter, limitPointer *uint) *generics.QuerySingleResult[*comments.Comment] {
+func (repo *CommentRepository) FindByFilter(filter structs.QueryFilter, limitPointer *uint) *generics.SingleQueryResult[*comments.Comment] {
 	qb := postgres.NewSquirrel()
 	limit := uint(20)
 	if limitPointer != nil {
 		limit = *limitPointer
 	}
 
-	var result generics.QuerySingleResult[*comments.Comment]
+	var result generics.SingleQueryResult[*comments.Comment]
 
 	if filter.PostId == uuid.Nil && filter.AuthorId == uuid.Nil {
 		result.Err = errors.New("FindError", "You must specify either postId or authorId at least")

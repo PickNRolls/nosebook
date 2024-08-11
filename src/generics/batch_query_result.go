@@ -4,9 +4,9 @@ import (
 	"github.com/google/uuid"
 )
 
-type QueryMultiResult[T any] struct {
+type BatchQueryResult[T any] struct {
 	Results *struct {
 		Id     uuid.UUID
-		Result *QuerySingleResult[T]
+		Result *SingleQueryResult[T]
 	}
 }

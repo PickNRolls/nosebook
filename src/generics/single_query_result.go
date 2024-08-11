@@ -2,7 +2,7 @@ package generics
 
 import "nosebook/src/errors"
 
-type QuerySingleResult[T any] struct {
+type SingleQueryResult[T any] struct {
 	Err            *errors.Error
 	RemainingCount int
 	Data           []T

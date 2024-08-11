@@ -19,7 +19,7 @@ func NewCommentService(commentRepo interfaces.CommentRepository) *CommentService
 	}
 }
 
-func (s *CommentService) FindByFilter(c *commands.FindCommentsCommand, a *auth.Auth) *generics.QuerySingleResult[*comments.Comment] {
+func (s *CommentService) FindByFilter(c *commands.FindCommentsCommand, a *auth.Auth) *generics.SingleQueryResult[*comments.Comment] {
 	return s.commentRepo.FindByFilter(c.Filter, c.Size)
 }
 
