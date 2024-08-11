@@ -19,7 +19,7 @@ func NewPostingService(postRepo interfaces.PostRepository) *PostingService {
 	}
 }
 
-func (s *PostingService) FindByFilter(c *commands.FindPostsCommand, a *auth.Auth) *generics.QueryResult[*posts.Post] {
+func (s *PostingService) FindByFilter(c *commands.FindPostsCommand, a *auth.Auth) *generics.QuerySingleResult[*posts.Post] {
 	return s.postRepo.FindByFilter(c.Filter)
 }
 

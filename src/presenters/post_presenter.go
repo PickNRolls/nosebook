@@ -134,7 +134,7 @@ func (p *PostPresenter) mapPosts(posts []*posts.Post, a *auth.Auth) ([]*dto.Post
 	return result, nil
 }
 
-func (p *PostPresenter) FindByFilter(filter dto.QueryFilterDTO, a *auth.Auth) *dto.QueryResultDTO[*dto.PostDTO] {
+func (p *PostPresenter) FindByFilter(filter dto.QueryFilterDTO, a *auth.Auth) *dto.QuerySingleResultDTO[*dto.PostDTO] {
 	result := p.postingService.FindByFilter(&commands.FindPostsCommand{
 		Filter: structs.QueryFilter{
 			OwnerId:  filter.OwnerId,
@@ -143,7 +143,7 @@ func (p *PostPresenter) FindByFilter(filter dto.QueryFilterDTO, a *auth.Auth) *d
 		},
 	}, a)
 
-	resultDTO := &dto.QueryResultDTO[*dto.PostDTO]{
+	resultDTO := &dto.QuerySingleResultDTO[*dto.PostDTO]{
 		Err:            result.Err,
 		Next:           result.Next,
 		RemainingCount: result.RemainingCount,

@@ -10,7 +10,7 @@ import (
 
 type PostRepository interface {
 	FindById(id uuid.UUID) *posts.Post
-	FindByFilter(filter structs.QueryFilter) *generics.QueryResult[*posts.Post]
+	FindByFilter(filter structs.QueryFilter) *generics.QuerySingleResult[*posts.Post]
 
 	Create(post *posts.Post) (*posts.Post, error)
 	Save(post *posts.Post) (*posts.Post, error)

@@ -24,8 +24,8 @@ func NewPostsRepository(db *sqlx.DB) interfaces.PostRepository {
 	}
 }
 
-func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) *generics.QueryResult[*posts.Post] {
-	var result generics.QueryResult[*posts.Post]
+func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) *generics.QuerySingleResult[*posts.Post] {
+	var result generics.QuerySingleResult[*posts.Post]
 	whereClause := make([]string, 0)
 	args := make([]any, 0)
 

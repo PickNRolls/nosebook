@@ -12,7 +12,7 @@ type PostDTO struct {
 	Owner   *UserDTO  `json:"owner"`
 	Message string    `json:"message"`
 
-	RecentComments QueryResultDTO[*CommentDTO] `json:"recentComments"`
+	RecentComments QuerySingleResultDTO[*CommentDTO] `json:"recentComments"`
 
 	LikesCount       int        `json:"likesCount"`
 	LikedByUser      bool       `json:"likedByUser"`
