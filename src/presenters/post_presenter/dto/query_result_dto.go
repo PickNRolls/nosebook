@@ -1,8 +1,10 @@
 package dto
 
-type QueryResultDTO struct {
-	Err            error      `json:"error"`
-	RemainingCount int        `json:"remainingCount"`
-	Data           []*PostDTO `json:"data"`
-	Next           string     `json:"next"`
+import "nosebook/src/errors"
+
+type QueryResultDTO[T any] struct {
+	Err            *errors.Error `json:"error"`
+	RemainingCount int           `json:"remainingCount"`
+	Data           []T           `json:"data"`
+	Next           string        `json:"next"`
 }

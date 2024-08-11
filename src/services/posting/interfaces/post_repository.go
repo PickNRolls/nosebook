@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"nosebook/src/domain/posts"
+	"nosebook/src/generics"
 	"nosebook/src/services/posting/structs"
 
 	"github.com/google/uuid"
@@ -9,7 +10,7 @@ import (
 
 type PostRepository interface {
 	FindById(id uuid.UUID) *posts.Post
-	FindByFilter(filter structs.QueryFilter) structs.QueryResult
+	FindByFilter(filter structs.QueryFilter) *generics.QueryResult[*posts.Post]
 
 	Create(post *posts.Post) (*posts.Post, error)
 	Save(post *posts.Post) (*posts.Post, error)

@@ -27,7 +27,11 @@ func main() {
 	commentService := services.NewCommentService(repos.NewCommentRepository(db))
 	userService := services.NewUserService(repos.NewUserRepository(db))
 
-	postPresenter := presenters.NewPostPresenter().WithPostingService(postingService).WithPostRepository(repos.NewPostPresenterRepository(db))
+	postPresenter := presenters.
+		NewPostPresenter().
+		WithPostingService(postingService).
+		WithPostRepository(repos.NewPostPresenterRepository(db)).
+		WithCommentService(commentService)
 
 	router := gin.Default()
 
@@ -64,6 +68,8 @@ func main() {
 
 	{
 		group := authRouter.Group("/comments")
+		group.GET("/", comments.NewHandlerFind(commentService))
+
 		group.POST("/publish-on-post", comments.NewHandlerPublishOnPost(commentService))
 		group.POST("/remove", comments.NewHandlerRemove(commentService))
 		group.POST("/like", comments.NewHandlerLike(commentService))

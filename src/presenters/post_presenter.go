@@ -3,6 +3,7 @@ package presenters
 import (
 	"math"
 	"nosebook/src/domain/posts"
+	"nosebook/src/errors"
 	"nosebook/src/presenters/post_presenter/dto"
 	"nosebook/src/presenters/post_presenter/interfaces"
 	"nosebook/src/services"
@@ -16,6 +17,7 @@ import (
 
 type PostPresenter struct {
 	postingService *services.PostingService
+	commentService *services.CommentService
 	postRepository interfaces.PostRepository
 }
 
@@ -28,12 +30,17 @@ func (p *PostPresenter) WithPostingService(s *services.PostingService) *PostPres
 	return p
 }
 
+func (p *PostPresenter) WithCommentService(s *services.CommentService) *PostPresenter {
+	p.commentService = s
+	return p
+}
+
 func (p *PostPresenter) WithPostRepository(repo interfaces.PostRepository) *PostPresenter {
 	p.postRepository = repo
 	return p
 }
 
-func (p *PostPresenter) mapPosts(posts []*posts.Post, a *auth.Auth) ([]*dto.PostDTO, error) {
+func (p *PostPresenter) mapPosts(posts []*posts.Post, a *auth.Auth) ([]*dto.PostDTO, *errors.Error) {
 	if len(posts) == 0 {
 		return make([]*dto.PostDTO, 0), nil
 	}
@@ -76,17 +83,17 @@ func (p *PostPresenter) mapPosts(posts []*posts.Post, a *auth.Auth) ([]*dto.Post
 
 	authors, err := p.postRepository.FindAuthors(authorIds)
 	if err != nil {
-		return nil, err
+		return nil, errors.From(err)
 	}
 
 	owners, err := p.postRepository.FindOwners(ownerIds)
 	if err != nil {
-		return nil, err
+		return nil, errors.From(err)
 	}
 
 	likers, err := p.postRepository.FindLikers(likerIds)
 	if err != nil {
-		return nil, err
+		return nil, errors.From(err)
 	}
 
 	result := make([]*dto.PostDTO, len(posts))
@@ -127,7 +134,7 @@ func (p *PostPresenter) mapPosts(posts []*posts.Post, a *auth.Auth) ([]*dto.Post
 	return result, nil
 }
 
-func (p *PostPresenter) FindByFilter(filter dto.QueryFilterDTO, a *auth.Auth) *dto.QueryResultDTO {
+func (p *PostPresenter) FindByFilter(filter dto.QueryFilterDTO, a *auth.Auth) *dto.QueryResultDTO[*dto.PostDTO] {
 	result := p.postingService.FindByFilter(&commands.FindPostsCommand{
 		Filter: structs.QueryFilter{
 			OwnerId:  filter.OwnerId,
@@ -136,7 +143,7 @@ func (p *PostPresenter) FindByFilter(filter dto.QueryFilterDTO, a *auth.Auth) *d
 		},
 	}, a)
 
-	resultDTO := &dto.QueryResultDTO{
+	resultDTO := &dto.QueryResultDTO[*dto.PostDTO]{
 		Err:            result.Err,
 		Next:           result.Next,
 		RemainingCount: result.RemainingCount,
@@ -155,12 +162,12 @@ func (p *PostPresenter) Publish(c *commands.PublishPostCommand, a *auth.Auth) (*
 		return nil, err
 	}
 
-	DTOs, err := p.mapPosts([]*posts.Post{post}, a)
-	if err != nil {
-		return nil, err
+	DTOs, error := p.mapPosts([]*posts.Post{post}, a)
+	if error != nil {
+		return nil, error
 	}
 
-	return DTOs[0], err
+	return DTOs[0], error
 }
 
 func (p *PostPresenter) Remove(c *commands.RemovePostCommand, a *auth.Auth) (*dto.PostDTO, error) {
@@ -169,12 +176,12 @@ func (p *PostPresenter) Remove(c *commands.RemovePostCommand, a *auth.Auth) (*dt
 		return nil, err
 	}
 
-	DTOs, err := p.mapPosts([]*posts.Post{post}, a)
-	if err != nil {
-		return nil, err
+	DTOs, error := p.mapPosts([]*posts.Post{post}, a)
+	if error != nil {
+		return nil, error
 	}
 
-	return DTOs[0], err
+	return DTOs[0], error
 }
 
 func (p *PostPresenter) Like(c *commands.LikePostCommand, a *auth.Auth) (*dto.PostDTO, error) {
@@ -183,9 +190,9 @@ func (p *PostPresenter) Like(c *commands.LikePostCommand, a *auth.Auth) (*dto.Po
 		return nil, err
 	}
 
-	DTOs, err := p.mapPosts([]*posts.Post{post}, a)
-	if err != nil {
-		return nil, err
+	DTOs, error := p.mapPosts([]*posts.Post{post}, a)
+	if error != nil {
+		return nil, error
 	}
 
 	return DTOs[0], err

@@ -14,7 +14,7 @@ type Comment struct {
 	Message   string              `json:"message" db:"message"`
 	CreatedAt time.Time           `json:"createdAt" db:"created_at"`
 	RemovedAt sql.Null[time.Time] `json:"-" db:"removed_at"`
-	PostId    uuid.UUID           `json:"-"`
+	PostId    uuid.UUID           `json:"-" db:"post_id"`
 	LikedBy   []uuid.UUID         `json:"-"`
 
 	Events []CommentEvent `json:"-"`

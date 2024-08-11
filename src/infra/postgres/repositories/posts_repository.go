@@ -1,9 +1,10 @@
 package repos
 
 import (
-	"errors"
 	"fmt"
 	"nosebook/src/domain/posts"
+	"nosebook/src/errors"
+	"nosebook/src/generics"
 	"nosebook/src/services/posting/interfaces"
 	"nosebook/src/services/posting/structs"
 	"strings"
@@ -23,8 +24,8 @@ func NewPostsRepository(db *sqlx.DB) interfaces.PostRepository {
 	}
 }
 
-func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) structs.QueryResult {
-	var result structs.QueryResult
+func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) *generics.QueryResult[*posts.Post] {
+	var result generics.QueryResult[*posts.Post]
 	whereClause := make([]string, 0)
 	args := make([]any, 0)
 
@@ -39,8 +40,8 @@ func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) structs.Qu
 	}
 
 	if filter.OwnerId == uuid.Nil && filter.AuthorId == uuid.Nil {
-		result.Err = errors.New("You must specify either ownerId or authorId at least.")
-		return result
+		result.Err = errors.New("FindError", "You must specify either ownerId or authorId at least")
+		return &result
 	}
 
 	if filter.Cursor != "" {
@@ -50,8 +51,8 @@ func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) structs.Qu
 
 		timestamp, err := time.Parse(time.RFC3339Nano, createdAt)
 		if err != nil {
-			result.Err = errors.New("Invalid cursor.")
-			return result
+			result.Err = errors.New("FindError", "Invalid cursor")
+			return &result
 		}
 
 		whereClause = append(whereClause, fmt.Sprintf("(created_at, id) < ($%v, $%v)", len(args)+1, len(args)+2))
@@ -75,8 +76,8 @@ func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) structs.Qu
 	`, where, limit), args...)
 
 	if err != nil {
-		result.Err = err
-		return result
+		result.Err = errors.New("FindError", err.Error())
+		return &result
 	}
 
 	if filter.Cursor != "" {
@@ -101,8 +102,8 @@ func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) structs.Qu
 		`, whereWithNextCursor), args...)
 
 		if err != nil {
-			result.Err = err
-			return result
+			result.Err = errors.New("FindError", err.Error())
+			return &result
 		}
 
 		result.RemainingCount = remainingCount.Count
@@ -121,21 +122,21 @@ func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) structs.Qu
 		}
 
 		query, args, err := sqlx.In(`SELECT
-		user_id,
-		post_id
-		  FROM post_likes WHERE
-		post_id IN (?)
-	`, postIds)
+			user_id,
+			post_id
+		  	FROM post_likes WHERE
+			post_id IN (?)
+		`, postIds)
 		if err != nil {
-			result.Err = err
-			return result
+			result.Err = errors.New("FindError", err.Error())
+			return &result
 		}
 
 		query = repo.db.Rebind(query)
 		err = repo.db.Select(&likes, query, args...)
 		if err != nil {
-			result.Err = err
-			return result
+			result.Err = errors.New("FindError", err.Error())
+			return &result
 		}
 
 		for _, like := range likes {
@@ -147,7 +148,7 @@ func (repo *PostsRepository) FindByFilter(filter structs.QueryFilter) structs.Qu
 		}
 	}
 
-	return result
+	return &result
 }
 
 func (repo *PostsRepository) Save(post *posts.Post) (*posts.Post, error) {

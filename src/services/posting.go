@@ -3,10 +3,10 @@ package services
 import (
 	"errors"
 	"nosebook/src/domain/posts"
+	"nosebook/src/generics"
 	"nosebook/src/services/auth"
 	"nosebook/src/services/posting/commands"
 	"nosebook/src/services/posting/interfaces"
-	"nosebook/src/services/posting/structs"
 )
 
 type PostingService struct {
@@ -19,7 +19,7 @@ func NewPostingService(postRepo interfaces.PostRepository) *PostingService {
 	}
 }
 
-func (s *PostingService) FindByFilter(c *commands.FindPostsCommand, a *auth.Auth) structs.QueryResult {
+func (s *PostingService) FindByFilter(c *commands.FindPostsCommand, a *auth.Auth) *generics.QueryResult[*posts.Post] {
 	return s.postRepo.FindByFilter(c.Filter)
 }
 
