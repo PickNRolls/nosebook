@@ -3,6 +3,9 @@ package dto
 import (
 	"time"
 
+	"nosebook/src/domain/comments"
+	"nosebook/src/presenters/dto"
+
 	"github.com/google/uuid"
 )
 
@@ -12,7 +15,7 @@ type PostDTO struct {
 	Owner   *UserDTO  `json:"owner"`
 	Message string    `json:"message"`
 
-	RecentComments QuerySingleResultDTO[*CommentDTO] `json:"recentComments"`
+	RecentComments dto.SingleQueryResultDTO[*comments.Comment] `json:"recentComments"`
 
 	LikesCount       int        `json:"likesCount"`
 	LikedByUser      bool       `json:"likedByUser"`

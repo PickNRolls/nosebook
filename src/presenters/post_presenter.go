@@ -2,8 +2,10 @@ package presenters
 
 import (
 	"math"
+	"nosebook/src/domain/comments"
 	"nosebook/src/domain/posts"
 	"nosebook/src/errors"
+	common_dto "nosebook/src/presenters/dto"
 	"nosebook/src/presenters/post_presenter/dto"
 	"nosebook/src/presenters/post_presenter/interfaces"
 	"nosebook/src/services"
@@ -98,6 +100,15 @@ func (p *PostPresenter) mapPosts(posts []*posts.Post, a *auth.Auth) ([]*dto.Post
 
 	result := make([]*dto.PostDTO, len(posts))
 
+	postIds := make([]uuid.UUID, len(posts))
+	for _, post := range posts {
+		postIds = append(postIds, post.Id)
+	}
+	commentsResult := p.commentService.BatchFindByPostIds(postIds)
+	if commentsResult.Err != nil {
+		return nil, commentsResult.Err
+	}
+
 	for i, post := range posts {
 		postDTO := &dto.PostDTO{}
 		postDTO.Id = post.Id
@@ -105,6 +116,13 @@ func (p *PostPresenter) mapPosts(posts []*posts.Post, a *auth.Auth) ([]*dto.Post
 		postDTO.CreatedAt = post.CreatedAt
 		postDTO.LikedByUser = slices.Contains(post.LikedBy, a.UserId)
 		postDTO.CanBeRemovedByUser = post.CanBeRemovedBy(a.UserId)
+
+		commentsEntry := commentsResult.EntryById(post.Id)
+		if commentsEntry != nil {
+			postDTO.RecentComments = common_dto.SingleQueryResultDTO[*comments.Comment]{}
+			postDTO.RecentComments.Data = commentsEntry.Result.Data
+			postDTO.RecentComments.Next = commentsEntry.Result.Next
+		}
 
 		for _, author := range authors {
 			if post.AuthorId == author.Id {
@@ -134,7 +152,7 @@ func (p *PostPresenter) mapPosts(posts []*posts.Post, a *auth.Auth) ([]*dto.Post
 	return result, nil
 }
 
-func (p *PostPresenter) FindByFilter(filter dto.QueryFilterDTO, a *auth.Auth) *dto.QuerySingleResultDTO[*dto.PostDTO] {
+func (p *PostPresenter) FindByFilter(filter dto.QueryFilterDTO, a *auth.Auth) *common_dto.SingleQueryResultDTO[*dto.PostDTO] {
 	result := p.postingService.FindByFilter(&commands.FindPostsCommand{
 		Filter: structs.QueryFilter{
 			OwnerId:  filter.OwnerId,
@@ -143,7 +161,7 @@ func (p *PostPresenter) FindByFilter(filter dto.QueryFilterDTO, a *auth.Auth) *d
 		},
 	}, a)
 
-	resultDTO := &dto.QuerySingleResultDTO[*dto.PostDTO]{
+	resultDTO := &common_dto.SingleQueryResultDTO[*dto.PostDTO]{
 		Err:            result.Err,
 		Next:           result.Next,
 		RemainingCount: result.RemainingCount,
@@ -156,10 +174,10 @@ func (p *PostPresenter) FindByFilter(filter dto.QueryFilterDTO, a *auth.Auth) *d
 	return resultDTO
 }
 
-func (p *PostPresenter) Publish(c *commands.PublishPostCommand, a *auth.Auth) (*dto.PostDTO, error) {
+func (p *PostPresenter) Publish(c *commands.PublishPostCommand, a *auth.Auth) (*dto.PostDTO, *errors.Error) {
 	post, err := p.postingService.Publish(c, a)
 	if err != nil {
-		return nil, err
+		return nil, errors.From(err)
 	}
 
 	DTOs, error := p.mapPosts([]*posts.Post{post}, a)
@@ -167,13 +185,13 @@ func (p *PostPresenter) Publish(c *commands.PublishPostCommand, a *auth.Auth) (*
 		return nil, error
 	}
 
-	return DTOs[0], error
+	return DTOs[0], nil
 }
 
-func (p *PostPresenter) Remove(c *commands.RemovePostCommand, a *auth.Auth) (*dto.PostDTO, error) {
+func (p *PostPresenter) Remove(c *commands.RemovePostCommand, a *auth.Auth) (*dto.PostDTO, *errors.Error) {
 	post, err := p.postingService.Remove(c, a)
 	if err != nil {
-		return nil, err
+		return nil, errors.From(err)
 	}
 
 	DTOs, error := p.mapPosts([]*posts.Post{post}, a)
@@ -181,13 +199,13 @@ func (p *PostPresenter) Remove(c *commands.RemovePostCommand, a *auth.Auth) (*dt
 		return nil, error
 	}
 
-	return DTOs[0], error
+	return DTOs[0], nil
 }
 
-func (p *PostPresenter) Like(c *commands.LikePostCommand, a *auth.Auth) (*dto.PostDTO, error) {
+func (p *PostPresenter) Like(c *commands.LikePostCommand, a *auth.Auth) (*dto.PostDTO, *errors.Error) {
 	post, err := p.postingService.Like(c, a)
 	if err != nil {
-		return nil, err
+		return nil, errors.From(err)
 	}
 
 	DTOs, error := p.mapPosts([]*posts.Post{post}, a)
@@ -195,5 +213,5 @@ func (p *PostPresenter) Like(c *commands.LikePostCommand, a *auth.Auth) (*dto.Po
 		return nil, error
 	}
 
-	return DTOs[0], err
+	return DTOs[0], nil
 }

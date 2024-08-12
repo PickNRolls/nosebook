@@ -20,11 +20,11 @@ func NewHandlerRemove(postPresenter *presenters.PostPresenter) func(ctx *gin.Con
 			return
 		}
 
-		post, err := postPresenter.Remove(&command, &auth.Auth{
+		post, error := postPresenter.Remove(&command, &auth.Auth{
 			UserId: user.ID,
 		})
-		if err != nil {
-			ctx.Error(err)
+		if error != nil {
+			ctx.Error(error)
 			ctx.Abort()
 			return
 		}

@@ -20,11 +20,11 @@ func NewHandlerPublish(postPresenter *presenters.PostPresenter) func(ctx *gin.Co
 			return
 		}
 
-		post, err := postPresenter.Publish(&command, &auth.Auth{
+		post, error := postPresenter.Publish(&command, &auth.Auth{
 			UserId: user.ID,
 		})
-		if err != nil {
-			ctx.Error(err)
+		if error != nil {
+			ctx.Error(error)
 			ctx.Abort()
 			return
 		}

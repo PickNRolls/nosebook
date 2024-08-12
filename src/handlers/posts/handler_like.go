@@ -20,11 +20,11 @@ func NewHandlerLike(postPresenter *presenters.PostPresenter) func(ctx *gin.Conte
 			return
 		}
 
-		post, err := postPresenter.Like(&command, &auth.Auth{
+		post, error := postPresenter.Like(&command, &auth.Auth{
 			UserId: user.ID,
 		})
-		if err != nil {
-			ctx.Error(err)
+		if error != nil {
+			ctx.Error(error)
 			ctx.Abort()
 			return
 		}

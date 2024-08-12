@@ -20,6 +20,11 @@ type CommentRepository struct {
 	db *sqlx.DB
 }
 
+type commentLike struct {
+	UserId    uuid.UUID `db:"user_id"`
+	CommentId uuid.UUID `db:"comment_id"`
+}
+
 var select_columns = []string{"id", "author_id", "message", "created_at", "removed_at"}
 var insert_columns = select_columns
 
@@ -102,31 +107,30 @@ func (repo *CommentRepository) findComments(postIds []uuid.UUID) *generics.Batch
 	return &result
 }
 
+func (repo *CommentRepository) findCommentLikes(coms []*comments.Comment) ([]*commentLike, *errors.Error) {
+	qb := postgres.NewSquirrel()
+	commentIds := make([]uuid.UUID, len(coms))
+	for _, comment := range coms {
+		commentIds = append(commentIds, comment.Id)
+	}
+
+	if len(commentIds) > 0 {
+		var likes []*commentLike
+
+		sql, args, _ := qb.Select("user_id", "comment_id").From("comment_likes").Where(squirrel.Eq{"comment_id": commentIds}).ToSql()
+		err := repo.db.Select(&likes, sql, args...)
+		if err != nil {
+			return nil, errors.New("FindError", err.Error())
+		}
+
+		return likes, nil
+	}
+
+	return make([]*commentLike, 0), nil
+}
+
 func (repo *CommentRepository) FindByPostIds(postIds []uuid.UUID) *generics.BatchQueryResult[*comments.Comment] {
-	var result *generics.BatchQueryResult[*comments.Comment]
-	result = repo.findComments(postIds)
-	// qb := postgres.NewSquirrel()
-	// limit := 5
-	//
-	// query := qb.Select(append(select_columns, "post_id")...).From(comments_table).Join(
-	// 	post_comments_table + " on c.id = pc.comment_id",
-	// ).Where(
-	// 	"removed_at IS NULL",
-	// ).Where(squirrel.Eq{"post_id": postIds}).Limit(uint64(limit))
-	//
-	// sql, args, _ := query.ToSql()
-	// var commentsRows []*comments.Comment
-	// err := repo.db.Select(&commentsRows, sql, args...)
-	// if err != nil {
-	// 	result.Err = errors.New("FindError", err.Error())
-	// 	return &result
-	// }
-	//
-	// for _, comment := range commentsRows {
-	// 	result.Append(comment.PostId, comment)
-	// }
-	//
-	return result
+	return repo.findComments(postIds)
 }
 
 func (repo *CommentRepository) FindByFilter(filter structs.QueryFilter, limitPointer *uint) *generics.SingleQueryResult[*comments.Comment] {
@@ -200,8 +204,6 @@ func (repo *CommentRepository) FindByFilter(filter structs.QueryFilter, limitPoi
 	}
 
 	sql, args, _ := resultQuery.ToSql()
-	fmt.Println(sql)
-	fmt.Println(args)
 	err := repo.db.Select(&commentsRows, sql, args...)
 
 	if err != nil {
@@ -249,29 +251,16 @@ func (repo *CommentRepository) FindByFilter(filter structs.QueryFilter, limitPoi
 		}
 	}
 
-	commentIds := make([]uuid.UUID, 0)
-	for _, comment := range result.Data {
-		commentIds = append(commentIds, comment.Id)
+	likes, error := repo.findCommentLikes(result.Data)
+	if error != nil {
+		result.Err = error
+		return &result
 	}
 
-	if len(commentIds) > 0 {
-		var likes []struct {
-			UserId    uuid.UUID `db:"user_id"`
-			CommentId uuid.UUID `db:"comment_id"`
-		}
-
-		sql, args, _ := qb.Select("user_id", "comment_id").From("comment_likes").Where(squirrel.Eq{"comment_id": commentIds}).ToSql()
-		err = repo.db.Select(&likes, sql, args...)
-		if err != nil {
-			result.Err = errors.New("FindError", err.Error())
-			return &result
-		}
-
-		for _, like := range likes {
-			for _, comment := range result.Data {
-				if like.CommentId == comment.Id {
-					comment.LikedBy = append(comment.LikedBy, like.UserId)
-				}
+	for _, like := range likes {
+		for _, comment := range result.Data {
+			if like.CommentId == comment.Id {
+				comment.LikedBy = append(comment.LikedBy, like.UserId)
 			}
 		}
 	}

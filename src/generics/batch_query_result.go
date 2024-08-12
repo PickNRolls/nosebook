@@ -7,13 +7,13 @@ import (
 )
 
 type batchQueryEntry[T any] struct {
-	Id     uuid.UUID            `json:"id"`
-	Result SingleQueryResult[T] `json:"result"`
+	Id     uuid.UUID
+	Result SingleQueryResult[T]
 }
 
 type BatchQueryResult[T any] struct {
-	Err     *errors.Error         `json:"error"`
-	Results []*batchQueryEntry[T] `json:"results"`
+	Err     *errors.Error
+	Results []*batchQueryEntry[T]
 }
 
 func (result *BatchQueryResult[T]) HasEntry(id uuid.UUID) bool {
@@ -24,6 +24,20 @@ func (result *BatchQueryResult[T]) HasEntry(id uuid.UUID) bool {
 	}
 
 	return false
+}
+
+func (result *BatchQueryResult[T]) EntryById(id uuid.UUID) *batchQueryEntry[T] {
+	for _, entry := range result.Results {
+		if entry.Id == id {
+			return entry
+		}
+	}
+
+	return nil
+}
+
+func (result *BatchQueryResult[T]) Entries() []*batchQueryEntry[T] {
+	return result.Results
 }
 
 func (result *BatchQueryResult[T]) AddEntryOnce(id uuid.UUID) {
