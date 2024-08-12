@@ -32,6 +32,103 @@ func NewCommentRepository(db *sqlx.DB) interfaces.CommentRepository {
 	}
 }
 
+func encodeCursor(comment *comments.Comment) string {
+	return fmt.Sprintf(`%v/%v`, comment.Id, comment.CreatedAt.Format(time.RFC3339Nano))
+}
+
+func decodeCursor(cursor string) (time.Time, uuid.UUID, *errors.Error) {
+	substrings := strings.Split(cursor, "/")
+	id := substrings[0]
+	createdAt := substrings[1]
+
+	uuidId, err := uuid.Parse(id)
+	if err != nil {
+		return time.Time{}, uuid.UUID{}, errors.New("DecodeCursorError", "Invalid cursor")
+	}
+
+	timestamp, err := time.Parse(time.RFC3339Nano, createdAt)
+	if err != nil {
+		return time.Time{}, uuid.UUID{}, errors.New("DecodeCursorError", "Invalid cursor")
+	}
+
+	return timestamp, uuidId, nil
+}
+
+func (repo *CommentRepository) findComments(postIds []uuid.UUID) *generics.BatchQueryResult[*comments.Comment] {
+	var result generics.BatchQueryResult[*comments.Comment]
+	qb := postgres.NewSquirrel()
+	limit := 5
+
+	query := qb.Select(
+		append(select_columns, "post_id")...,
+	).FromSelect(qb.Select(
+		append(
+			select_columns,
+			"post_id",
+			"ROW_NUMBER() OVER (PARTITION BY post_id ORDER BY post_id ASC, created_at ASC, id ASC)",
+		)...,
+	).From(comments_table).Join(
+		post_comments_table+" on c.id = pc.comment_id",
+	).Where(
+		"removed_at IS NULL",
+	).Where(squirrel.Eq{"post_id": postIds}).OrderBy(
+		"post_id ASC, created_at ASC, id ASC",
+	).Limit(uint64(limit+1)), "subquery").Where(
+		"row_number <= ?", limit+1,
+	)
+
+	var commentsRows []*comments.Comment
+	sql, args, _ := query.ToSql()
+
+	err := repo.db.Select(&commentsRows, sql, args...)
+	if err != nil {
+		result.Err = errors.New("FindError", err.Error())
+		return &result
+	}
+
+	for _, row := range commentsRows {
+		if !result.HasEntry(row.PostId) {
+			result.AddEntryOnce(row.PostId)
+		}
+
+		single := result.SingleResultOf(row.PostId)
+		if len(single.Data) < limit {
+			single.Data = append(single.Data, row)
+		} else {
+			single.Next = encodeCursor(single.Data[len(single.Data)-1])
+		}
+	}
+
+	return &result
+}
+
+func (repo *CommentRepository) FindByPostIds(postIds []uuid.UUID) *generics.BatchQueryResult[*comments.Comment] {
+	var result *generics.BatchQueryResult[*comments.Comment]
+	result = repo.findComments(postIds)
+	// qb := postgres.NewSquirrel()
+	// limit := 5
+	//
+	// query := qb.Select(append(select_columns, "post_id")...).From(comments_table).Join(
+	// 	post_comments_table + " on c.id = pc.comment_id",
+	// ).Where(
+	// 	"removed_at IS NULL",
+	// ).Where(squirrel.Eq{"post_id": postIds}).Limit(uint64(limit))
+	//
+	// sql, args, _ := query.ToSql()
+	// var commentsRows []*comments.Comment
+	// err := repo.db.Select(&commentsRows, sql, args...)
+	// if err != nil {
+	// 	result.Err = errors.New("FindError", err.Error())
+	// 	return &result
+	// }
+	//
+	// for _, comment := range commentsRows {
+	// 	result.Append(comment.PostId, comment)
+	// }
+	//
+	return result
+}
+
 func (repo *CommentRepository) FindByFilter(filter structs.QueryFilter, limitPointer *uint) *generics.SingleQueryResult[*comments.Comment] {
 	qb := postgres.NewSquirrel()
 	limit := uint(20)
@@ -78,13 +175,9 @@ func (repo *CommentRepository) FindByFilter(filter structs.QueryFilter, limitPoi
 	cursorQuery := limitQuery.OrderBy("created_at ASC, id ASC")
 
 	if filter.Next != "" {
-		substrings := strings.Split(filter.Next, "/")
-		id := substrings[0]
-		createdAt := substrings[1]
-
-		timestamp, err := time.Parse(time.RFC3339Nano, createdAt)
+		timestamp, id, err := decodeCursor(filter.Next)
 		if err != nil {
-			result.Err = errors.New("FindError", "Invalid cursor")
+			result.Err = err
 			return &result
 		}
 
@@ -92,13 +185,9 @@ func (repo *CommentRepository) FindByFilter(filter structs.QueryFilter, limitPoi
 	}
 
 	if filter.Prev != "" {
-		substrings := strings.Split(filter.Prev, "/")
-		id := substrings[0]
-		createdAt := substrings[1]
-
-		timestamp, err := time.Parse(time.RFC3339Nano, createdAt)
+		timestamp, id, err := decodeCursor(filter.Prev)
 		if err != nil {
-			result.Err = errors.New("FindError", "Invalid cursor")
+			result.Err = err
 			return &result
 		}
 
@@ -111,6 +200,8 @@ func (repo *CommentRepository) FindByFilter(filter structs.QueryFilter, limitPoi
 	}
 
 	sql, args, _ := resultQuery.ToSql()
+	fmt.Println(sql)
+	fmt.Println(args)
 	err := repo.db.Select(&commentsRows, sql, args...)
 
 	if err != nil {
@@ -150,11 +241,11 @@ func (repo *CommentRepository) FindByFilter(filter structs.QueryFilter, limitPoi
 		}
 
 		if prevCount.Count > 0 {
-			result.Prev = fmt.Sprintf(`%v/%v`, firstComment.Id, firstComment.CreatedAt.Format(time.RFC3339Nano))
+			result.Prev = encodeCursor(firstComment)
 		}
 
 		if nextCount.Count > 0 {
-			result.Next = fmt.Sprintf(`%v/%v`, lastComment.Id, lastComment.CreatedAt.Format(time.RFC3339Nano))
+			result.Next = encodeCursor(lastComment)
 		}
 	}
 

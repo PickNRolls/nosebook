@@ -7,6 +7,8 @@ import (
 	"nosebook/src/services/auth"
 	"nosebook/src/services/commenting/commands"
 	"nosebook/src/services/commenting/interfaces"
+
+	"github.com/google/uuid"
 )
 
 type CommentService struct {
@@ -19,8 +21,12 @@ func NewCommentService(commentRepo interfaces.CommentRepository) *CommentService
 	}
 }
 
-func (s *CommentService) FindByFilter(c *commands.FindCommentsCommand, a *auth.Auth) *generics.SingleQueryResult[*comments.Comment] {
+func (s *CommentService) FindByFilter(c *commands.FindCommentsCommand) *generics.SingleQueryResult[*comments.Comment] {
 	return s.commentRepo.FindByFilter(c.Filter, c.Size)
+}
+
+func (s *CommentService) BatchFindByPostIds(ids []uuid.UUID) *generics.BatchQueryResult[*comments.Comment] {
+	return s.commentRepo.FindByPostIds(ids)
 }
 
 func (s *CommentService) PublishOnPost(c *commands.PublishPostCommentCommand, a *auth.Auth) (*comments.Comment, *errors.Error) {
@@ -40,7 +46,7 @@ func (s *CommentService) Remove(c *commands.RemoveCommentCommand, a *auth.Auth) 
 		return nil, errors.New("RemoveError", "Такого комментария не существует")
 	}
 
-	comment, error := comment.Remove()
+	comment, error := comment.Remove(a.UserId)
 	if error != nil {
 		return nil, error
 	}

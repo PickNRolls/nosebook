@@ -1,9 +1,8 @@
 package comments
 
 import (
-	"nosebook/src/infra/helpers"
+	"fmt"
 	"nosebook/src/services"
-	"nosebook/src/services/auth"
 	"nosebook/src/services/commenting/commands"
 	"nosebook/src/services/commenting/structs"
 
@@ -13,10 +12,24 @@ import (
 
 func NewHandlerFind(commentService *services.CommentService) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
-		user := helpers.GetUserOrForbidden(ctx)
-
 		filter := structs.QueryFilter{}
 		var err error
+
+		postIdsQuery := ctx.QueryArray("postIds")
+		postIds := make([]uuid.UUID, len(postIdsQuery))
+		fmt.Println(postIdsQuery)
+		for i, p := range postIdsQuery {
+			postIds[i], err = uuid.Parse(p)
+			if err != nil {
+				ctx.Error(err)
+				return
+			}
+		}
+		if len(postIds) > 0 {
+			result := commentService.BatchFindByPostIds(postIds)
+			ctx.Set("data", result)
+			return
+		}
 
 		postId := ctx.Query("postId")
 		if postId != "" {
@@ -53,8 +66,6 @@ func NewHandlerFind(commentService *services.CommentService) func(ctx *gin.Conte
 
 		result := commentService.FindByFilter(&commands.FindCommentsCommand{
 			Filter: filter,
-		}, &auth.Auth{
-			UserId: user.ID,
 		})
 		if result.Err != nil {
 			ctx.Error(result.Err)

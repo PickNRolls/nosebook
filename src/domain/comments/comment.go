@@ -54,7 +54,11 @@ func (c *Comment) Like(userId uuid.UUID) *Comment {
 	return c
 }
 
-func (c *Comment) Remove() (*Comment, *errors.Error) {
+func (c *Comment) Remove(userId uuid.UUID) (*Comment, *errors.Error) {
+	if c.AuthorId != userId {
+		return nil, errors.New("CommentError", "Только автор комментария может его удалить")
+	}
+
 	if c.RemovedAt.Valid {
 		return nil, errors.New("CommentError", "Комментарий уже удален")
 	}
