@@ -3,10 +3,10 @@ package generics
 import "nosebook/src/errors"
 
 type SingleQueryResult[T any] struct {
-	Err            *errors.Error
+	Err            *errors.Error `json:"error"`
 	RemainingCount int
-	Data           []T
+	Data           []T `json:"data"`
 
-	Next string
-	Prev string
+	Next string `json:"prev"`
+	Prev string `json:"next"`
 }

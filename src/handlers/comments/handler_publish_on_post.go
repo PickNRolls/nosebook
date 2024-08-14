@@ -25,10 +25,10 @@ func NewHandlerPublishOnPost(commentService *services.CommentService) func(ctx *
 		})
 		if err != nil {
 			ctx.Error(err)
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			ctx.Abort()
 			return
 		}
 
-		ctx.JSON(http.StatusOK, comment)
+		ctx.Set("data", comment)
 	}
 }
