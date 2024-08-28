@@ -1,47 +1,13 @@
 package application_tests
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
-	"time"
-
-	"github.com/google/uuid"
 )
-
-type ResponseError struct {
-	Type    string `json:"type"`
-	Message string `json:"message"`
-}
-
-type Response[T any] struct {
-	Errors []ResponseError `json:"errors"`
-	Data   T               `json:"data"`
-}
-
-type UserDTO struct {
-	Id             uuid.UUID `json:"id"`
-	FirstName      string    `json:"firstName"`
-	LastName       string    `json:"lastName"`
-	Nick           string    `json:"nick"`
-	Passhash       string    `json:"passhash"`
-	CreatedAt      time.Time `json:"createdAt"`
-	LastActivityAt time.Time `json:"lastActivityAt"`
-}
-
-type SessionDTO struct {
-	SessionId uuid.UUID `json:"sessionId"`
-	UserId    uuid.UUID `json:"userId"`
-	CreatedAt time.Time `json:"createdAt"`
-	ExpiresAt time.Time `json:"expiresAt"`
-}
-
-type LoginDTO struct {
-	User    UserDTO    `json:"user"`
-	Session SessionDTO `json:"session"`
-}
 
 func TestNotAuthenticated(t *testing.T) {
 	expect := CreateMatcher(t, false)
@@ -64,6 +30,45 @@ func TestNotAuthenticated(t *testing.T) {
 
 	json.Unmarshal(body, &actual)
 	expect(actual).ToBe(expected).ElseFail()
+}
+
+func TestRegister(t *testing.T) {
+	expect := CreateMatcher(t, true)
+	reqBody, _ := json.Marshal(J{
+		"firstName": "test",
+		"lastName":  "test",
+		"nick":      "some_unusual_nick",
+		"password":  "123123123",
+	})
+	req, _ := http.NewRequest("POST", "http://backend:8080/register", bytes.NewReader(reqBody))
+	res, _ := http.DefaultClient.Do(req)
+
+	expect(res.StatusCode).ToBe(200)
+	body, _ := io.ReadAll(res.Body)
+	defer res.Body.Close()
+
+	expected := J{
+		"errors": []any{},
+		"data": J{
+			"user": J{
+				"firstName": "test",
+				"lastName":  "test",
+				"nick":      "some_unusual_nick",
+			},
+		},
+	}
+	actual := J{}
+	json.Unmarshal(body, &actual)
+
+	expect(actual).ToContain(expected)
+	user := actual["data"].(J)["user"].(J)
+	expect(user["id"]).Not().ToBe("")
+	expect(user["passhash"]).Not().ToBe("")
+
+	session := actual["data"].(J)["session"].(J)
+	expect(session).Not().ToBe(nil)
+	expect(session["sessionId"]).Not().ToBe("")
+	expect(session["userId"]).ToBe(user["id"])
 }
 
 func TestLogin(t *testing.T) {

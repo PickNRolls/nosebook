@@ -1,6 +1,7 @@
 package application_tests
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -16,12 +17,37 @@ type Matcher struct {
 	diff              []string
 	ok                bool
 	failOnExpect      bool
+	inverted          bool
+}
+
+func (this *Matcher) assert(ok bool) {
+	this.ok = ok
+	if this.inverted {
+		this.ok = !this.ok
+	}
+}
+
+func (this *Matcher) Not() *Matcher {
+	this.inverted = !this.inverted
+	return this
 }
 
 func (this *Matcher) ToBe(value any) *Matcher {
 	this.diff = deep.Equal(this.value, value)
-	this.ok = len(this.diff) == 0
+	this.assert(len(this.diff) == 0)
 	this.lastExpectedValue = value
+
+	if this.failOnExpect {
+		this.ElseFail()
+	}
+
+	return this
+}
+
+func (this *Matcher) ToBeTypeOf(t string) *Matcher {
+	kind := reflect.TypeOf(this.value).Kind().String()
+	this.assert(kind == t)
+	this.diff = append(this.diff, fmt.Sprintf("Value type is %v instead of %v", kind, t))
 
 	if this.failOnExpect {
 		this.ElseFail()
@@ -82,7 +108,7 @@ func (this *Matcher) ToContain(value J) *Matcher {
 	}
 
 	this.diff = contains(j, value)
-	this.ok = len(this.diff) == 0
+	this.assert(len(this.diff) == 0)
 	if this.failOnExpect {
 		this.ElseFail()
 	}
