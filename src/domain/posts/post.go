@@ -1,52 +1,102 @@
 package posts
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 type Post struct {
-	Id        uuid.UUID `db:"id"`
-	AuthorId  uuid.UUID `db:"author_id"`
-	OwnerId   uuid.UUID `db:"owner_id"`
-	Message   string    `db:"message"`
-	CreatedAt time.Time `db:"created_at"`
-	RemovedAt time.Time `db:"removed_at"`
-	LikedBy   []uuid.UUID
+	Id        uuid.UUID
+	AuthorId  uuid.UUID
+	OwnerId   uuid.UUID
+	Message   string
+	CreatedAt time.Time
+	RemovedAt sql.NullTime
 
-	Events []PostEvent
+	events []PostEvent
+
+	liked bool
 }
 
-func NewPost(authorId uuid.UUID, ownerId uuid.UUID, message string) *Post {
-	return &Post{
-		Id:        uuid.New(),
+func NewPost(
+	id uuid.UUID,
+	authorId uuid.UUID,
+	ownerId uuid.UUID,
+	message string,
+	createdAt time.Time,
+	removedAt sql.NullTime,
+	raiseCreatedEvent bool,
+) *Post {
+	post := &Post{
+		Id:        id,
 		AuthorId:  authorId,
 		OwnerId:   ownerId,
 		Message:   message,
-		CreatedAt: time.Now(),
-		RemovedAt: time.Time{},
-		LikedBy:   make([]uuid.UUID, 0),
+		CreatedAt: createdAt,
+		RemovedAt: removedAt,
 
-		Events: make([]PostEvent, 0),
+		events: make([]PostEvent, 0),
 	}
-}
-
-func (post *Post) Like(userId uuid.UUID) *Post {
-	for i, id := range post.LikedBy {
-		if id == userId {
-			post.LikedBy[i] = post.LikedBy[len(post.LikedBy)-1]
-			post.LikedBy = post.LikedBy[:len(post.LikedBy)-1]
-			post.Events = append(post.Events, NewPostUnlikeEvent(userId))
-			return post
-		}
+	if raiseCreatedEvent {
+		post.raiseEvent(NewPostCreatedEvent())
 	}
 
-	post.LikedBy = append(post.LikedBy, userId)
-	post.Events = append(post.Events, NewPostLikeEvent(userId))
 	return post
 }
 
-func (post *Post) CanBeRemovedBy(userId uuid.UUID) bool {
-	return post.OwnerId == userId || post.AuthorId == userId
+func (post *Post) Events() []PostEvent {
+	return post.events
+}
+
+func (post *Post) raiseEvent(event PostEvent) {
+	post.events = append(post.events, event)
+}
+
+func (post *Post) CanBeRemovedBy(userId uuid.UUID) *PostError {
+	if post.OwnerId == userId || post.AuthorId == userId {
+		return nil
+	}
+
+	return NewError("Только автор и владелец поста может его удалить")
+}
+
+func (post *Post) RemoveBy(userId uuid.UUID) *PostError {
+	err := post.CanBeRemovedBy(userId)
+	if err != nil {
+		return err
+	}
+
+	if post.RemovedAt.Valid {
+		return NewError("Пост уже удален")
+	}
+
+	post.RemovedAt = sql.NullTime{
+		Time:  time.Now(),
+		Valid: true,
+	}
+	post.raiseEvent(NewPostRemovedEvent())
+
+	return nil
+}
+
+func (post *Post) CanBeEditedBy(userId uuid.UUID) *PostError {
+	if post.AuthorId == userId {
+		return nil
+	}
+
+	return NewError("Только владелец поста может его редактировать")
+}
+
+func (post *Post) EditBy(userId uuid.UUID, message string) *PostError {
+	err := post.CanBeEditedBy(userId)
+	if err != nil {
+		return err
+	}
+
+	post.Message = message
+	post.raiseEvent(NewPostEditedEvent(post.Message))
+
+	return nil
 }

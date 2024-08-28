@@ -2,7 +2,6 @@ package comments
 
 import (
 	"database/sql"
-	"nosebook/src/errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -34,33 +33,40 @@ func NewComment(authorId uuid.UUID, message string) *Comment {
 	}
 }
 
-func (c *Comment) WithPost(id uuid.UUID) *Comment {
+func (c *Comment) WithPostId(id uuid.UUID) *Comment {
 	c.PostId = id
 	return c
 }
 
-func (c *Comment) Like(userId uuid.UUID) *Comment {
+func (c *Comment) Like(userId uuid.UUID) {
 	for i, id := range c.LikedBy {
 		if id == userId {
 			c.LikedBy[i] = c.LikedBy[len(c.LikedBy)-1]
 			c.LikedBy = c.LikedBy[:len(c.LikedBy)-1]
 			c.Events = append(c.Events, NewCommentUnlikeEvent(userId))
-			return c
 		}
 	}
 
 	c.LikedBy = append(c.LikedBy, userId)
 	c.Events = append(c.Events, NewCommentLikeEvent(userId))
-	return c
 }
 
-func (c *Comment) Remove(userId uuid.UUID) (*Comment, *errors.Error) {
+func (c *Comment) CanBeRemovedBy(userId uuid.UUID) *CommentError {
 	if c.AuthorId != userId {
-		return nil, errors.New("CommentError", "Только автор комментария может его удалить")
+		return NewError("Только автор комментария может его удалить")
+	}
+
+	return nil
+}
+
+func (c *Comment) Remove(userId uuid.UUID) *CommentError {
+	err := c.CanBeRemovedBy(userId)
+	if err != nil {
+		return err
 	}
 
 	if c.RemovedAt.Valid {
-		return nil, errors.New("CommentError", "Комментарий уже удален")
+		return NewError("Комментарий уже удален")
 	}
 
 	c.RemovedAt = sql.Null[time.Time]{
@@ -68,5 +74,5 @@ func (c *Comment) Remove(userId uuid.UUID) (*Comment, *errors.Error) {
 		Valid: true,
 	}
 	c.Events = append(c.Events, NewCommentRemoveEvent())
-	return c, nil
+	return nil
 }

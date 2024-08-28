@@ -19,7 +19,7 @@ func From(err error) *Error {
 		return e
 	}
 
-	return New("unknown", err.Error())
+	return New("Unknown", err.Error())
 }
 
 func (e *Error) Unwrap() error {

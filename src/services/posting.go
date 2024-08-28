@@ -1,44 +1,39 @@
 package services
 
 import (
-	"errors"
+	"database/sql"
 	"nosebook/src/domain/posts"
-	"nosebook/src/generics"
+	"nosebook/src/errors"
 	"nosebook/src/services/auth"
+	"nosebook/src/services/posting"
 	"nosebook/src/services/posting/commands"
 	"nosebook/src/services/posting/interfaces"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type PostingService struct {
-	postRepo interfaces.PostRepository
+	repository interfaces.PostRepository
 }
 
-func NewPostingService(postRepo interfaces.PostRepository) *PostingService {
+func NewPostingService(repository interfaces.PostRepository) *PostingService {
 	return &PostingService{
-		postRepo: postRepo,
+		repository: repository,
 	}
 }
 
-func (s *PostingService) FindByFilter(c *commands.FindPostsCommand, a *auth.Auth) *generics.SingleQueryResult[*posts.Post] {
-	return s.postRepo.FindByFilter(c.Filter)
-}
-
-func (s *PostingService) Publish(c *commands.PublishPostCommand, a *auth.Auth) (*posts.Post, error) {
-	post := posts.NewPost(a.UserId, c.OwnerId, c.Message)
-	return s.postRepo.Create(post)
-}
-
-func (s *PostingService) Remove(c *commands.RemovePostCommand, a *auth.Auth) (*posts.Post, error) {
-	post := s.postRepo.FindById(c.Id)
-	if post == nil {
-		return nil, errors.New("No such post.")
-	}
-
-	if post.OwnerId != a.UserId {
-		return nil, errors.New("You can't remove this post, only post owners can remove posts.")
-	}
-
-	_, err := s.postRepo.Remove(post)
+func (s *PostingService) Publish(c *commands.PublishPostCommand, a *auth.Auth) (*posts.Post, *errors.Error) {
+	post := posts.NewPost(
+		uuid.New(),
+		a.UserId,
+		c.OwnerId,
+		c.Message,
+		time.Now(),
+		sql.NullTime{},
+		true,
+	)
+	err := s.repository.Save(post)
 	if err != nil {
 		return nil, err
 	}
@@ -46,15 +41,37 @@ func (s *PostingService) Remove(c *commands.RemovePostCommand, a *auth.Auth) (*p
 	return post, nil
 }
 
-func (s *PostingService) Like(c *commands.LikePostCommand, a *auth.Auth) (*posts.Post, error) {
-	post := s.postRepo.FindById(c.Id)
+func (s *PostingService) Remove(c *commands.RemovePostCommand, a *auth.Auth) (*posts.Post, *errors.Error) {
+	post := s.repository.FindById(c.Id)
 	if post == nil {
-		return nil, errors.New("No such post.")
+		return nil, posting.NewNotFoundError()
 	}
 
-	post.Like(a.UserId)
-	post, err := s.postRepo.Save(post)
+	err := post.RemoveBy(a.UserId)
+	if err != nil {
+		return nil, err
+	}
 
+	err = s.repository.Save(post)
+	if err != nil {
+		return nil, err
+	}
+
+	return post, nil
+}
+
+func (s *PostingService) Edit(c *commands.EditPostCommand, a *auth.Auth) (*posts.Post, *errors.Error) {
+	post := s.repository.FindById(c.Id)
+	if post == nil {
+		return nil, posting.NewNotFoundError()
+	}
+
+	err := post.EditBy(a.UserId, c.Message)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.repository.Save(post)
 	if err != nil {
 		return nil, err
 	}

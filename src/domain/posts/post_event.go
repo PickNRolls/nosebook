@@ -3,8 +3,9 @@ package posts
 type PostEventType string
 
 const (
-	LIKED   PostEventType = "LIKED"
-	UNLIKED PostEventType = "UNLIKED"
+	CREATED PostEventType = "CREATED"
+	REMOVED PostEventType = "REMOVED"
+	EDITED  PostEventType = "EDITED"
 )
 
 type PostEvent interface {
