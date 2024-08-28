@@ -48,20 +48,22 @@ func TestNotAuthenticated(t *testing.T) {
 	res, _ := http.Get("http://backend:8080/whoami")
 
 	expect(res.StatusCode).ToBe(403).ElseFail()
-	body, err := io.ReadAll(res.Body)
+	body, _ := io.ReadAll(res.Body)
 	defer res.Body.Close()
 
-	expect(err).ToBe(nil)
-	expected := Response[struct{}]{}
-	expected.Errors = append(expected.Errors, ResponseError{
-		Type:    "Not Authenticated",
-		Message: "You are not authenticated",
-	})
+	expected := J{
+		"data": nil,
+		"errors": []any{
+			J{
+				"type":    "Not Authenticated",
+				"message": "You are not authenticated",
+			},
+		},
+	}
+	actual := J{}
 
-	actual := Response[struct{}]{}
-	err = json.Unmarshal(body, &actual)
-	expect(err).ToBe(nil)
-	expect(actual).ToDeepEqual(expected).ElseFail()
+	json.Unmarshal(body, &actual)
+	expect(actual).ToBe(expected).ElseFail()
 }
 
 func TestLogin(t *testing.T) {
@@ -74,42 +76,23 @@ func TestLogin(t *testing.T) {
 	body, err := io.ReadAll(res.Body)
 	defer res.Body.Close()
 
-	expectedResponse := Response[LoginDTO]{}
-	json.Unmarshal([]byte(`
-		{
-    		"errors": [],
-    		"data": {
-        		"user": {
-            		"id": "ed1a3fd0-4d0b-4961-b4cd-cf212357740d",
-            		"firstName": "Test",
-            		"lastName": "Tester",
-            		"nick": "test_tester",
-            		"passhash": "$2a$04$PFIkrnjZ62TLHhcU3a6Breh1sLUVMXzwlrLNo2dqQSTM9d02py.oa",
-            		"createdAt": "2024-08-28T13:00:39.440309Z",
-            		"lastActivityAt": "2024-08-28T13:00:39.440309Z"
-        		},
-        		"session": {
-            		"sessionId": "b58eb155-5933-43eb-b905-a9edfe8d0744",
-            		"userId": "ed1a3fd0-4d0b-4961-b4cd-cf212357740d",
-            		"createdAt": "2024-08-28T13:06:30.624200793Z",
-            		"expiresAt": "2024-08-30T13:06:30.624200793Z"
-        		}
-    		}
-		}
-	`), &expectedResponse)
+	expected := J{
+		"errors": []any{},
+		"data": J{
+			"user": J{
+				"id":        "ed1a3fd0-4d0b-4961-b4cd-cf212357740d",
+				"firstName": "Test",
+				"lastName":  "Tester",
+				"nick":      "test_tester",
+				"passhash":  "$2a$04$PFIkrnjZ62TLHhcU3a6Breh1sLUVMXzwlrLNo2dqQSTM9d02py.oa",
+			},
+			"session": J{
+				"userId": "ed1a3fd0-4d0b-4961-b4cd-cf212357740d",
+			},
+		},
+	}
+	actual := J{}
+	json.Unmarshal(body, &actual)
 
-	actual := Response[LoginDTO]{}
-	err = json.Unmarshal(body, &actual)
-	expect(err).ToBe(nil)
-
-	expect(len(actual.Errors)).ToBe(0)
-
-	expected := expectedResponse.Data
-	expect(actual.Data.User.Id).ToBe(expected.User.Id)
-	expect(actual.Data.User.FirstName).ToBe(expected.User.FirstName)
-	expect(actual.Data.User.LastName).ToBe(expected.User.LastName)
-	expect(actual.Data.User.Nick).ToBe(expected.User.Nick)
-	expect(actual.Data.User.Passhash).ToBe(expected.User.Passhash)
-
-	expect(actual.Data.Session.UserId).ToBe(expected.Session.UserId)
+	expect(actual).ToContain(expected)
 }
