@@ -64,6 +64,13 @@ INSERT INTO
   users (id, first_name, last_name, nick, passhash)
 VALUES
   (
+    'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
+    'Test',
+    'Tester',
+    'test_tester',
+    '$2a$04$PFIkrnjZ62TLHhcU3a6Breh1sLUVMXzwlrLNo2dqQSTM9d02py.oa' -- 123123123 unhashed
+  ),
+  (
     '1ae02f69-ea1a-4308-b825-0e5896e652e4',
     'Ilya',
     'Blinkov',
@@ -237,8 +244,4 @@ VALUES
   (
     'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
     'd0023f4d-8d7f-4907-9438-d2ed2a9661fa'
-  ),
-  (
-    'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
-    'd0023f4d-8d7f-4907-9438-d2ed2a9661fa',
   );
