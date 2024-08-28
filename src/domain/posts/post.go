@@ -16,8 +16,6 @@ type Post struct {
 	RemovedAt sql.NullTime
 
 	events []PostEvent
-
-	liked bool
 }
 
 func NewPost(

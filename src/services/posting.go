@@ -1,7 +1,6 @@
 package services
 
 import (
-	"database/sql"
 	"nosebook/src/domain/posts"
 	"nosebook/src/errors"
 	"nosebook/src/services/auth"
@@ -24,15 +23,15 @@ func NewPostingService(repository interfaces.PostRepository) *PostingService {
 }
 
 func (s *PostingService) Publish(c *commands.PublishPostCommand, a *auth.Auth) (*posts.Post, *errors.Error) {
-	post := posts.NewPost(
-		uuid.New(),
-		a.UserId,
-		c.OwnerId,
-		c.Message,
-		time.Now(),
-		sql.NullTime{},
-		true,
-	)
+	post := posts.NewBuilder().
+		Id(uuid.New()).
+		AuthorId(a.UserId).
+		OwnerId(c.OwnerId).
+		Message(c.Message).
+		CreatedAt(time.Now()).
+		RaiseCreatedEvent().
+		Build()
+
 	err := s.repository.Save(post)
 	if err != nil {
 		return nil, err

@@ -63,7 +63,6 @@ func main() {
 
 		group.POST("/publish", posts.NewHandlerPublish(postPresenter))
 		group.POST("/remove", posts.NewHandlerRemove(postPresenter))
-		// group.POST("/like", posts.NewHandlerLike(postPresenter))
 	}
 
 	{
