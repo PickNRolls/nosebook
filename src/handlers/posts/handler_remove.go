@@ -1,8 +1,10 @@
+//go:build exclude
+
 package posts
 
 import (
 	"nosebook/src/infra/helpers"
-	"nosebook/src/presenters"
+	// "nosebook/src/presenters"
 	"nosebook/src/services/auth"
 	"nosebook/src/services/posting/commands"
 

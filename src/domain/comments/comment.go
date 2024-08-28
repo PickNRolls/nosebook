@@ -8,47 +8,49 @@ import (
 )
 
 type Comment struct {
-	Id        uuid.UUID           `json:"id" db:"id"`
-	AuthorId  uuid.UUID           `json:"authorId" db:"author_id"`
-	Message   string              `json:"message" db:"message"`
-	CreatedAt time.Time           `json:"createdAt" db:"created_at"`
-	RemovedAt sql.Null[time.Time] `json:"-" db:"removed_at"`
-	PostId    uuid.UUID           `json:"-" db:"post_id"`
-	LikedBy   []uuid.UUID         `json:"-"`
+	Id        uuid.UUID
+	AuthorId  uuid.UUID
+	Message   string
+	CreatedAt time.Time
+	RemovedAt sql.NullTime
+	PostId    uuid.UUID
 
-	Events []CommentEvent `json:"-"`
+	events []CommentEvent
 }
 
-func NewComment(authorId uuid.UUID, message string) *Comment {
-	return &Comment{
-		Id:        uuid.New(),
+func newComment(
+	id uuid.UUID,
+	authorId uuid.UUID,
+	message string,
+	postId uuid.UUID,
+	createdAt time.Time,
+	removedAt sql.NullTime,
+	raiseCreatedEvent bool,
+) *Comment {
+	comment := &Comment{
+		Id:        id,
 		AuthorId:  authorId,
 		Message:   message,
-		CreatedAt: time.Now(),
-		RemovedAt: sql.Null[time.Time]{},
-		PostId:    uuid.UUID{},
-		LikedBy:   make([]uuid.UUID, 0),
+		PostId:    postId,
+		CreatedAt: createdAt,
+		RemovedAt: removedAt,
 
-		Events: make([]CommentEvent, 0),
-	}
-}
-
-func (c *Comment) WithPostId(id uuid.UUID) *Comment {
-	c.PostId = id
-	return c
-}
-
-func (c *Comment) Like(userId uuid.UUID) {
-	for i, id := range c.LikedBy {
-		if id == userId {
-			c.LikedBy[i] = c.LikedBy[len(c.LikedBy)-1]
-			c.LikedBy = c.LikedBy[:len(c.LikedBy)-1]
-			c.Events = append(c.Events, NewCommentUnlikeEvent(userId))
-		}
+		events: make([]CommentEvent, 0),
 	}
 
-	c.LikedBy = append(c.LikedBy, userId)
-	c.Events = append(c.Events, NewCommentLikeEvent(userId))
+	if raiseCreatedEvent {
+		comment.raiseEvent(NewCommentCreatedEvent())
+	}
+
+	return comment
+}
+
+func (this *Comment) raiseEvent(event CommentEvent) {
+	this.events = append(this.events, event)
+}
+
+func (this *Comment) Events() []CommentEvent {
+	return this.events
 }
 
 func (c *Comment) CanBeRemovedBy(userId uuid.UUID) *CommentError {
@@ -59,20 +61,21 @@ func (c *Comment) CanBeRemovedBy(userId uuid.UUID) *CommentError {
 	return nil
 }
 
-func (c *Comment) Remove(userId uuid.UUID) *CommentError {
-	err := c.CanBeRemovedBy(userId)
+func (this *Comment) RemoveBy(userId uuid.UUID) *CommentError {
+	err := this.CanBeRemovedBy(userId)
 	if err != nil {
 		return err
 	}
 
-	if c.RemovedAt.Valid {
+	if this.RemovedAt.Valid {
 		return NewError("Комментарий уже удален")
 	}
 
-	c.RemovedAt = sql.Null[time.Time]{
-		V:     time.Now(),
+	this.RemovedAt = sql.NullTime{
+		Time:  time.Now(),
 		Valid: true,
 	}
-	c.Events = append(c.Events, NewCommentRemoveEvent())
+
+	this.raiseEvent(NewCommentRemovedEvent())
 	return nil
 }

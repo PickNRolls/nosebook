@@ -9,7 +9,7 @@ import (
 
 func GetAuthOrForbidden(ctx *gin.Context) *auth.Auth {
 	a, _ := GetAuthOr(ctx, func() {
-		ctx.Error(errors.NewNotAuthorizedError())
+		ctx.Error(errors.NewNotAuthenticatedError())
 		ctx.Abort()
 	})
 

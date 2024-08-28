@@ -3,8 +3,7 @@ package comments
 type CommentEventType string
 
 const (
-	LIKED   CommentEventType = "LIKED"
-	UNLIKED CommentEventType = "UNLIKED"
+	CREATED CommentEventType = "CREATED"
 	REMOVED CommentEventType = "REMOVED"
 )
 

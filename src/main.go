@@ -6,7 +6,6 @@ import (
 	"nosebook/src/handlers/friendship"
 	"nosebook/src/handlers/posts"
 	"nosebook/src/handlers/users"
-	"nosebook/src/presenters"
 
 	"nosebook/src/infra/middlewares"
 
@@ -23,20 +22,27 @@ func main() {
 
 	userAuthenticationService := services.NewUserAuthenticationService(repos.NewUserRepository(db), repos.NewSessionRepository(db))
 	friendshipService := services.NewFriendshipService(repos.NewUserFriendsRepository(db))
-	postingService := services.NewPostingService(repos.NewPostsRepository(db))
-	commentService := services.NewCommentService(repos.NewCommentRepository(db))
+	postRepository := repos.NewPostsRepository(db)
+	postingService := services.NewPostingService(postRepository)
+	commentService := services.NewCommentService(repos.NewCommentRepository(db), postRepository)
 	userService := services.NewUserService(repos.NewUserRepository(db))
 
-	postPresenter := presenters.
-		NewPostPresenter().
-		WithPostingService(postingService).
-		WithPostRepository(repos.NewPostPresenterRepository(db)).
-		WithCommentService(commentService)
+	// postPresenter := presenters.
+	// 	NewPostPresenter().
+	// 	WithPostingService(postingService).
+	// 	WithPostRepository(repos.NewPostPresenterRepository(db)).
+	// 	WithCommentService(commentService)
 
 	router := gin.Default()
 
+	router.GET("/ping", func(ctx *gin.Context) {
+		ctx.Writer.Write([]byte("pong"))
+		ctx.Status(200)
+	})
+
 	router.Use(middlewares.NewPresenterMiddleware())
 	router.Use(middlewares.NewErrorHandlerMiddleware())
+	router.NoRoute(middlewares.NewNoRouteHandler())
 	router.Use(middlewares.NewSessionMiddleware(userAuthenticationService))
 
 	unauthRouter := router.Group("/", middlewares.NewNotAuthMiddleware())
@@ -61,17 +67,16 @@ func main() {
 		group := authRouter.Group("/posts")
 		// group.GET("/", posts.NewHandlerFind(postPresenter))
 
-		group.POST("/publish", posts.NewHandlerPublish(postPresenter))
-		group.POST("/remove", posts.NewHandlerRemove(postPresenter))
+		group.POST("/publish", posts.NewHandlerPublish(postingService))
+		// group.POST("/remove", posts.NewHandlerRemove(postPresenter))
 	}
 
 	{
 		group := authRouter.Group("/comments")
-		group.GET("/", comments.NewHandlerFind(commentService))
+		// group.GET("/", comments.NewHandlerFind(commentService))
 
 		group.POST("/publish-on-post", comments.NewHandlerPublishOnPost(commentService))
 		group.POST("/remove", comments.NewHandlerRemove(commentService))
-		group.POST("/like", comments.NewHandlerLike(commentService))
 	}
 
 	{

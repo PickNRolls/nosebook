@@ -1,6 +1,7 @@
 package repos
 
 import (
+	"database/sql"
 	"fmt"
 	"nosebook/src/domain/comments"
 	"nosebook/src/errors"
@@ -23,6 +24,30 @@ type CommentRepository struct {
 type commentLike struct {
 	UserId    uuid.UUID `db:"user_id"`
 	CommentId uuid.UUID `db:"comment_id"`
+}
+
+type commentDest struct {
+	id        uuid.UUID    `db:"id"`
+	authorId  uuid.UUID    `db:"author_id"`
+	postId    uuid.UUID    `db:"post_id"`
+	message   string       `db:"message"`
+	createdAt time.Time    `db:"created_at"`
+	removedAt sql.NullTime `db:"removed_at"`
+}
+
+func (this *commentDest) toDomain() *comments.Comment {
+	builder := comments.NewBuilder().
+		Id(this.id).
+		AuthorId(this.authorId).
+		Message(this.message).
+		PostId(this.postId).
+		CreatedAt(this.createdAt)
+
+	if this.removedAt.Valid {
+		builder.RemovedAt(this.removedAt.Time)
+	}
+
+	return builder.Build()
 }
 
 var select_columns = []string{"id", "author_id", "message", "created_at", "removed_at"}
@@ -251,85 +276,81 @@ func (repo *CommentRepository) FindByFilter(filter structs.QueryFilter, limitPoi
 		}
 	}
 
-	likes, error := repo.findCommentLikes(result.Data)
-	if error != nil {
-		result.Err = error
-		return &result
-	}
-
-	for _, like := range likes {
-		for _, comment := range result.Data {
-			if like.CommentId == comment.Id {
-				comment.LikedBy = append(comment.LikedBy, like.UserId)
-			}
-		}
-	}
+	// likes, error := repo.findCommentLikes(result.Data)
+	// if error != nil {
+	// 	result.Err = error
+	// 	return &result
+	// }
+	//
+	// for _, like := range likes {
+	// 	for _, comment := range result.Data {
+	// 		if like.CommentId == comment.Id {
+	// 			comment.LikedBy = append(comment.LikedBy, like.UserId)
+	// 		}
+	// 	}
+	// }
 
 	return &result
 }
 
 func (repo *CommentRepository) FindById(id uuid.UUID, includeRemoved bool) *comments.Comment {
 	qb := postgres.NewSquirrel()
-	comment := comments.Comment{}
+	dest := commentDest{}
 
 	{
-		query := qb.Select(select_columns...).From(comments_table).Where("id = (?)", id)
+		query := qb.Select(append(select_columns, "post_id")...).
+			From(comments_table).
+			Join(
+				post_comments_table+" on c.id = pc.comment_id",
+			).
+			Where("id = ?", id)
+
 		if !includeRemoved {
 			query = query.Where("removed_at IS NULL")
 		}
 		sql, args, _ := query.ToSql()
-		err := repo.db.Get(&comment, sql, args...)
+		err := repo.db.Get(&dest, sql, args...)
 
 		if err != nil {
 			return nil
 		}
 	}
 
-	{
-		var likes []struct {
-			UserId uuid.UUID `db:"user_id"`
-		}
-
-		sql, args, _ := qb.Select("user_id").From("comment_likes").Where("comment_id = (?)", id).ToSql()
-		err := repo.db.Select(&likes, sql, args...)
-
-		if err != nil {
-			return nil
-		}
-
-		for _, like := range likes {
-			comment.LikedBy = append(comment.LikedBy, like.UserId)
-		}
-	}
-
-	return &comment
+	return dest.toDomain()
 }
 
-func (repo *CommentRepository) Save(comment *comments.Comment) (*comments.Comment, error) {
+func (repo *CommentRepository) Save(comment *comments.Comment) *errors.Error {
 	qb := postgres.NewSquirrel()
 	tx, err := repo.db.Beginx()
 	if err != nil {
-		return nil, err
+		return errors.From(err)
 	}
 
-	for _, event := range comment.Events {
+	for _, event := range comment.Events() {
 		switch event.Type() {
-		case comments.LIKED:
-			likeEvent := event.(*comments.CommentLikeEvent)
-			sql, args, _ := qb.Insert("comment_likes").Columns("user_id", "comment_id").Values(likeEvent.UserId, comment.Id).ToSql()
-			_, err := tx.Exec(sql, args...)
-			if err != nil {
-				tx.Rollback()
-				return nil, err
+		case comments.CREATED:
+			{
+				sql, args, _ := qb.Insert(comments_table).Columns(
+					insert_columns...,
+				).Values(
+					comment.Id, comment.AuthorId, comment.Message, comment.CreatedAt, comment.RemovedAt,
+				).ToSql()
+				_, err = tx.Exec(sql, args...)
+
+				if err != nil {
+					tx.Rollback()
+					return errors.From(err)
+				}
 			}
 
-		case comments.UNLIKED:
-			unlikeEvent := event.(*comments.CommentUnlikeEvent)
-			sql, args, _ := qb.Delete("comment_likes").Where("user_id = ? AND comment_id = ?", unlikeEvent.UserId, comment.Id).ToSql()
-			_, err := tx.Exec(sql, args...)
-			if err != nil {
-				tx.Rollback()
-				return nil, err
+			if comment.PostId != uuid.Nil {
+				sql, args, _ := qb.Insert("post_comments").Columns("post_id", "comment_id").Values(comment.PostId, comment.Id).ToSql()
+				_, err = tx.Exec(sql, args...)
+
+				if err != nil {
+					tx.Rollback()
+					return errors.From(err)
+				}
 			}
 
 		case comments.REMOVED:
@@ -337,53 +358,15 @@ func (repo *CommentRepository) Save(comment *comments.Comment) (*comments.Commen
 			_, err := tx.Exec(sql, args...)
 			if err != nil {
 				tx.Rollback()
-				return nil, err
+				return errors.From(err)
 			}
 		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return nil, err
+		return errors.From(err)
 	}
 
-	return comment, nil
-}
-
-func (repo *CommentRepository) Create(comment *comments.Comment) (*comments.Comment, error) {
-	qb := postgres.NewSquirrel()
-	tx, err := repo.db.Begin()
-	if err != nil {
-		return nil, err
-	}
-
-	{
-		sql, args, _ := qb.Insert(comments_table).Columns(
-			insert_columns...,
-		).Values(
-			comment.Id, comment.AuthorId, comment.Message, comment.CreatedAt, comment.RemovedAt,
-		).ToSql()
-		_, err = tx.Exec(sql, args...)
-
-		if err != nil {
-			tx.Rollback()
-			return nil, err
-		}
-	}
-
-	if comment.PostId != uuid.Nil {
-		sql, args, _ := qb.Insert("post_comments").Columns("post_id", "comment_id").Values(comment.PostId, comment.Id).ToSql()
-		_, err = tx.Exec(sql, args...)
-
-		if err != nil {
-			tx.Rollback()
-			return nil, err
-		}
-	}
-
-	if err := tx.Commit(); err != nil {
-		return nil, err
-	}
-
-	return comment, nil
+	return nil
 }

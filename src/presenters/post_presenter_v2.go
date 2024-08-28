@@ -118,7 +118,7 @@ func (p *PostPresenterV2) FindByFilter(filter *dto.FindInputDTO, a *auth.Auth) *
 		result.Data = append(result.Data, postDTO)
 	}
 
-	result.Next = encodeNext(posts[len(posts)-1])
+	// result.Next = encodeNext(posts[len(posts)-1])
 
 	return result
 }

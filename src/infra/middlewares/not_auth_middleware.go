@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"net/http"
 	"nosebook/src/infra/errors"
 	"nosebook/src/infra/helpers"
 
@@ -14,7 +15,8 @@ func NewNotAuthMiddleware() func(ctx *gin.Context) {
 		})
 
 		if ok {
-			ctx.Error(errors.NewAuthorizedError())
+			ctx.Status(http.StatusForbidden)
+			ctx.Error(errors.NewAuthenticatedError())
 			ctx.Abort()
 		}
 	}

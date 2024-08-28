@@ -2,14 +2,14 @@ package posts
 
 import (
 	"nosebook/src/infra/helpers"
-	"nosebook/src/presenters"
+	"nosebook/src/services"
 	"nosebook/src/services/auth"
 	"nosebook/src/services/posting/commands"
 
 	"github.com/gin-gonic/gin"
 )
 
-func NewHandlerPublish(postPresenter *presenters.PostPresenter) func(ctx *gin.Context) {
+func NewHandlerPublish(postService *services.PostingService) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		user := helpers.GetUserOrForbidden(ctx)
 
@@ -20,7 +20,7 @@ func NewHandlerPublish(postPresenter *presenters.PostPresenter) func(ctx *gin.Co
 			return
 		}
 
-		post, error := postPresenter.Publish(&command, &auth.Auth{
+		post, error := postService.Publish(&command, &auth.Auth{
 			UserId: user.ID,
 		})
 		if error != nil {

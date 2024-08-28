@@ -19,17 +19,16 @@ func NewPresenterMiddleware() func(ctx *gin.Context) {
 			responseDTO.Data = data
 		}
 
-		errorsAny, exists := ctx.Get("errors")
-		if exists {
-			errors, ok := errorsAny.([]*errors.Error)
+		if errorsAny, exists := ctx.Get("errors"); exists {
+			errs, ok := errorsAny.([]*errors.Error)
 			if !ok {
 				ctx.AbortWithStatusJSON(http.StatusInternalServerError, responseDTO)
 				return
 			}
 
-			responseDTO.Errors = errors
+			responseDTO.Errors = errs
 		}
 
-		ctx.JSON(http.StatusOK, responseDTO)
+		ctx.JSON(ctx.Writer.Status(), responseDTO)
 	}
 }
