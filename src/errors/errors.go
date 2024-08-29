@@ -14,6 +14,10 @@ func New(errorType string, message string) *Error {
 }
 
 func From(err error) *Error {
+	if err == nil {
+		return nil
+	}
+
 	e, ok := err.(*Error)
 	if ok {
 		return e
