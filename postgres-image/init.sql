@@ -13,7 +13,7 @@ CREATE TABLE user_sessions (
   user_id UUID REFERENCES users (id),
   session_id UUID NOT NULL UNIQUE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  expires_at TIMESTAMP NOT NULL
+  expires_at TIMESTAMP NOT NULL DEFAULT NOW() + '1day'::interval
 );
 
 CREATE TABLE friendship_requests (
@@ -104,6 +104,14 @@ VALUES
     'Mandjiev',
     'sanal',
     '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS'
+  );
+
+INSERT INTO
+  user_sessions (user_id, session_id)
+VALUES
+  (
+    'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
+    'bb23af03-be50-4bce-b729-b259b2e02e54' -- for logout test
   );
 
 INSERT INTO
