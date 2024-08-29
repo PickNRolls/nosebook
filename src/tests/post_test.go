@@ -8,13 +8,13 @@ import (
 	"testing"
 )
 
-func TestCommentPost(t *testing.T) {
+func TestPost(t *testing.T) {
 	expect := CreateMatcher(t, true)
 	reqBody, _ := json.Marshal(J{
-		"id":      "c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7",
-		"message": "my test comment",
+		"ownerId": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+		"message": "my test message",
 	})
-	req, _ := http.NewRequest("POST", "http://backend:8080/comments/publish-on-post", bytes.NewReader(reqBody))
+	req, _ := http.NewRequest("POST", "http://backend:8080/posts/publish", bytes.NewReader(reqBody))
 	addSessionId(req)
 	res, _ := http.DefaultClient.Do(req)
 	expect(res.StatusCode).ToBe(200)
@@ -29,13 +29,13 @@ func TestCommentPost(t *testing.T) {
 	json.Unmarshal(body, &actual)
 	expect(actual).ToContain(expected)
 	expect(actual["data"].(J)["id"]).ToBeTypeOf("string")
-	commentId := actual["data"].(J)["id"].(string)
-	expect(commentId).Not().ToBe("")
+	postId := actual["data"].(J)["id"].(string)
+	expect(postId).Not().ToBe("")
 
 	reqBody, _ = json.Marshal(J{
-		"id": commentId,
+		"id": postId,
 	})
-	req, _ = http.NewRequest("POST", "http://backend:8080/comments/remove", bytes.NewReader(reqBody))
+	req, _ = http.NewRequest("POST", "http://backend:8080/posts/remove", bytes.NewReader(reqBody))
 	addSessionId(req)
 	res, _ = http.DefaultClient.Do(req)
 	expect(res.StatusCode).ToBe(200)
@@ -44,7 +44,7 @@ func TestCommentPost(t *testing.T) {
 	expected = J{
 		"ok": true,
 		"data": J{
-			"id": commentId,
+			"id": postId,
 		},
 	}
 	actual = J{}
