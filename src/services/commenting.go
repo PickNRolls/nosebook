@@ -46,8 +46,8 @@ func (this *CommentService) PublishOnPost(c *commands.PublishPostCommentCommand,
 	return comment, nil
 }
 
-func (s *CommentService) Remove(c *commands.RemoveCommentCommand, a *auth.Auth) (*comments.Comment, *errors.Error) {
-	comment := s.repository.FindById(c.CommentId, true)
+func (this *CommentService) Remove(c *commands.RemoveCommentCommand, a *auth.Auth) (*comments.Comment, *errors.Error) {
+	comment := this.repository.FindById(c.CommentId, true)
 	if comment == nil {
 		return nil, commenting.NewError("Такого комментария не существует")
 	}
@@ -57,7 +57,7 @@ func (s *CommentService) Remove(c *commands.RemoveCommentCommand, a *auth.Auth) 
 		return nil, err
 	}
 
-	err = s.repository.Save(comment)
+	err = this.repository.Save(comment)
 	if err != nil {
 		return nil, err
 	}

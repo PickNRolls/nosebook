@@ -17,8 +17,8 @@ func NewUserService(userRepo common_interfaces.UserRepository) *UserService {
 	}
 }
 
-func (s *UserService) GetUser(c *commands.GetUserCommand) (*users.User, error) {
-	user := s.userRepo.FindById(c.Id)
+func (this *UserService) GetUser(c *commands.GetUserCommand) (*users.User, error) {
+	user := this.userRepo.FindById(c.Id)
 	if user == nil {
 		return nil, errors.New("No such user.")
 	}
@@ -26,8 +26,8 @@ func (s *UserService) GetUser(c *commands.GetUserCommand) (*users.User, error) {
 	return user, nil
 }
 
-func (s *UserService) GetAllUsers() ([]*users.User, error) {
-	all, err := s.userRepo.FindAll()
+func (this *UserService) GetAllUsers() ([]*users.User, error) {
+	all, err := this.userRepo.FindAll()
 	if err != nil {
 		return make([]*users.User, 0), err
 	}

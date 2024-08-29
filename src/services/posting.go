@@ -22,7 +22,7 @@ func NewPostingService(repository interfaces.PostRepository) *PostingService {
 	}
 }
 
-func (s *PostingService) Publish(c *commands.PublishPostCommand, a *auth.Auth) (*posts.Post, *errors.Error) {
+func (this *PostingService) Publish(c *commands.PublishPostCommand, a *auth.Auth) (*posts.Post, *errors.Error) {
 	post := posts.NewBuilder().
 		Id(uuid.New()).
 		AuthorId(a.UserId).
@@ -32,7 +32,7 @@ func (s *PostingService) Publish(c *commands.PublishPostCommand, a *auth.Auth) (
 		RaiseCreatedEvent().
 		Build()
 
-	err := s.repository.Save(post)
+	err := this.repository.Save(post)
 	if err != nil {
 		return nil, err
 	}
@@ -40,8 +40,8 @@ func (s *PostingService) Publish(c *commands.PublishPostCommand, a *auth.Auth) (
 	return post, nil
 }
 
-func (s *PostingService) Remove(c *commands.RemovePostCommand, a *auth.Auth) (*posts.Post, *errors.Error) {
-	post := s.repository.FindById(c.Id)
+func (this *PostingService) Remove(c *commands.RemovePostCommand, a *auth.Auth) (*posts.Post, *errors.Error) {
+	post := this.repository.FindById(c.Id)
 	if post == nil {
 		return nil, posting.NewNotFoundError()
 	}
@@ -51,7 +51,7 @@ func (s *PostingService) Remove(c *commands.RemovePostCommand, a *auth.Auth) (*p
 		return nil, err
 	}
 
-	err = s.repository.Save(post)
+	err = this.repository.Save(post)
 	if err != nil {
 		return nil, err
 	}
@@ -59,8 +59,8 @@ func (s *PostingService) Remove(c *commands.RemovePostCommand, a *auth.Auth) (*p
 	return post, nil
 }
 
-func (s *PostingService) Edit(c *commands.EditPostCommand, a *auth.Auth) (*posts.Post, *errors.Error) {
-	post := s.repository.FindById(c.Id)
+func (this *PostingService) Edit(c *commands.EditPostCommand, a *auth.Auth) (*posts.Post, *errors.Error) {
+	post := this.repository.FindById(c.Id)
 	if post == nil {
 		return nil, posting.NewNotFoundError()
 	}
@@ -70,7 +70,7 @@ func (s *PostingService) Edit(c *commands.EditPostCommand, a *auth.Auth) (*posts
 		return nil, err
 	}
 
-	err = s.repository.Save(post)
+	err = this.repository.Save(post)
 	if err != nil {
 		return nil, err
 	}
