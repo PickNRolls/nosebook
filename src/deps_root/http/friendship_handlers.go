@@ -1,19 +1,16 @@
-//go:build exclude
-
 package roothttp
 
 import (
-	"nosebook/src/handlers/friendship"
-	"nosebook/src/infra/postgres/repositories"
-	"nosebook/src/services"
+	rootfriendshipservice "nosebook/src/deps_root/friendship_service"
+	"nosebook/src/services/friendship"
 )
 
 func (this *RootHTTP) addFriendshipHandlers() {
-	friendshipService := services.NewFriendshipService(repos.NewUserFriendsRepository(this.db))
+	service := rootfriendshipservice.New(this.db)
 
 	group := this.authRouter.Group("/friendship")
-	group.POST("/add", friendship.NewHandlerAdd(friendshipService))
-	group.POST("/accept", friendship.NewHandlerAccept(friendshipService))
-	group.POST("/deny", friendship.NewHandlerDeny(friendshipService))
-	group.POST("/remove", friendship.NewHandlerRemove(friendshipService))
+	group.POST("/send-request", execDefaultHandler(&friendship.SendRequestCommand{}, service.SendRequest))
+	group.POST("/accept-request", execDefaultHandler(&friendship.AcceptRequestCommand{}, service.AcceptRequest))
+	group.POST("/deny-request", execDefaultHandler(&friendship.DenyRequestCommand{}, service.DenyRequest))
+	group.POST("/remove-friend", execDefaultHandler(&friendship.RemoveFriendCommand{}, service.RemoveFriend))
 }

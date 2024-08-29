@@ -12,6 +12,20 @@ type Result struct {
 	Data   any             `json:"data,omitempty"`
 }
 
+func FromCommandReturn(data any, err *errors.Error) *Result {
+	if err != nil {
+		return Fail(err)
+	}
+
+	output := Ok()
+	if id, ok := data.(uuid.UUID); ok {
+		output.WithId(id)
+		return output
+	}
+
+	return output.WithData(data)
+}
+
 func Ok() *Result {
 	return &Result{
 		Ok: true,

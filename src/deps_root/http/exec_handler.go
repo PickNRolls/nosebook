@@ -1,15 +1,24 @@
 package roothttp
 
 import (
-	"fmt"
 	reqcontext "nosebook/src/deps_root/http/req_context"
+	"nosebook/src/errors"
 	"nosebook/src/services/auth"
 	commandresult "nosebook/src/services/command_result"
 
 	"github.com/gin-gonic/gin"
 )
 
-func execDefaultHandler[C any](
+func execDefaultHandler[C any, T any](
+	command *C,
+	serviceMethod func(*C, *auth.Auth) (T, *errors.Error),
+) func(*gin.Context) {
+	return execResultHandler(command, func(c *C, a *auth.Auth) *commandresult.Result {
+		return commandresult.FromCommandReturn(serviceMethod(c, a))
+	})
+}
+
+func execResultHandler[C any](
 	command *C,
 	serviceMethod func(*C, *auth.Auth) *commandresult.Result,
 ) func(*gin.Context) {
@@ -17,7 +26,6 @@ func execDefaultHandler[C any](
 		reqCtx := reqcontext.From(ctx)
 		if command != nil {
 			if err := ctx.ShouldBindJSON(command); err != nil {
-				fmt.Println(err)
 				ctx.Error(err)
 				ctx.Abort()
 				return

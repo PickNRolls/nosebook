@@ -40,10 +40,10 @@ func New(db *sqlx.DB) *RootHTTP {
 	output.authRouter = router.Group("/", middleware.NewAuth())
 	authRouter := output.authRouter
 
-	unauthRouter.POST("/register", execDefaultHandler(&userauth.RegisterUserCommand{}, userAuthService.RegisterUser))
-	unauthRouter.POST("/login", execDefaultHandler(&userauth.LoginCommand{}, userAuthService.Login))
+	unauthRouter.POST("/register", execResultHandler(&userauth.RegisterUserCommand{}, userAuthService.RegisterUser))
+	unauthRouter.POST("/login", execResultHandler(&userauth.LoginCommand{}, userAuthService.Login))
 
-	authRouter.POST("/logout", execDefaultHandler(nil, userAuthService.Logout))
+	authRouter.POST("/logout", execResultHandler(nil, userAuthService.Logout))
 	authRouter.GET("/whoami", func(ctx *gin.Context) {
 		reqCtx := reqcontext.From(ctx)
 		user := reqCtx.UserOrForbidden()
@@ -54,7 +54,7 @@ func New(db *sqlx.DB) *RootHTTP {
 	output.addLikeHandlers()
 	output.addPostHandlers()
 	output.addCommentHandlers()
-	// output.addFriendshipHandlers()
+	output.addFriendshipHandlers()
 
 	return output
 }

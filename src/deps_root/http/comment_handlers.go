@@ -10,6 +10,6 @@ func (this *RootHTTP) addCommentHandlers() {
 
 	group := this.authRouter.Group("/comments")
 
-	group.POST("/publish-on-post", execDefaultHandler(&commenting.PublishPostCommentCommand{}, commentService.PublishOnPost))
-	group.POST("/remove", execDefaultHandler(&commenting.RemoveCommentCommand{}, commentService.Remove))
+	group.POST("/publish-on-post", execResultHandler(&commenting.PublishPostCommentCommand{}, commentService.PublishOnPost))
+	group.POST("/remove", execResultHandler(&commenting.RemoveCommentCommand{}, commentService.Remove))
 }
