@@ -1,9 +1,8 @@
 package like
 
 import (
-	"fmt"
-	domainlike "nosebook/src/domain/like"
 	"nosebook/src/services/auth"
+	commandresult "nosebook/src/services/command_result"
 )
 
 type Service struct {
@@ -16,44 +15,46 @@ func New(repository Repository) *Service {
 	}
 }
 
-func (this *Service) LikePost(c *LikePostCommand, a *auth.Auth) (*domainlike.Like, *Error) {
+func (this *Service) LikePost(c *LikePostCommand, a *auth.Auth) *commandresult.Result {
 	like, err := this.repository.
 		WithPostId(c.Id).
 		WithUserId(a.UserId).
 		FindOne()
 	if err != nil {
-		return nil, err
+		return commandresult.Fail(err)
 	}
-
-	fmt.Println(like)
 
 	err = like.Toggle()
 	if err != nil {
-		return nil, err
+		return commandresult.Fail(err)
 	}
-
-	fmt.Println(like)
 
 	this.repository.Save(like)
 
-	return like, nil
+	return commandresult.Ok().WithData(resultData{
+		PostId: &c.Id,
+		Liked:  like.Value,
+	})
 }
 
-func (this *Service) LikeComment(c *LikeCommentCommand, a *auth.Auth) (*domainlike.Like, *Error) {
+func (this *Service) LikeComment(c *LikeCommentCommand, a *auth.Auth) *commandresult.Result {
 	like, err := this.repository.
 		WithCommentId(c.Id).
 		WithUserId(a.UserId).
 		FindOne()
 	if err != nil {
-		return nil, err
+		return commandresult.Fail(err)
 	}
 
 	err = like.Toggle()
 	if err != nil {
-		return nil, err
+		return commandresult.Fail(err)
 	}
 
 	this.repository.Save(like)
 
-	return like, nil
+	return commandresult.Ok().WithData(resultData{
+		CommentId: &c.Id,
+		Liked:     like.Value,
+	})
 }

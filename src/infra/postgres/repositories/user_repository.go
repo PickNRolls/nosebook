@@ -1,8 +1,8 @@
 package repos
 
 import (
-	"nosebook/src/domain/users"
-	"nosebook/src/services/common/interfaces"
+	"nosebook/src/domain/user"
+	userauth "nosebook/src/services/user_auth"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,13 +13,13 @@ type UserRepository struct {
 	db *sqlx.DB
 }
 
-func NewUserRepository(db *sqlx.DB) interfaces.UserRepository {
+func NewUserRepository(db *sqlx.DB) userauth.UserRepository {
 	return &UserRepository{
 		db: db,
 	}
 }
 
-func (repo *UserRepository) Create(user *users.User) (*users.User, error) {
+func (repo *UserRepository) Create(user *domainuser.User) (*domainuser.User, error) {
 	_, err := repo.db.NamedExec(`INSERT INTO users (
 		id,
 	  first_name,
@@ -62,8 +62,8 @@ func (repo *UserRepository) UpdateActivity(userId uuid.UUID, t time.Time) error 
 	return err
 }
 
-func (repo *UserRepository) FindAll() ([]*users.User, error) {
-	var all []*users.User
+func (repo *UserRepository) FindAll() ([]*domainuser.User, error) {
+	var all []*domainuser.User
 	err := repo.db.Select(&all, `SELECT
 		id,
 		first_name,
@@ -76,14 +76,14 @@ func (repo *UserRepository) FindAll() ([]*users.User, error) {
 	`)
 
 	if err != nil {
-		return make([]*users.User, 0), nil
+		return make([]*domainuser.User, 0), nil
 	}
 
 	return all, nil
 }
 
-func (repo *UserRepository) FindByNick(nick string) *users.User {
-	user := users.User{}
+func (repo *UserRepository) FindByNick(nick string) *domainuser.User {
+	user := domainuser.User{}
 	err := repo.db.Get(&user, `SELECT
 		id,
 	  first_name,
@@ -103,8 +103,8 @@ func (repo *UserRepository) FindByNick(nick string) *users.User {
 	return &user
 }
 
-func (repo *UserRepository) FindById(id uuid.UUID) *users.User {
-	user := users.User{}
+func (repo *UserRepository) FindById(id uuid.UUID) *domainuser.User {
+	user := domainuser.User{}
 	err := repo.db.Get(&user, `SELECT
 		id,
 		first_name,

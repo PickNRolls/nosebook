@@ -2,9 +2,9 @@ package roothttp
 
 import (
 	"nosebook/src/deps_root/http/middleware"
-	"nosebook/src/handlers"
+	reqcontext "nosebook/src/deps_root/http/req_context"
 	"nosebook/src/infra/postgres/repositories"
-	"nosebook/src/services"
+	userauth "nosebook/src/services/user_auth"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
@@ -24,7 +24,7 @@ func New(db *sqlx.DB) *RootHTTP {
 		router: router,
 	}
 
-	userAuthenticationService := services.NewUserAuthenticationService(repos.NewUserRepository(db), repos.NewSessionRepository(db))
+	userAuthService := userauth.New(repos.NewUserRepository(db), repos.NewSessionRepository(db))
 
 	router.GET("/ping", func(ctx *gin.Context) {
 		ctx.Status(200)
@@ -33,23 +33,28 @@ func New(db *sqlx.DB) *RootHTTP {
 
 	router.Use(middleware.NewPresenter())
 	router.NoRoute(middleware.NewNoRouteHandler())
-	router.Use(middleware.NewSession(userAuthenticationService))
+	router.Use(middleware.NewSession(userAuthService))
 
 	output.unauthRouter = router.Group("/", middleware.NewNotAuth())
 	unauthRouter := output.unauthRouter
 	output.authRouter = router.Group("/", middleware.NewAuth())
 	authRouter := output.authRouter
 
-	unauthRouter.POST("/register", handlers.NewHandlerRegister(userAuthenticationService))
-	unauthRouter.POST("/login", handlers.NewHandlerLogin(userAuthenticationService))
+	unauthRouter.POST("/register", execDefaultHandler(&userauth.RegisterUserCommand{}, userAuthService.RegisterUser))
+	unauthRouter.POST("/login", execDefaultHandler(&userauth.LoginCommand{}, userAuthService.Login))
 
-	authRouter.GET("/whoami", handlers.NewHandlerWhoAmI())
-	authRouter.POST("/logout", handlers.NewHandlerLogout(userAuthenticationService))
+	authRouter.POST("/logout", execDefaultHandler(nil, userAuthService.Logout))
+	authRouter.GET("/whoami", func(ctx *gin.Context) {
+		reqCtx := reqcontext.From(ctx)
+		user := reqCtx.UserOrForbidden()
+		reqCtx.SetResponseOk(true)
+		reqCtx.SetResponseData(user)
+	})
 
 	output.addLikeHandlers()
 	output.addPostHandlers()
 	output.addCommentHandlers()
-	output.addFriendshipHandlers()
+	// output.addFriendshipHandlers()
 
 	return output
 }

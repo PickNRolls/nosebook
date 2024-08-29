@@ -1,4 +1,4 @@
-package users
+package domainuser
 
 import (
 	"github.com/google/uuid"
@@ -6,7 +6,7 @@ import (
 )
 
 type User struct {
-	ID             uuid.UUID `json:"id" db:"id"`
+	Id             uuid.UUID `json:"id" db:"id"`
 	FirstName      string    `json:"firstName" db:"first_name"`
 	LastName       string    `json:"lastName" db:"last_name"`
 	Nick           string    `json:"nick" db:"nick"`
@@ -15,9 +15,9 @@ type User struct {
 	LastActivityAt time.Time `json:"lastActivityAt" db:"last_activity_at"`
 }
 
-func NewUser(firstName string, lastName string, nick string, passhash string) *User {
+func New(firstName string, lastName string, nick string, passhash string) *User {
 	return &User{
-		ID:             uuid.New(),
+		Id:             uuid.New(),
 		FirstName:      firstName,
 		LastName:       lastName,
 		Nick:           nick,

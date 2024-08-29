@@ -2,10 +2,10 @@ package auth
 
 import (
 	"nosebook/src/domain/sessions"
-	"nosebook/src/domain/users"
+	"nosebook/src/domain/user"
 )
 
 type AuthResult struct {
-	User    *users.User       `json:"user"`
+	User    *domainuser.User  `json:"user"`
 	Session *sessions.Session `json:"session"`
 }

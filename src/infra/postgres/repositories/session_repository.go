@@ -2,7 +2,7 @@ package repos
 
 import (
 	"nosebook/src/domain/sessions"
-	"nosebook/src/services/user_authentication/interfaces"
+	userauth "nosebook/src/services/user_auth"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -12,7 +12,7 @@ type SessionRepository struct {
 	db *sqlx.DB
 }
 
-func NewSessionRepository(db *sqlx.DB) interfaces.SessionRepository {
+func NewSessionRepository(db *sqlx.DB) userauth.SessionRepository {
 	return &SessionRepository{
 		db: db,
 	}

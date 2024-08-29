@@ -2,7 +2,7 @@ package reqcontext
 
 import (
 	"net/http"
-	"nosebook/src/domain/users"
+	"nosebook/src/domain/user"
 	"nosebook/src/errors"
 	infraerrors "nosebook/src/infra/errors"
 	"nosebook/src/services/auth"
@@ -24,17 +24,17 @@ func From(ctx *gin.Context) *ReqContext {
 	}
 }
 
-func (this *ReqContext) SetUser(user *users.User) {
+func (this *ReqContext) SetUser(user *domainuser.User) {
 	this.ctx.Set("user", user)
 }
 
-func (this *ReqContext) User() *users.User {
+func (this *ReqContext) User() *domainuser.User {
 	userAny, ok := this.ctx.Get("user")
 	if !ok {
 		return nil
 	}
 
-	user, ok := userAny.(*users.User)
+	user, ok := userAny.(*domainuser.User)
 	if !ok {
 		return nil
 	}
@@ -42,7 +42,7 @@ func (this *ReqContext) User() *users.User {
 	return user
 }
 
-func (this *ReqContext) UserOrForbidden() *users.User {
+func (this *ReqContext) UserOrForbidden() *domainuser.User {
 	user := this.User()
 
 	if user == nil {
@@ -74,6 +74,19 @@ func (this *ReqContext) SessionId() uuid.UUID {
 
 func (this *ReqContext) Auth() *auth.Auth {
 	return auth.From(this.User(), this.SessionId())
+}
+
+func (this *ReqContext) SetResponseOk(ok bool) {
+	this.ctx.Set("ok", ok)
+}
+
+func (this *ReqContext) ResponseOk() bool {
+	data, exists := this.ctx.Get("ok")
+	if !exists {
+		return false
+	}
+
+	return data.(bool)
 }
 
 func (this *ReqContext) SetResponseData(data any) {

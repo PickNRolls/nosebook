@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"nosebook/src/domain/users"
+	"nosebook/src/domain/user"
 
 	"github.com/google/uuid"
 )
@@ -11,13 +11,13 @@ type Auth struct {
 	SessionId uuid.UUID
 }
 
-func From(user *users.User, sessionId uuid.UUID) *Auth {
+func From(user *domainuser.User, sessionId uuid.UUID) *Auth {
 	if user == nil || sessionId == uuid.Nil {
 		return nil
 	}
 
 	return &Auth{
-		UserId:    user.ID,
+		UserId:    user.Id,
 		SessionId: sessionId,
 	}
 }

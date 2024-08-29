@@ -2,14 +2,13 @@ package middleware
 
 import (
 	reqcontext "nosebook/src/deps_root/http/req_context"
-	"nosebook/src/services"
-	"nosebook/src/services/user_authentication/commands"
+	userauth "nosebook/src/services/user_auth"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
-func NewSession(userAuthenticationService *services.UserAuthenticationService) func(ctx *gin.Context) {
+func NewSession(service *userauth.Service) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		defer ctx.Next()
 
@@ -23,7 +22,7 @@ func NewSession(userAuthenticationService *services.UserAuthenticationService) f
 			return
 		}
 
-		user, err := userAuthenticationService.TryGetUserBySessionId(&commands.TryGetUserBySessionIdCommand{
+		user, err := service.TryGetUserBySessionId(&userauth.TryGetUserBySessionIdCommand{
 			SessionId: sessionId,
 		})
 		if err != nil {
@@ -34,7 +33,7 @@ func NewSession(userAuthenticationService *services.UserAuthenticationService) f
 		reqCtx.SetUser(user)
 		reqCtx.SetSessionId(sessionId)
 
-		if err := userAuthenticationService.MarkSessionActive(sessionId); err != nil {
+		if err := service.MarkSessionActive(sessionId); err != nil {
 			ctx.Error(err)
 		}
 	}

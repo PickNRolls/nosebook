@@ -11,7 +11,7 @@ type Like struct {
 	Resource Resource
 	Owner    Owner
 	Event    Event
-	value    bool
+	Value    bool
 }
 
 func New() *Like {
@@ -19,7 +19,7 @@ func New() *Like {
 }
 
 func (this *Like) WithValue(value bool) *Like {
-	this.value = value
+	this.Value = value
 	return this
 }
 
@@ -56,10 +56,10 @@ func (this *Like) Toggle() *errors.Error {
 		return errors.New("Like Error", "У лайка отсутствует ресурс")
 	}
 
-	this.value = !this.value
+	this.Value = !this.Value
 
 	if this.Event == nil {
-		if this.value {
+		if this.Value {
 			this.Event = NewLikeEvent()
 		} else {
 			this.Event = NewUnlikeEvent()

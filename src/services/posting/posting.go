@@ -2,8 +2,8 @@ package posting
 
 import (
 	"nosebook/src/domain/post"
-	"nosebook/src/errors"
 	"nosebook/src/services/auth"
+	commandresult "nosebook/src/services/command_result"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,7 +19,7 @@ func New(repository Repository) *Service {
 	}
 }
 
-func (this *Service) Publish(c *PublishPostCommand, a *auth.Auth) (*domainpost.Post, *errors.Error) {
+func (this *Service) Publish(c *PublishPostCommand, a *auth.Auth) *commandresult.Result {
 	post := domainpost.NewBuilder().
 		Id(uuid.New()).
 		AuthorId(a.UserId).
@@ -31,46 +31,46 @@ func (this *Service) Publish(c *PublishPostCommand, a *auth.Auth) (*domainpost.P
 
 	err := this.repository.Save(post)
 	if err != nil {
-		return nil, err
+		return commandresult.Fail(err)
 	}
 
-	return post, nil
+	return commandresult.Ok().WithId(post.Id)
 }
 
-func (this *Service) Remove(c *RemovePostCommand, a *auth.Auth) (*domainpost.Post, *errors.Error) {
+func (this *Service) Remove(c *RemovePostCommand, a *auth.Auth) *commandresult.Result {
 	post := this.repository.FindById(c.Id)
 	if post == nil {
-		return nil, NewNotFoundError()
+		return commandresult.Fail(NewNotFoundError())
 	}
 
 	err := post.RemoveBy(a.UserId)
 	if err != nil {
-		return nil, err
+		return commandresult.Fail(err)
 	}
 
 	err = this.repository.Save(post)
 	if err != nil {
-		return nil, err
+		return commandresult.Fail(err)
 	}
 
-	return post, nil
+	return commandresult.Ok().WithId(post.Id)
 }
 
-func (this *Service) Edit(c *EditPostCommand, a *auth.Auth) (*domainpost.Post, *errors.Error) {
+func (this *Service) Edit(c *EditPostCommand, a *auth.Auth) *commandresult.Result {
 	post := this.repository.FindById(c.Id)
 	if post == nil {
-		return nil, NewNotFoundError()
+		return commandresult.Fail(NewNotFoundError())
 	}
 
 	err := post.EditBy(a.UserId, c.Message)
 	if err != nil {
-		return nil, err
+		return commandresult.Fail(err)
 	}
 
 	err = this.repository.Save(post)
 	if err != nil {
-		return nil, err
+		return commandresult.Fail(err)
 	}
 
-	return post, nil
+	return commandresult.Ok().WithId(post.Id)
 }

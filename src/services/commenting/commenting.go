@@ -2,8 +2,8 @@ package commenting
 
 import (
 	"nosebook/src/domain/comment"
-	"nosebook/src/errors"
 	"nosebook/src/services/auth"
+	commandresult "nosebook/src/services/command_result"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,9 +21,9 @@ func New(repository Repository, postRepository PostRepository) *Service {
 	}
 }
 
-func (this *Service) PublishOnPost(c *PublishPostCommentCommand, a *auth.Auth) (*domaincomment.Comment, *errors.Error) {
+func (this *Service) PublishOnPost(c *PublishPostCommentCommand, a *auth.Auth) *commandresult.Result {
 	if post := this.postRepository.FindById(c.Id); post == nil {
-		return nil, NewPostNotFoundError()
+		return commandresult.Fail(NewPostNotFoundError())
 	}
 
 	comment := domaincomment.NewBuilder().
@@ -37,27 +37,27 @@ func (this *Service) PublishOnPost(c *PublishPostCommentCommand, a *auth.Auth) (
 
 	err := this.repository.Save(comment)
 	if err != nil {
-		return nil, err
+		return commandresult.Fail(err)
 	}
 
-	return comment, nil
+	return commandresult.Ok().WithId(comment.Id)
 }
 
-func (this *Service) Remove(c *RemoveCommentCommand, a *auth.Auth) (*domaincomment.Comment, *errors.Error) {
+func (this *Service) Remove(c *RemoveCommentCommand, a *auth.Auth) *commandresult.Result {
 	comment := this.repository.FindById(c.Id, true)
 	if comment == nil {
-		return nil, NewError("Такого комментария не существует")
+		return commandresult.Fail(NewError("Такого комментария не существует"))
 	}
 
 	err := comment.RemoveBy(a.UserId)
 	if err != nil {
-		return nil, err
+		return commandresult.Fail(err)
 	}
 
 	err = this.repository.Save(comment)
 	if err != nil {
-		return nil, err
+		return commandresult.Fail(err)
 	}
 
-	return comment, nil
+	return commandresult.Ok().WithId(comment.Id)
 }
