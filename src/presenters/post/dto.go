@@ -15,7 +15,7 @@ type FindByFilterInput struct {
 
 type FindByFilterOutput struct {
 	Err   *errors.Error `json:"error,omitempty"`
-	Posts []*postDTO    `json:"data,omitempty"`
+	Posts []*postDTO    `json:"data"`
 	Next  string        `json:"next,omitempty"`
 }
 
