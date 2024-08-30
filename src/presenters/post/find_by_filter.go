@@ -1,11 +1,11 @@
 package presenterpost
 
 import (
+	"fmt"
 	"nosebook/src/errors"
 	"nosebook/src/infra/postgres"
-	"nosebook/src/presenters/cursor"
+	cursorquery "nosebook/src/presenters/cursor_query"
 	"nosebook/src/services/auth"
-	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -15,17 +15,18 @@ import (
 const limit = 10
 
 type findByFilterQuery struct {
-	db *sqlx.DB
-	qb squirrel.StatementBuilderType
+	db               *sqlx.DB
+	qb               squirrel.StatementBuilderType
+	auth             *auth.Auth
+	userPresenter    userPresenter
+	commentPresenter commentPresenter
+	likePresenter    likePresenter
 
-	err   *errors.Error
-	next  string
-	posts []*post
+	doSkip bool
+	err    *errors.Error
+	next   string
+	posts  []*post
 
-	auth              *auth.Auth
-	userPresenter     userPresenter
-	commentPresenter  commentPresenter
-	likePresenter     likePresenter
 	postLikesMap      map[uuid.UUID]*likes
 	postDests         []*postDest
 	postIds           uuid.UUIDs
@@ -36,10 +37,18 @@ type findByFilterQuery struct {
 	commentsMap       map[uuid.UUID]*comments
 }
 
-func newFindByFilterQuery(db *sqlx.DB) *findByFilterQuery {
+func newFindByFilterQuery(
+	db *sqlx.DB,
+	userPresenter userPresenter,
+	commentPresenter commentPresenter,
+	likePresenter likePresenter,
+) *findByFilterQuery {
 	output := &findByFilterQuery{
-		db: db,
-		qb: postgres.NewSquirrel(),
+		db:               db,
+		qb:               postgres.NewSquirrel(),
+		userPresenter:    userPresenter,
+		commentPresenter: commentPresenter,
+		likePresenter:    likePresenter,
 	}
 
 	output.reset()
@@ -47,42 +56,27 @@ func newFindByFilterQuery(db *sqlx.DB) *findByFilterQuery {
 	return output
 }
 
-type postDest struct {
-	Id        uuid.UUID `db:"id"`
-	AuthorId  uuid.UUID `db:"author_id"`
-	OwnerId   uuid.UUID `db:"owner_id"`
-	Message   string    `db:"message"`
-	CreatedAt time.Time `db:"created_at"`
-}
-
 type likeDest struct {
 	PostId uuid.UUID `db:"post_id"`
 	UserId uuid.UUID `db:"user_id"`
 }
 
+func (this *findByFilterQuery) skip() bool {
+	return this.doSkip || this.err != nil
+}
+
 func (this *findByFilterQuery) FindByFilter(
 	input *FindByFilterInput,
 	a *auth.Auth,
-	userPresenter userPresenter,
-	commentPresenter commentPresenter,
-	likePresenter likePresenter,
 ) *FindByFilterOutput {
 	this.auth = a
-	this.userPresenter = userPresenter
-	this.commentPresenter = commentPresenter
-	this.likePresenter = likePresenter
 
 	this.fetchPosts(input)
-	if len(this.postDests) == 0 {
-		return this.output()
-	}
-
 	this.defineFetchData()
 	this.fetchComments()
 	this.fetchLikes()
 	this.fetchUsers()
 	this.mapPosts()
-	this.addNextCursor()
 
 	return this.output()
 }
@@ -113,19 +107,9 @@ func (this *findByFilterQuery) fetchPosts(input *FindByFilterInput) {
 	}
 
 	query := this.qb.
-		Select(
-			"id", "author_id", "owner_id", "message", "created_at",
-		).
-		From(
-			"posts",
-		).
-		Where(
-			"removed_at IS NULL",
-		).
-		OrderBy(
-			"created_at DESC, id DESC",
-		).
-		Limit(limit)
+		Select("id", "author_id", "owner_id", "message", "created_at").
+		From("posts").
+		Where("removed_at is null")
 
 	if ownerId != uuid.Nil {
 		query = query.Where(
@@ -139,33 +123,32 @@ func (this *findByFilterQuery) fetchPosts(input *FindByFilterInput) {
 		)
 	}
 
-	if input.Cursor != "" {
-		timestamp, id, err := cursor.Decode(input.Cursor)
-		if err != nil {
-			this.err = err
-			return
-		}
-
-		query = query.Where(
-			"(created_at, id) < (?, ?)",
-			timestamp, id,
-		)
-	}
-
-	sql, args, _ := query.ToSql()
-	err := this.db.Select(&this.postDests, sql, args...)
+	cursors, err := cursorquery.Do(this.db, &cursorquery.Input{
+		Query:    query,
+		Next:     input.Cursor,
+		Limit:    limit,
+		OrderAsc: false,
+	}, &this.postDests)
 	if err != nil {
 		this.err = errorFrom(err)
 	}
+
+	fmt.Println(this.postDests)
+
+	this.next = cursors.Next
 
 	this.postIds = make(uuid.UUIDs, len(this.postDests))
 	for i, post := range this.postDests {
 		this.postIds[i] = post.Id
 	}
+
+	if len(this.postDests) == 0 {
+		this.doSkip = true
+	}
 }
 
 func (this *findByFilterQuery) defineFetchData() {
-	if this.err != nil {
+	if this.skip() {
 		return
 	}
 
@@ -184,7 +167,7 @@ func (this *findByFilterQuery) defineFetchData() {
 }
 
 func (this *findByFilterQuery) fetchComments() {
-	if this.err != nil {
+	if this.skip() {
 		return
 	}
 
@@ -194,7 +177,7 @@ func (this *findByFilterQuery) fetchComments() {
 }
 
 func (this *findByFilterQuery) fetchLikes() {
-	if this.err != nil {
+	if this.skip() {
 		return
 	}
 
@@ -208,7 +191,7 @@ func (this *findByFilterQuery) fetchLikes() {
 }
 
 func (this *findByFilterQuery) fetchUsers() {
-	if this.err != nil {
+	if this.skip() {
 		return
 	}
 
@@ -223,7 +206,7 @@ func (this *findByFilterQuery) fetchUsers() {
 }
 
 func (this *findByFilterQuery) mapPosts() {
-	if this.err != nil {
+	if this.skip() {
 		return
 	}
 
@@ -245,33 +228,6 @@ func (this *findByFilterQuery) mapPosts() {
 	}
 }
 
-func (this *findByFilterQuery) addNextCursor() {
-	if this.err != nil || len(this.posts) == 0 || len(this.posts) < limit {
-		return
-	}
-
-	last := this.posts[len(this.posts)-1]
-
-	remainingCount := struct {
-		Count int `db:"count"`
-	}{}
-
-	sql, args, _ := this.qb.Select("count(*)").
-		From("posts").
-		Where("removed_at IS NULL").
-		Where("(created_at, id) < (?, ?)", last.CreatedAt, last.Id).
-		ToSql()
-	err := this.db.Get(&remainingCount, sql, args...)
-	if err != nil {
-		this.err = errorFrom(err)
-		return
-	}
-
-	if remainingCount.Count > 0 {
-		this.next = cursor.Encode(last.CreatedAt, last.Id)
-	}
-}
-
 func (this *findByFilterQuery) output() *FindByFilterOutput {
 	output := &FindByFilterOutput{
 		Err:  this.err,
@@ -288,12 +244,10 @@ func (this *findByFilterQuery) output() *FindByFilterOutput {
 }
 
 func (this *findByFilterQuery) reset() {
+	this.doSkip = false
 	this.err = nil
 	this.next = ""
 	this.auth = nil
-	this.userPresenter = nil
-	this.commentPresenter = nil
-	this.likePresenter = nil
 	this.posts = make([]*post, 0)
 	this.postDests = make([]*postDest, 0)
 	this.postIds = make(uuid.UUIDs, 0)

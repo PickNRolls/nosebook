@@ -170,11 +170,48 @@ VALUES
     TIMESTAMP '2024-02-16 15:36:38'
   ),
   (
-    'd0023f4d-8d7f-4907-9438-d2ed2a9661fa',
+    'd0023f4d-8d7f-4907-9438-d2ed2a9661f0',
     '1ae02f69-ea1a-4308-b825-0e5896e652e4',
-    '2nd comment message',
+    '3nd comment message',
     TIMESTAMP '2024-02-16 15:36:55'
+  ),
+  (
+    'd0023f4d-8d7f-4907-9438-d2ed2a9661f1',
+    '1ae02f69-ea1a-4308-b825-0e5896e652e4',
+    '4nd comment message',
+    TIMESTAMP '2024-02-16 15:37:55'
+  ),
+  (
+    'd0023f4d-8d7f-4907-9438-d2ed2a9661f2',
+    '1ae02f69-ea1a-4308-b825-0e5896e652e4',
+    '5nd comment message',
+    TIMESTAMP '2024-02-16 15:38:55'
+  ),
+  (
+    'd0023f4d-8d7f-4907-9438-d2ed2a9661f3',
+    '1ae02f69-ea1a-4308-b825-0e5896e652e4',
+    '6nd comment message',
+    TIMESTAMP '2024-02-16 15:39:55'
+  ),
+  (
+    'd0023f4d-8d7f-4907-9438-d2ed2a9661f4',
+    '1ae02f69-ea1a-4308-b825-0e5896e652e4',
+    '7nd comment message',
+    TIMESTAMP '2024-02-16 15:40:55'
+  ),
+  (
+    'd0023f4d-8d7f-4907-9438-d2ed2a9661f5',
+    '1ae02f69-ea1a-4308-b825-0e5896e652e4',
+    '8nd comment message',
+    TIMESTAMP '2024-02-16 15:41:55'
+  ),
+  (
+    'd0023f4d-8d7f-4907-9438-d2ed2a9661f6',
+    '1ae02f69-ea1a-4308-b825-0y5896e652e4',
+    '9nd comment message',
+    TIMESTAMP '2024-02-16 15:42:55'
   );
+
 
 INSERT INTO
   posts (id, author_id, owner_id, message, created_at)
@@ -339,5 +376,30 @@ INSERT INTO
 VALUES
   (
     'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
-    'd0023f4d-8d7f-4907-9438-d2ed2a9661fa'
+    'd0023f4d-8d7f-4907-9438-d2ed2a9661f0'
+  ),
+  (
+    'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
+    'd0023f4d-8d7f-4907-9438-d2ed2a9661f1'
+  ),
+  (
+    'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
+    'd0023f4d-8d7f-4907-9438-d2ed2a9661f2'
+  ),
+  (
+    'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
+    'd0023f4d-8d7f-4907-9438-d2ed2a9661f3'
+  ),
+  (
+    'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
+    'd0023f4d-8d7f-4907-9438-d2ed2a9661f4'
+  ),
+  (
+    'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
+    'd0023f4d-8d7f-4907-9438-d2ed2a9661f5'
+  ),
+  (
+    'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
+    'd0023f4d-8d7f-4907-9438-d2ed2a9661f6'
   );
+

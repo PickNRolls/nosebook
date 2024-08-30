@@ -15,13 +15,18 @@ type Presenter struct {
 
 func New(db *sqlx.DB, userPresenter userPresenter, commentPresenter commentPresenter, likePresenter likePresenter) *Presenter {
 	return &Presenter{
-		userPresenter:     userPresenter,
-		commentPresenter:  commentPresenter,
-		likePresenter:     likePresenter,
-		findByFilterQuery: newFindByFilterQuery(db),
+		userPresenter:    userPresenter,
+		commentPresenter: commentPresenter,
+		likePresenter:    likePresenter,
+		findByFilterQuery: newFindByFilterQuery(
+			db,
+			userPresenter,
+			commentPresenter,
+			likePresenter,
+		),
 	}
 }
 
 func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *FindByFilterOutput {
-	return this.findByFilterQuery.FindByFilter(input, a, this.userPresenter, this.commentPresenter, this.likePresenter)
+	return this.findByFilterQuery.FindByFilter(input, a)
 }
