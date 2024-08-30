@@ -22,10 +22,12 @@ type findByFilterQuery struct {
 	next  string
 	posts []*postDTO
 
+	auth              *auth.Auth
 	postDests         []*postDest
 	postIds           uuid.UUIDs
 	likeDests         []*likeDest
 	postLikesCountMap map[uuid.UUID]int
+	postLikedMap      map[uuid.UUID]struct{}
 	postLikersMap     map[uuid.UUID]uuid.UUIDs
 	userIdsToFetchMap map[uuid.UUID]struct{}
 	userIdsToFetch    uuid.UUIDs
@@ -58,6 +60,8 @@ type likeDest struct {
 }
 
 func (this *findByFilterQuery) FindByFilter(input *FindByFilterInput, a *auth.Auth) *FindByFilterOutput {
+	this.auth = a
+
 	this.fetchPosts(input)
 	if len(this.postDests) == 0 {
 		return this.output()
@@ -65,7 +69,7 @@ func (this *findByFilterQuery) FindByFilter(input *FindByFilterInput, a *auth.Au
 
 	this.defineFetchData()
 	this.fetchLikes()
-	this.fetchLikeCounts()
+	this.fetchLikeAdditionals()
 	this.fetchUsers()
 	this.mapPosts()
 	this.addNextCursor()
@@ -210,30 +214,41 @@ func (this *findByFilterQuery) fetchLikes() {
 	}
 }
 
-func (this *findByFilterQuery) fetchLikeCounts() {
+func (this *findByFilterQuery) fetchLikeAdditionals() {
 	if this.err != nil {
 		return
 	}
 
 	sql, args, _ := this.qb.
-		Select("post_id, count(*)").
-		From("post_likes").
-		Where(squirrel.Eq{"post_id": this.postIds}).
-		GroupBy("post_id").
+		Select("a.post_id", "count", "b.user_id IS NOT NULL AS liked").
+		FromSelect(
+			this.qb.
+				Select("post_id, count(*)").
+				From("post_likes").
+				Where(squirrel.Eq{"post_id": this.postIds}).
+				GroupBy("post_id"),
+			"a",
+		).
+		JoinClause("LEFT OUTER JOIN post_likes AS b").
+		Suffix("ON a.post_id = b.post_id AND b.user_id = ?", this.auth.UserId).
 		ToSql()
 
-	counts := []struct {
+	additional := []struct {
 		PostId uuid.UUID `db:"post_id"`
 		Count  int       `db:"count"`
+		Liked  bool      `db:"liked"`
 	}{}
-	err := this.db.Select(&counts, sql, args...)
+	err := this.db.Select(&additional, sql, args...)
 	if err != nil {
 		this.err = errors.From(err)
 		return
 	}
 
-	for _, count := range counts {
-		this.postLikesCountMap[count.PostId] = count.Count
+	for _, add := range additional {
+		this.postLikesCountMap[add.PostId] = add.Count
+		if add.Liked {
+			this.postLikedMap[add.PostId] = struct{}{}
+		}
 	}
 }
 
@@ -275,8 +290,10 @@ func (this *findByFilterQuery) mapPosts() {
 		postDTO.Message = dest.Message
 		postDTO.CreatedAt = dest.CreatedAt
 		postDTO.Likes = &likesDTO{
-			Count: this.postLikesCountMap[dest.Id],
+			Count:            this.postLikesCountMap[dest.Id],
+			RandomFiveLikers: make([]*userDTO, 0),
 		}
+		_, postDTO.Likes.Liked = this.postLikedMap[dest.Id]
 
 		for _, userId := range this.postLikersMap[dest.Id] {
 			postDTO.Likes.RandomFiveLikers = append(postDTO.Likes.RandomFiveLikers, this.usersMap[userId])
@@ -331,11 +348,13 @@ func (this *findByFilterQuery) output() *FindByFilterOutput {
 func (this *findByFilterQuery) reset() {
 	this.err = nil
 	this.next = ""
+	this.auth = nil
 	this.posts = make([]*postDTO, 0)
 	this.postDests = make([]*postDest, 0)
 	this.postIds = make(uuid.UUIDs, 0)
 	this.likeDests = make([]*likeDest, 0)
 	this.postLikesCountMap = make(map[uuid.UUID]int)
+	this.postLikedMap = make(map[uuid.UUID]struct{})
 	this.postLikersMap = make(map[uuid.UUID]uuid.UUIDs)
 	this.userIdsToFetchMap = make(map[uuid.UUID]struct{})
 	this.userIdsToFetch = make(uuid.UUIDs, 0)
