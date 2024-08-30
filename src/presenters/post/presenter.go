@@ -16,16 +16,64 @@ const limit = 10
 
 type Presenter struct {
 	db *sqlx.DB
+	qb squirrel.StatementBuilderType
+
+	err   *errors.Error
+	next  string
+	posts []*postDTO
+
+	postDests         []*postDest
+	postIds           uuid.UUIDs
+	likeDests         []*likeDest
+	postLikesCountMap map[uuid.UUID]int
+	postLikersMap     map[uuid.UUID]uuid.UUIDs
+	userIdsToFetchMap map[uuid.UUID]struct{}
+	userIdsToFetch    uuid.UUIDs
+	users             []*userDTO
+	usersMap          map[uuid.UUID]*userDTO
 }
 
 func New(db *sqlx.DB) *Presenter {
-	return &Presenter{
+	output := &Presenter{
 		db: db,
+		qb: postgres.NewSquirrel(),
 	}
+
+	output.reset()
+
+	return output
+}
+
+type postDest struct {
+	Id        uuid.UUID `db:"id"`
+	AuthorId  uuid.UUID `db:"author_id"`
+	OwnerId   uuid.UUID `db:"owner_id"`
+	Message   string    `db:"message"`
+	CreatedAt time.Time `db:"created_at"`
+}
+
+type likeDest struct {
+	PostId uuid.UUID `db:"post_id"`
+	UserId uuid.UUID `db:"user_id"`
 }
 
 func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *FindByFilterOutput {
-	output := &FindByFilterOutput{}
+	this.fetchPosts(input)
+	if len(this.postDests) == 0 {
+		return this.output()
+	}
+
+	this.defineFetchData()
+	this.fetchLikes()
+	this.fetchLikeCounts()
+	this.fetchUsers()
+	this.mapPosts()
+	this.addNextCursor()
+
+	return this.output()
+}
+
+func (this *Presenter) fetchPosts(input *FindByFilterInput) {
 	var ownerId uuid.UUID
 	var authorId uuid.UUID
 
@@ -33,7 +81,7 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *Fin
 		var err error
 		ownerId, err = uuid.Parse(input.OwnerId)
 		if err != nil {
-			output.Err = errors.From(err)
+			this.err = errors.From(err)
 		}
 	}
 
@@ -41,18 +89,16 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *Fin
 		var err error
 		authorId, err = uuid.Parse(input.AuthorId)
 		if err != nil {
-			output.Err = errors.From(err)
+			this.err = errors.From(err)
 		}
 	}
 
 	if ownerId == uuid.Nil && authorId == uuid.Nil {
-		output.Err = newError("Отсутствует фильтр")
-		return output
+		this.err = newError("Отсутствует фильтр")
+		return
 	}
 
-	qb := postgres.NewSquirrel()
-
-	query := qb.
+	query := this.qb.
 		Select(
 			"id", "author_id", "owner_id", "message", "created_at",
 		).
@@ -82,8 +128,8 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *Fin
 	if input.Cursor != "" {
 		timestamp, id, err := cursor.Decode(input.Cursor)
 		if err != nil {
-			output.Err = err
-			return output
+			this.err = err
+			return
 		}
 
 		query = query.Where(
@@ -93,95 +139,202 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *Fin
 	}
 
 	sql, args, _ := query.ToSql()
-	posts := []struct {
-		Id        uuid.UUID `db:"id"`
-		AuthorId  uuid.UUID `db:"author_id"`
-		OwnerId   uuid.UUID `db:"owner_id"`
-		Message   string    `db:"message"`
-		CreatedAt time.Time `db:"created_at"`
-	}{}
-	err := this.db.Select(&posts, sql, args...)
+	err := this.db.Select(&this.postDests, sql, args...)
 	if err != nil {
-		output.Err = errors.From(err)
-		return output
+		this.err = errors.From(err)
 	}
 
-	if len(posts) == 0 {
-		output.Posts = make([]*PostDTO, 0)
-		return output
+	this.postIds = make(uuid.UUIDs, len(this.postDests))
+	for i, post := range this.postDests {
+		this.postIds[i] = post.Id
 	}
+}
 
-	userMap := make(map[uuid.UUID]struct{})
-	for _, post := range posts {
-		if _, has := userMap[post.AuthorId]; !has {
-			userMap[post.AuthorId] = struct{}{}
+func (this *Presenter) defineFetchData() {
+	for _, post := range this.postDests {
+		if _, has := this.userIdsToFetchMap[post.AuthorId]; !has {
+			this.userIdsToFetchMap[post.AuthorId] = struct{}{}
 		}
 
-		if _, has := userMap[post.OwnerId]; !has {
-			userMap[post.OwnerId] = struct{}{}
+		if _, has := this.userIdsToFetchMap[post.OwnerId]; !has {
+			this.userIdsToFetchMap[post.OwnerId] = struct{}{}
 		}
 	}
-	userIds := make([]uuid.UUID, 1)
-	for id := range userMap {
-		userIds = append(userIds, id)
+	for id := range this.userIdsToFetchMap {
+		this.userIdsToFetch = append(this.userIdsToFetch, id)
+	}
+}
+
+func (this *Presenter) fetchLikes() {
+	if this.err != nil {
+		return
 	}
 
-	sql, args, _ = qb.Select(
+	sql, args, _ := this.qb.
+		Select("sub.post_id, sub.user_id").
+		FromSelect(
+			this.qb.
+				Select(
+					"post_id",
+					"user_id",
+					"row_number() over(partition by post_id) as row_number",
+				).
+				From("post_likes").
+				Where(squirrel.Eq{"post_id": this.postIds}),
+			"sub",
+		).
+		Where("sub.row_number <= 5").
+		ToSql()
+
+	this.likeDests = []*likeDest{}
+	err := this.db.Select(&this.likeDests, sql, args...)
+	if err != nil {
+		this.err = errors.From(err)
+		return
+	}
+
+	for _, like := range this.likeDests {
+		if _, has := this.userIdsToFetchMap[like.UserId]; !has {
+			this.userIdsToFetch = append(this.userIdsToFetch, like.UserId)
+			this.userIdsToFetchMap[like.UserId] = struct{}{}
+		}
+
+		if _, has := this.postLikersMap[like.PostId]; !has {
+			this.postLikersMap[like.PostId] = make(uuid.UUIDs, 0)
+		}
+		this.postLikersMap[like.PostId] = append(this.postLikersMap[like.PostId], like.UserId)
+	}
+}
+
+func (this *Presenter) fetchLikeCounts() {
+	if this.err != nil {
+		return
+	}
+
+	sql, args, _ := this.qb.
+		Select("post_id, count(*)").
+		From("post_likes").
+		Where(squirrel.Eq{"post_id": this.postIds}).
+		GroupBy("post_id").
+		ToSql()
+
+	counts := []struct {
+		PostId uuid.UUID `db:"post_id"`
+		Count  int       `db:"count"`
+	}{}
+	err := this.db.Select(&counts, sql, args...)
+	if err != nil {
+		this.err = errors.From(err)
+		return
+	}
+
+	for _, count := range counts {
+		this.postLikesCountMap[count.PostId] = count.Count
+	}
+}
+
+func (this *Presenter) fetchUsers() {
+	if this.err != nil {
+		return
+	}
+
+	sql, args, _ := this.qb.Select(
 		"id", "first_name", "last_name", "nick", "created_at",
 	).From(
 		"users",
 	).Where(
-		squirrel.Eq{"id": userIds},
+		squirrel.Eq{"id": this.userIdsToFetch},
 	).ToSql()
-	users := []*UserDTO{}
-	error := errors.From(this.db.Select(&users, sql, args...))
+	error := errors.From(this.db.Select(&this.users, sql, args...))
 	if error != nil {
-		output.Err = error
-		return output
+		this.err = error
+		return
 	}
 
-	for _, post := range posts {
-		postDTO := &PostDTO{}
-		postDTO.Id = post.Id
-		postDTO.Message = post.Message
-		postDTO.CreatedAt = post.CreatedAt
+	for _, dto := range this.users {
+		this.usersMap[dto.Id] = dto
+	}
+}
 
-		for _, user := range users {
-			if post.AuthorId == user.Id {
-				postDTO.Author = user
-			}
-
-			if post.OwnerId == user.Id {
-				postDTO.Owner = user
-			}
-		}
-
-		output.Posts = append(output.Posts, postDTO)
+func (this *Presenter) mapPosts() {
+	if this.err != nil {
+		return
 	}
 
-	last := output.Posts[len(output.Posts)-1]
+	this.posts = make([]*postDTO, 0, len(this.postDests))
 
-	if len(output.Posts) == limit {
-		remainingCount := struct {
-			Count int `db:"count"`
-		}{}
-
-		sql, args, _ = qb.Select("count(*)").
-			From("posts").
-			Where("removed_at IS NULL").
-			Where("(created_at, id) < (?, ?)", last.CreatedAt, last.Id).
-			ToSql()
-		err := this.db.Get(&remainingCount, sql, args...)
-		if err != nil {
-			output.Err = errors.From(err)
-			output.Posts = nil
-			return output
+	for _, dest := range this.postDests {
+		postDTO := &postDTO{}
+		postDTO.Id = dest.Id
+		postDTO.Author = this.usersMap[dest.AuthorId]
+		postDTO.Owner = this.usersMap[dest.OwnerId]
+		postDTO.Message = dest.Message
+		postDTO.CreatedAt = dest.CreatedAt
+		postDTO.Likes = &likesDTO{
+			Count: this.postLikesCountMap[dest.Id],
 		}
 
-		if remainingCount.Count > 0 {
-			output.Next = cursor.Encode(last.CreatedAt, last.Id)
+		for _, userId := range this.postLikersMap[dest.Id] {
+			postDTO.Likes.RandomFiveLikers = append(postDTO.Likes.RandomFiveLikers, this.usersMap[userId])
 		}
+
+		this.posts = append(this.posts, postDTO)
 	}
+}
+
+func (this *Presenter) addNextCursor() {
+	if this.err != nil || len(this.posts) == 0 || len(this.posts) < limit {
+		return
+	}
+
+	last := this.posts[len(this.posts)-1]
+
+	remainingCount := struct {
+		Count int `db:"count"`
+	}{}
+
+	sql, args, _ := this.qb.Select("count(*)").
+		From("posts").
+		Where("removed_at IS NULL").
+		Where("(created_at, id) < (?, ?)", last.CreatedAt, last.Id).
+		ToSql()
+	err := this.db.Get(&remainingCount, sql, args...)
+	if err != nil {
+		this.err = errors.From(err)
+		return
+	}
+
+	if remainingCount.Count > 0 {
+		this.next = cursor.Encode(last.CreatedAt, last.Id)
+	}
+}
+
+func (this *Presenter) output() *FindByFilterOutput {
+	output := &FindByFilterOutput{
+		Err:  this.err,
+		Next: this.next,
+	}
+
+	if output.Err == nil {
+		output.Posts = this.posts
+	}
+
+	this.reset()
 
 	return output
+}
+
+func (this *Presenter) reset() {
+	this.err = nil
+	this.next = ""
+	this.posts = make([]*postDTO, 0)
+	this.postDests = make([]*postDest, 0)
+	this.postIds = make(uuid.UUIDs, 0)
+	this.likeDests = make([]*likeDest, 0)
+	this.postLikesCountMap = make(map[uuid.UUID]int)
+	this.postLikersMap = make(map[uuid.UUID]uuid.UUIDs)
+	this.userIdsToFetchMap = make(map[uuid.UUID]struct{})
+	this.userIdsToFetch = make(uuid.UUIDs, 0)
+	this.users = make([]*userDTO, 0)
+	this.usersMap = make(map[uuid.UUID]*userDTO)
 }

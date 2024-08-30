@@ -15,19 +15,26 @@ type FindByFilterInput struct {
 
 type FindByFilterOutput struct {
 	Err   *errors.Error `json:"error,omitempty"`
-	Posts []*PostDTO    `json:"data,omitempty"`
+	Posts []*postDTO    `json:"data,omitempty"`
 	Next  string        `json:"next,omitempty"`
 }
 
-type PostDTO struct {
+type postDTO struct {
 	Id        uuid.UUID `json:"id"`
-	Author    *UserDTO  `json:"author"`
-	Owner     *UserDTO  `json:"owner"`
+	Author    *userDTO  `json:"author"`
+	Owner     *userDTO  `json:"owner"`
 	Message   string    `json:"message"`
+	Likes     *likesDTO `json:"likes"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-type UserDTO struct {
+type likesDTO struct {
+	Count            int        `json:"count"`
+	RandomFiveLikers []*userDTO `json:"randomFiveLikers"`
+	Liked            bool       `json:"liked"`
+}
+
+type userDTO struct {
 	Id        uuid.UUID `json:"id" db:"id"`
 	FirstName string    `json:"firstName" db:"first_name"`
 	LastName  string    `json:"lastName" db:"last_name"`

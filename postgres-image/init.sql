@@ -104,6 +104,20 @@ VALUES
     'Mandjiev',
     'sanal',
     '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS'
+  ),
+  (
+    '12d28fdf-99bc-44b5-8df9-6a3b1a36f177',
+    'Somebody',
+    'Some',
+    'somebody',
+    '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS'
+  ),
+  (
+    '78b640fd-7aa4-4bba-8ee6-3935b700297a',
+    'john',
+    'wick',
+    'killer',
+    '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS'
   );
 
 INSERT INTO
@@ -276,6 +290,48 @@ VALUES
     '1ae02f69-ea1a-4308-b825-0e5896e652e4',
     'post message 5',
     TIMESTAMP '2024-02-16 14:36:59'
+  );
+
+INSERT INTO
+  post_likes (post_id, user_id)
+VALUES
+  (
+    'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e8',
+    '1ae02f69-ea1a-4308-b825-0e5896e652e4'
+  ),
+  (
+    'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e8',
+    '48683858-796c-45ad-a361-9e3d6d003354'
+  ),
+  -- post 1
+
+  (
+    'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
+    '1ae02f69-ea1a-4308-b825-0e5896e652e4'
+  ),
+  (
+    'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
+    '48683858-796c-45ad-a361-9e3d6d003354'
+  ),
+  (
+    'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
+    'baa0e8bc-385f-4314-9580-29855aff2229'
+  ),
+  (
+    'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
+    '37d28fdf-99bc-44b5-8df9-6a3b1a36f177'
+  ),
+  (
+    'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
+    '2db640fd-7aa4-4bba-8ee6-3935b700297a'
+  ),
+  (
+    'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
+    '12d28fdf-99bc-44b5-8df9-6a3b1a36f177'
+  ),
+  (
+    'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
+    '78b640fd-7aa4-4bba-8ee6-3935b700297a'
   );
 
 INSERT INTO
