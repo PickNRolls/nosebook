@@ -1,7 +1,7 @@
 package presenterpost
 
 import (
-	"nosebook/src/errors"
+	presenterdto "nosebook/src/presenters/dto"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,31 +13,18 @@ type FindByFilterInput struct {
 	Cursor   string
 }
 
-type FindByFilterOutput struct {
-	Err   *errors.Error `json:"error,omitempty"`
-	Posts []*postDTO    `json:"data"`
-	Next  string        `json:"next,omitempty"`
-}
+type FindByFilterOutput presenterdto.FindOut[*post]
 
-type postDTO struct {
-	Id        uuid.UUID `json:"id"`
-	Author    *userDTO  `json:"author"`
-	Owner     *userDTO  `json:"owner"`
-	Message   string    `json:"message"`
-	Likes     *likesDTO `json:"likes"`
-	CreatedAt time.Time `json:"createdAt"`
-}
+type user = presenterdto.User
+type comments = presenterdto.FindOut[*presenterdto.Comment]
+type likes = presenterdto.Likes
 
-type likesDTO struct {
-	Count            int        `json:"count"`
-	RandomFiveLikers []*userDTO `json:"randomFiveLikers"`
-	Liked            bool       `json:"liked"`
-}
-
-type userDTO struct {
-	Id        uuid.UUID `json:"id" db:"id"`
-	FirstName string    `json:"firstName" db:"first_name"`
-	LastName  string    `json:"lastName" db:"last_name"`
-	Nick      string    `json:"nick" db:"nick"`
-	CreatedAt time.Time `json:"createdAt" db:"created_at"`
+type post struct {
+	Id             uuid.UUID `json:"id"`
+	Author         *user     `json:"author"`
+	Owner          *user     `json:"owner"`
+	Message        string    `json:"message"`
+	Likes          *likes    `json:"likes"`
+	RecentComments *comments `json:"recentComments"`
+	CreatedAt      time.Time `json:"createdAt"`
 }

@@ -2,6 +2,7 @@ package roothttp
 
 import (
 	reqcontext "nosebook/src/deps_root/http/req_context"
+	rootpostpresenter "nosebook/src/deps_root/post_presenter"
 	rootpostservice "nosebook/src/deps_root/post_service"
 	presenterpost "nosebook/src/presenters/post"
 	"nosebook/src/services/posting"
@@ -11,7 +12,7 @@ import (
 
 func (this *RootHTTP) addPostHandlers() {
 	service := rootpostservice.New(this.db)
-	presenter := presenterpost.New(this.db)
+	presenter := rootpostpresenter.New(this.db)
 
 	group := this.authRouter.Group("/posts")
 	group.POST("/publish", execResultHandler(&posting.PublishPostCommand{}, service.Publish))

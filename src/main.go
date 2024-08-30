@@ -9,6 +9,7 @@ import (
 
 func main() {
 	db := postgres.Connect()
+
 	rootHttp := roothttp.New(db)
 	rootHttp.Run("0.0.0.0:8080")
 }

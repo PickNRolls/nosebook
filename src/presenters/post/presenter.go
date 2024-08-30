@@ -7,16 +7,21 @@ import (
 )
 
 type Presenter struct {
+	userPresenter     userPresenter
+	commentPresenter  commentPresenter
+	likePresenter     likePresenter
 	findByFilterQuery *findByFilterQuery
 }
 
-func New(db *sqlx.DB) *Presenter {
+func New(db *sqlx.DB, userPresenter userPresenter, commentPresenter commentPresenter, likePresenter likePresenter) *Presenter {
 	return &Presenter{
+		userPresenter:     userPresenter,
+		commentPresenter:  commentPresenter,
+		likePresenter:     likePresenter,
 		findByFilterQuery: newFindByFilterQuery(db),
 	}
 }
 
 func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *FindByFilterOutput {
-	return this.findByFilterQuery.FindByFilter(input, a)
+	return this.findByFilterQuery.FindByFilter(input, a, this.userPresenter, this.commentPresenter, this.likePresenter)
 }
-
