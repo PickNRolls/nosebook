@@ -12,19 +12,18 @@ import (
 
 type Presenter struct {
 	db *sqlx.DB
-	qb squirrel.StatementBuilderType
 }
 
 func New(db *sqlx.DB) *Presenter {
 	return &Presenter{
 		db: db,
-		qb: postgres.NewSquirrel(),
 	}
 }
 
 func (this *Presenter) FindByIds(ids uuid.UUIDs) ([]*presenterdto.User, *errors.Error) {
-	sql, args, _ := this.qb.Select(
-		"id", "first_name", "last_name", "nick", "created_at",
+	qb := postgres.NewSquirrel()
+	sql, args, _ := qb.Select(
+		"id", "first_name", "last_name", "nick",
 	).From(
 		"users",
 	).Where(
