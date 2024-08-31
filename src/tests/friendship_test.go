@@ -5,17 +5,18 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"nosebook/src/tests/testlib"
 	"testing"
 )
 
 func TestRequestSend(t *testing.T) {
-	expect := CreateMatcher(t, true)
+	expect := testlib.CreateMatcher(t, true)
 	reqBody, _ := json.Marshal(J{
 		"responderId": "48683858-796c-45ad-a361-9e3d6d003354",
 		"message":     "test add",
 	})
 	req, _ := http.NewRequest("POST", "http://backend:8080/friendship/send-request", bytes.NewReader(reqBody))
-	addSessionId(req)
+	testlib.AddSessionId(req)
 	res, _ := http.DefaultClient.Do(req)
 	expect(res.StatusCode).ToBe(200)
 	body, _ := io.ReadAll(res.Body)
@@ -37,12 +38,12 @@ func TestRequestSend(t *testing.T) {
 }
 
 func TestRequestAccept(t *testing.T) {
-	expect := CreateMatcher(t, true)
+	expect := testlib.CreateMatcher(t, true)
 	reqBody, _ := json.Marshal(J{
 		"requesterId": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
 	})
 	req, _ := http.NewRequest("POST", "http://backend:8080/friendship/accept-request", bytes.NewReader(reqBody))
-	addSessionId(req)
+	testlib.AddSessionId(req)
 	res, _ := http.DefaultClient.Do(req)
 	expect(res.StatusCode).ToBe(200)
 	body, _ := io.ReadAll(res.Body)
@@ -64,12 +65,12 @@ func TestRequestAccept(t *testing.T) {
 }
 
 func TestRequestDeny(t *testing.T) {
-	expect := CreateMatcher(t, true)
+	expect := testlib.CreateMatcher(t, true)
 	reqBody, _ := json.Marshal(J{
 		"requesterId": "baa0e8bc-385f-4314-9580-29855aff2229",
 	})
 	req, _ := http.NewRequest("POST", "http://backend:8080/friendship/deny-request", bytes.NewReader(reqBody))
-	addSessionId(req)
+	testlib.AddSessionId(req)
 	res, _ := http.DefaultClient.Do(req)
 	expect(res.StatusCode).ToBe(200)
 	body, _ := io.ReadAll(res.Body)
@@ -91,12 +92,12 @@ func TestRequestDeny(t *testing.T) {
 }
 
 func TestRemoveFriend(t *testing.T) {
-	expect := CreateMatcher(t, true)
+	expect := testlib.CreateMatcher(t, true)
 	reqBody, _ := json.Marshal(J{
 		"friendId": "37d28fdf-99bc-44b5-8df9-6a3b1a36f177",
 	})
 	req, _ := http.NewRequest("POST", "http://backend:8080/friendship/remove-friend", bytes.NewReader(reqBody))
-	addSessionId(req)
+	testlib.AddSessionId(req)
 	res, _ := http.DefaultClient.Do(req)
 	expect(res.StatusCode).ToBe(200)
 	body, _ := io.ReadAll(res.Body)
@@ -120,7 +121,7 @@ func TestRemoveFriend(t *testing.T) {
 		"friendId": "2db640fd-7aa4-4bba-8ee6-3935b700297a",
 	})
 	req, _ = http.NewRequest("POST", "http://backend:8080/friendship/remove-friend", bytes.NewReader(reqBody))
-	addSessionId(req)
+	testlib.AddSessionId(req)
 	res, _ = http.DefaultClient.Do(req)
 	expect(res.StatusCode).ToBe(200)
 	body, _ = io.ReadAll(res.Body)

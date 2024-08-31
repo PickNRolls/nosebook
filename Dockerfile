@@ -81,5 +81,5 @@ ENTRYPOINT [ "/bin/server" ]
 
 FROM build AS test
 
-ENTRYPOINT [ "go", "test", "./src/tests", "-v" ]
+ENTRYPOINT [ "go", "test", "./src/tests/...", "-v" ]
 

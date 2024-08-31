@@ -1,16 +1,19 @@
-package application_tests
+package postfind
 
 import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"nosebook/src/tests/testlib"
 	"testing"
 )
 
+type J = testlib.J
+
 func TestPostFind(t *testing.T) {
-	expect := CreateMatcher(t, true)
+	expect := testlib.CreateMatcher(t, true)
 	req, _ := http.NewRequest("GET", "http://backend:8080/posts?ownerId=1ae02f69-ea1a-4308-b825-0e5896e652e4", nil)
-	addSessionId(req)
+	testlib.AddSessionId(req)
 	res, _ := http.DefaultClient.Do(req)
 	expect(res.StatusCode).ToBe(200)
 	body, _ := io.ReadAll(res.Body)
@@ -190,7 +193,7 @@ func TestPostFind(t *testing.T) {
 
 	next := actual["data"].(J)["next"].(string)
 	req, _ = http.NewRequest("GET", "http://backend:8080/posts?ownerId=1ae02f69-ea1a-4308-b825-0e5896e652e4&cursor="+next, nil)
-	addSessionId(req)
+	testlib.AddSessionId(req)
 	res, _ = http.DefaultClient.Do(req)
 	expect(res.StatusCode).ToBe(200)
 	body, _ = io.ReadAll(res.Body)
@@ -269,4 +272,17 @@ func TestPostFind(t *testing.T) {
 	actual = J{}
 	json.Unmarshal(body, &actual)
 	expect(actual).ToContain(expected)
+}
+
+func TestPostComments(t *testing.T) {
+	expect := testlib.CreateMatcher(t, true)
+	req, _ := http.NewRequest("GET", "http://backend:8080/posts?ownerId=1ae02f69-ea1a-4308-b825-0e5896e652e4&authorId=1ae02f69-ea1a-4308-b825-0e5896e652e4&cursor=c7b7bf17-38f9-4ed5-b0a8-601a90f7c8e7/2024-02-16T14:36:38Z", nil)
+	testlib.AddSessionId(req)
+	res, _ := http.DefaultClient.Do(req)
+	expect(res.StatusCode).ToBe(200)
+	body, _ := io.ReadAll(res.Body)
+	defer res.Body.Close()
+
+	expectedJSON := TestPostCommentsJSON()
+	expect(string(body)).ToBe(expectedJSON)
 }

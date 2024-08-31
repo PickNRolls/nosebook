@@ -1,4 +1,4 @@
-package application_tests
+package testlib
 
 import (
 	"fmt"

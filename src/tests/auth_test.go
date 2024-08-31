@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"nosebook/src/tests/testlib"
 	"strings"
 	"testing"
 )
 
 func TestNotAuthenticated(t *testing.T) {
-	expect := CreateMatcher(t, false)
+	expect := testlib.CreateMatcher(t, false)
 	res, _ := http.Get("http://backend:8080/whoami")
 
 	expect(res.StatusCode).ToBe(403).ElseFail()
@@ -33,7 +34,7 @@ func TestNotAuthenticated(t *testing.T) {
 }
 
 func TestRegister(t *testing.T) {
-	expect := CreateMatcher(t, true)
+	expect := testlib.CreateMatcher(t, true)
 	reqBody, _ := json.Marshal(J{
 		"firstName": "test",
 		"lastName":  "test",
@@ -72,7 +73,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	expect := CreateMatcher(t, true)
+	expect := testlib.CreateMatcher(t, true)
 	req, _ := http.NewRequest("POST", "http://backend:8080/login", strings.NewReader(`{"nick": "test_tester", "password": "123123123" }`))
 	res, err := http.DefaultClient.Do(req)
 
@@ -107,9 +108,9 @@ func TestLogin(t *testing.T) {
 // => тесты зависимы друг от друга, а вызов logout удаляет сессию из базы.
 
 // func TestLogout(t *testing.T) {
-// 	expect := CreateMatcher(t, true)
+// 	expect := testlib.CreateMatcher(t, true)
 // 	req, _ := http.NewRequest("POST", "http://backend:8080/logout", nil)
-// 	addSessionId(req)
+// 	testlib.AddSessionId(req)
 // 	res, _ := http.DefaultClient.Do(req)
 //
 // 	expect(res.StatusCode).ToBe(200)

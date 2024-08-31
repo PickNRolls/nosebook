@@ -5,17 +5,18 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"nosebook/src/tests/testlib"
 	"testing"
 )
 
 func TestPost(t *testing.T) {
-	expect := CreateMatcher(t, true)
+	expect := testlib.CreateMatcher(t, true)
 	reqBody, _ := json.Marshal(J{
 		"ownerId": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
 		"message": "my test message",
 	})
 	req, _ := http.NewRequest("POST", "http://backend:8080/posts/publish", bytes.NewReader(reqBody))
-	addSessionId(req)
+	testlib.AddSessionId(req)
 	res, _ := http.DefaultClient.Do(req)
 	expect(res.StatusCode).ToBe(200)
 	body, _ := io.ReadAll(res.Body)
@@ -36,7 +37,7 @@ func TestPost(t *testing.T) {
 		"id": postId,
 	})
 	req, _ = http.NewRequest("POST", "http://backend:8080/posts/remove", bytes.NewReader(reqBody))
-	addSessionId(req)
+	testlib.AddSessionId(req)
 	res, _ = http.DefaultClient.Do(req)
 	expect(res.StatusCode).ToBe(200)
 	body, _ = io.ReadAll(res.Body)
