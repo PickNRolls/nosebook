@@ -31,6 +31,8 @@ type Cursors struct {
 	Prev string
 }
 
+const DEFAULT_LIMIT = 10
+
 func newError(message string) *errors.Error {
 	return errors.New("Cursor Query Error", message)
 }
@@ -54,8 +56,12 @@ func Do[T destType](db *sqlx.DB, input *Input, dest *[]T) (*Cursors, *errors.Err
 
 	next := input.Next
 	prev := input.Prev
+	limit := input.Limit
+	if limit == 0 {
+		limit = DEFAULT_LIMIT
+	}
 
-	query := input.Query.Limit(input.Limit + 1)
+	query := input.Query.Limit(limit + 1)
 	query = addOrder(query, boolean.Xor(input.OrderAsc, input.Last))
 
 	if input.Last {
@@ -101,7 +107,7 @@ func Do[T destType](db *sqlx.DB, input *Input, dest *[]T) (*Cursors, *errors.Err
 	}
 
 	slice := *dest
-	lengthGreaterLimit := len(slice) > int(input.Limit)
+	lengthGreaterLimit := len(slice) > int(limit)
 	shouldBeNext := lengthGreaterLimit
 	shouldBePrev := lengthGreaterLimit && (prev != "" || input.Last)
 

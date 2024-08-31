@@ -21,11 +21,13 @@ type likes = presenterdto.Likes
 type comment = presenterdto.Comment
 
 type FindByFilterInput struct {
+	Ids    []string
 	PostId string
-	Next   string
-	Prev   string
-	Limit  uint64
-	Last   bool
+
+	Next  string
+	Prev  string
+	Limit uint64
+	Last  bool
 }
 
 type FindByFilterOutput = presenterdto.FindOut[*comment]

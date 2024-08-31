@@ -7,6 +7,7 @@ import (
 	presenterdto "nosebook/src/presenters/dto"
 	"nosebook/src/services/auth"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -35,23 +36,55 @@ func errMsgOut(message string) *FindByFilterOutput {
 	}
 }
 
-func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *FindByFilterOutput {
-	if input.PostId == "" {
-		return errMsgOut("Отсутствует фильтр по PostId")
+func (this *Presenter) FindById(id string, auth *auth.Auth) *comment {
+	out := this.FindByFilter(&FindByFilterInput{
+		Ids: []string{id},
+	}, auth)
+
+	if out.Data != nil && len(out.Data) > 0 {
+		return out.Data[0]
 	}
 
-	postId, err := uuid.Parse(input.PostId)
-	if err != nil {
-		return errOut(err)
+	return nil
+}
+
+func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *FindByFilterOutput {
+	var postId uuid.UUID
+	if input.PostId != "" {
+		var err error
+		postId, err = uuid.Parse(input.PostId)
+		if err != nil {
+			return errOut(err)
+		}
+	}
+
+	var ids []uuid.UUID
+	if input.Ids != nil && len(input.Ids) != 0 {
+		ids = make([]uuid.UUID, len(input.Ids))
+		for i, id := range input.Ids {
+			u, err := uuid.Parse(id)
+			if err != nil {
+				return errOut(err)
+			}
+
+			ids[i] = u
+		}
 	}
 
 	qb := postgres.NewSquirrel()
 	query := qb.
-		Select("id", "post_id", "author_id", "message", "created_at").
+		Select("id", "author_id", "message", "created_at").
 		From("comments as c").
 		Where("removed_at is null").
-		Where("post_id = ?", postId).
 		Join("post_comments as pc on c.id = pc.comment_id")
+
+	if postId != uuid.Nil {
+		query = query.Column("post_id").Where("post_id = ?", postId)
+	}
+
+	if ids != nil {
+		query = query.Where(squirrel.Eq{"id": ids})
+	}
 
 	dest := []*dest{}
 	cursors, error := cursorquery.Do(this.db, &cursorquery.Input{
@@ -73,6 +106,9 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 		}
 		return ids
 	}(), auth)
+	if err != nil {
+		return errOut(err)
+	}
 
 	userMap, err := func() (map[uuid.UUID]*presenterdto.User, *errors.Error) {
 		ids := uuid.UUIDs{}
@@ -91,6 +127,9 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 		}
 		return m, nil
 	}()
+	if err != nil {
+		errOut(err)
+	}
 
 	output := &FindByFilterOutput{
 		Data: make([]*comment, len(dest)),
