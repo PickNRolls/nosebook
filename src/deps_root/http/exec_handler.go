@@ -3,8 +3,8 @@ package roothttp
 import (
 	reqcontext "nosebook/src/deps_root/http/req_context"
 	"nosebook/src/errors"
+	commandresult "nosebook/src/lib/command_result"
 	"nosebook/src/services/auth"
-	commandresult "nosebook/src/services/command_result"
 
 	"github.com/gin-gonic/gin"
 )

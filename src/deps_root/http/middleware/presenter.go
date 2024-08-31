@@ -2,7 +2,7 @@ package middleware
 
 import (
 	reqcontext "nosebook/src/deps_root/http/req_context"
-	commandresult "nosebook/src/services/command_result"
+	commandresult "nosebook/src/lib/command_result"
 
 	"github.com/gin-gonic/gin"
 )

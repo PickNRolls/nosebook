@@ -4,8 +4,8 @@ import (
 	"nosebook/src/domain/sessions"
 	"nosebook/src/domain/user"
 	"nosebook/src/errors"
+	commandresult "nosebook/src/lib/command_result"
 	"nosebook/src/services/auth"
-	commandresult "nosebook/src/services/command_result"
 	"time"
 
 	"github.com/google/uuid"

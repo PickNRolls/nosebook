@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"nosebook/src/errors"
 	"nosebook/src/infra/postgres"
-	cursorquery "nosebook/src/presenters/cursor_query"
+	cursorquery "nosebook/src/lib/cursor_query"
 	"nosebook/src/services/auth"
 
 	"github.com/Masterminds/squirrel"

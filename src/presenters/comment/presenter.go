@@ -2,7 +2,7 @@ package presentercomment
 
 import (
 	"nosebook/src/infra/postgres"
-	cursorquery "nosebook/src/presenters/cursor_query"
+	"nosebook/src/lib/cursor_query"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"

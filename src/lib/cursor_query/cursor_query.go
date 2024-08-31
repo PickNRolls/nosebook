@@ -1,10 +1,10 @@
 package cursorquery
 
 import (
-	"nosebook/src/boolean"
 	"nosebook/src/errors"
 	"nosebook/src/infra/postgres"
-	"nosebook/src/presenters/cursor"
+	"nosebook/src/lib/boolean"
+	"nosebook/src/lib/cursor"
 	"time"
 
 	"github.com/Masterminds/squirrel"

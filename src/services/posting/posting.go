@@ -2,8 +2,8 @@ package posting
 
 import (
 	"nosebook/src/domain/post"
+	commandresult "nosebook/src/lib/command_result"
 	"nosebook/src/services/auth"
-	commandresult "nosebook/src/services/command_result"
 	"time"
 
 	"github.com/google/uuid"
