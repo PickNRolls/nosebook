@@ -1,6 +1,7 @@
 package reqcontext
 
 import (
+	"fmt"
 	"net/http"
 	"nosebook/src/domain/user"
 	"nosebook/src/errors"
@@ -22,6 +23,26 @@ func From(ctx *gin.Context) *ReqContext {
 		ctx:  ctx,
 		errs: make([]*errors.Error, 0),
 	}
+}
+
+func Handle[T any](data T, err *errors.Error) func(*ReqContext) (T, bool) {
+	return func(reqctx *ReqContext) (T, bool) {
+		if err != nil {
+			fmt.Println(reqctx)
+			reqctx.ctx.Error(err)
+			reqctx.ctx.Abort()
+
+			var zero T
+			return zero, false
+		}
+
+		return data, true
+	}
+}
+
+func (this *ReqContext) ParamUUID(key string) (uuid.UUID, bool) {
+	str := this.ctx.Param(key)
+	return Handle(errors.Using(uuid.Parse(str)))(this)
 }
 
 func (this *ReqContext) SetUser(user *domainuser.User) {

@@ -29,10 +29,8 @@ func (this *RootHTTP) addPostHandlers() {
 			OwnerId:  ownerId,
 			Cursor:   cursor,
 		}, reqctx.Auth())
-
-		if output.Err != nil {
-			ctx.Error(output.Err)
-			ctx.Abort()
+		_, ok := handle(output, output.Err)(reqctx)
+		if !ok {
 			return
 		}
 

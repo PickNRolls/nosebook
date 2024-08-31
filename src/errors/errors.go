@@ -13,6 +13,10 @@ func New(errorType string, message string) *Error {
 	}
 }
 
+func Using[T any](data T, err error) (T, *Error) {
+	return data, From(err)
+}
+
 func From(err error) *Error {
 	if err == nil {
 		return nil
