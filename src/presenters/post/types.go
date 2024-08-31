@@ -10,6 +10,7 @@ import (
 )
 
 type FindByFilterInput struct {
+	Ids      []string
 	OwnerId  string
 	AuthorId string
 	Cursor   string

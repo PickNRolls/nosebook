@@ -83,6 +83,7 @@ func (this *findByFilterQuery) FindByFilter(
 func (this *findByFilterQuery) fetchPosts(input *FindByFilterInput) {
 	var ownerId uuid.UUID
 	var authorId uuid.UUID
+	var ids uuid.UUIDs
 
 	if input.OwnerId != "" {
 		var err error
@@ -100,7 +101,20 @@ func (this *findByFilterQuery) fetchPosts(input *FindByFilterInput) {
 		}
 	}
 
-	if ownerId == uuid.Nil && authorId == uuid.Nil {
+	if input.Ids != nil && len(input.Ids) != 0 {
+		ids = make(uuid.UUIDs, len(input.Ids))
+		for i, id := range input.Ids {
+			u, err := uuid.Parse(id)
+			if err != nil {
+				this.err = errorFrom(err)
+				break
+			}
+
+			ids[i] = u
+		}
+	}
+
+	if ownerId == uuid.Nil && authorId == uuid.Nil && ids == nil {
 		this.err = newError("Отсутствует фильтр")
 		return
 	}
@@ -119,6 +133,12 @@ func (this *findByFilterQuery) fetchPosts(input *FindByFilterInput) {
 	if authorId != uuid.Nil {
 		query = query.Where(
 			"author_id = ?", authorId,
+		)
+	}
+
+	if ids != nil {
+		query = query.Where(
+			squirrel.Eq{"id": ids},
 		)
 	}
 

@@ -37,4 +37,12 @@ func (this *RootHTTP) addPostHandlers() {
 		reqctx.SetResponseData(output)
 		reqctx.SetResponseOk(true)
 	})
+
+	group.GET("/:id", func(ctx *gin.Context) {
+		reqctx := reqcontext.From(ctx)
+		id := ctx.Param("id")
+
+		reqctx.SetResponseData(presenter.FindById(id, reqctx.Auth()))
+		reqctx.SetResponseOk(true)
+	})
 }
