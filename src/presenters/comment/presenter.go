@@ -53,7 +53,7 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 		Where("post_id = ?", postId).
 		Join("post_comments as pc on c.id = pc.comment_id")
 
-	dest := []*commentDest{}
+	dest := []*dest{}
 	cursors, error := cursorquery.Do(this.db, &cursorquery.Input{
 		Query:    query,
 		Next:     input.Next,
