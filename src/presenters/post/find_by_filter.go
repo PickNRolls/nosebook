@@ -1,7 +1,6 @@
 package presenterpost
 
 import (
-	"fmt"
 	"nosebook/src/errors"
 	"nosebook/src/infra/postgres"
 	cursorquery "nosebook/src/lib/cursor_query"
@@ -133,8 +132,6 @@ func (this *findByFilterQuery) fetchPosts(input *FindByFilterInput) {
 		this.err = errorFrom(err)
 	}
 
-	fmt.Println(this.postDests)
-
 	this.next = cursors.Next
 
 	this.postIds = make(uuid.UUIDs, len(this.postDests))
@@ -172,7 +169,7 @@ func (this *findByFilterQuery) fetchComments() {
 	}
 
 	for _, id := range this.postIds {
-		this.commentsMap[id] = this.commentPresenter.FindByPostId(id)
+		this.commentsMap[id] = this.commentPresenter.FindByPostId(id, this.auth)
 	}
 }
 
@@ -181,13 +178,7 @@ func (this *findByFilterQuery) fetchLikes() {
 		return
 	}
 
-	out, err := this.likePresenter.FindByPostIds(this.postIds, this.auth)
-	if err != nil {
-		this.err = err
-		return
-	}
-
-	this.postLikesMap = out
+	this.postLikesMap, this.err = this.likePresenter.FindByPostIds(this.postIds, this.auth)
 }
 
 func (this *findByFilterQuery) fetchUsers() {

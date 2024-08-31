@@ -14,29 +14,26 @@ import (
 type Presenter struct {
 	db            *sqlx.DB
 	qb            squirrel.StatementBuilderType
-	userPresenter userPresenter
+	userPresenter UserPresenter
+	resource      Resource
 
 	err               *errors.Error
 	auth              *auth.Auth
-	postIds           uuid.UUIDs
+	linkedResourceIds uuid.UUIDs
 	userIdsToFetchMap map[uuid.UUID]struct{}
 	userIdsToFetch    uuid.UUIDs
-	postLikersMap     map[uuid.UUID]uuid.UUIDs
+	resourceLikersMap map[uuid.UUID]uuid.UUIDs
 	users             []*presenterdto.User
-	usersMap          map[uuid.UUID]*presenterdto.User
-	out               map[uuid.UUID]*presenterdto.Likes
+	usersMap          usersMap
+	out               likesMap
 }
 
-type likeDest struct {
-	PostId uuid.UUID `db:"post_id"`
-	UserId uuid.UUID `db:"user_id"`
-}
-
-func New(db *sqlx.DB, userPresenter userPresenter) *Presenter {
+func New(db *sqlx.DB, userPresenter UserPresenter, resource Resource) *Presenter {
 	out := &Presenter{
 		db:            db,
 		qb:            postgres.NewSquirrel(),
 		userPresenter: userPresenter,
+		resource:      resource,
 	}
 
 	out.reset()
@@ -44,8 +41,8 @@ func New(db *sqlx.DB, userPresenter userPresenter) *Presenter {
 	return out
 }
 
-func (this *Presenter) FindByPostIds(ids uuid.UUIDs, auth *auth.Auth) (map[uuid.UUID]*presenterdto.Likes, *errors.Error) {
-	this.postIds = ids
+func (this *Presenter) FindByResourceIds(ids uuid.UUIDs, auth *auth.Auth) (likesMap, *errors.Error) {
+	this.linkedResourceIds = ids
 	this.auth = auth
 
 	this.fetchLikes()
@@ -60,17 +57,21 @@ func (this *Presenter) fetchLikes() {
 		return
 	}
 
+	idColumn := this.resource.IDColumn()
+	whereEq := squirrel.Eq{}
+	whereEq[idColumn] = this.linkedResourceIds
+
 	sql, args, _ := this.qb.
-		Select("sub.post_id, sub.user_id").
+		Select("sub."+idColumn+" as resource_id", "sub.user_id").
 		FromSelect(
 			this.qb.
 				Select(
-					"post_id",
+					idColumn,
 					"user_id",
-					"row_number() over(partition by post_id) as row_number",
+					"row_number() over(partition by "+idColumn+") as row_number",
 				).
-				From("post_likes").
-				Where(squirrel.Eq{"post_id": this.postIds}),
+				From(this.resource.Table()).
+				Where(whereEq),
 			"sub",
 		).
 		Where("sub.row_number <= 5").
@@ -89,10 +90,10 @@ func (this *Presenter) fetchLikes() {
 			this.userIdsToFetchMap[like.UserId] = struct{}{}
 		}
 
-		if _, has := this.postLikersMap[like.PostId]; !has {
-			this.postLikersMap[like.PostId] = make(uuid.UUIDs, 0)
+		if _, has := this.resourceLikersMap[like.ResourceId]; !has {
+			this.resourceLikersMap[like.ResourceId] = make(uuid.UUIDs, 0)
 		}
-		this.postLikersMap[like.PostId] = append(this.postLikersMap[like.PostId], like.UserId)
+		this.resourceLikersMap[like.ResourceId] = append(this.resourceLikersMap[like.ResourceId], like.UserId)
 	}
 }
 
@@ -101,24 +102,29 @@ func (this *Presenter) fetchLikeAdditionals() {
 		return
 	}
 
+	idColumn := this.resource.IDColumn()
+	table := this.resource.Table()
+	whereEq := squirrel.Eq{}
+	whereEq[idColumn] = this.linkedResourceIds
+
 	sql, args, _ := this.qb.
-		Select("a.post_id", "count", "b.user_id IS NOT NULL AS liked").
+		Select("a."+idColumn+" as resource_id", "count", "b.user_id IS NOT NULL AS liked").
 		FromSelect(
 			this.qb.
-				Select("post_id, count(*)").
-				From("post_likes").
-				Where(squirrel.Eq{"post_id": this.postIds}).
-				GroupBy("post_id"),
+				Select(idColumn, "count(*)").
+				From(table).
+				Where(whereEq).
+				GroupBy(idColumn),
 			"a",
 		).
-		JoinClause("LEFT OUTER JOIN post_likes AS b").
-		Suffix("ON a.post_id = b.post_id AND b.user_id = ?", this.auth.UserId).
+		JoinClause("LEFT OUTER JOIN "+table+" AS b").
+		Suffix("ON a."+idColumn+" = b."+idColumn+" AND b.user_id = ?", this.auth.UserId).
 		ToSql()
 
 	additional := []struct {
-		PostId uuid.UUID `db:"post_id"`
-		Count  int       `db:"count"`
-		Liked  bool      `db:"liked"`
+		ResourceId uuid.UUID `db:"resource_id"`
+		Count      int       `db:"count"`
+		Liked      bool      `db:"liked"`
 	}{}
 	err := this.db.Select(&additional, sql, args...)
 	if err != nil {
@@ -126,15 +132,15 @@ func (this *Presenter) fetchLikeAdditionals() {
 		return
 	}
 
-	for _, postId := range this.postIds {
-		this.out[postId] = &presenterdto.Likes{
+	for _, resourceId := range this.linkedResourceIds {
+		this.out[resourceId] = &presenterdto.Likes{
 			RandomFiveLikers: make([]*presenterdto.User, 0),
 		}
 	}
 
 	for _, add := range additional {
-		this.out[add.PostId].Count = add.Count
-		this.out[add.PostId].Liked = add.Liked
+		this.out[add.ResourceId].Count = add.Count
+		this.out[add.ResourceId].Liked = add.Liked
 	}
 }
 
@@ -148,22 +154,22 @@ func (this *Presenter) fetchUsers() {
 		return
 	}
 
-	this.usersMap = map[uuid.UUID]*presenterdto.User{}
+	this.usersMap = usersMap{}
 	for _, user := range this.users {
 		this.usersMap[user.Id] = user
 	}
 }
 
-func (this *Presenter) output() (map[uuid.UUID]*presenterdto.Likes, *errors.Error) {
+func (this *Presenter) output() (likesMap, *errors.Error) {
 	if this.err != nil {
 		err := this.err
 		this.reset()
 		return nil, err
 	}
 
-	for postId, likerIds := range this.postLikersMap {
+	for resourceId, likerIds := range this.resourceLikersMap {
 		for _, userId := range likerIds {
-			this.out[postId].RandomFiveLikers = append(this.out[postId].RandomFiveLikers, this.usersMap[userId])
+			this.out[resourceId].RandomFiveLikers = append(this.out[resourceId].RandomFiveLikers, this.usersMap[userId])
 		}
 	}
 
@@ -175,11 +181,11 @@ func (this *Presenter) output() (map[uuid.UUID]*presenterdto.Likes, *errors.Erro
 func (this *Presenter) reset() {
 	this.err = nil
 	this.auth = nil
-	this.postIds = make(uuid.UUIDs, 0)
+	this.linkedResourceIds = make(uuid.UUIDs, 0)
 	this.userIdsToFetch = make(uuid.UUIDs, 0)
 	this.userIdsToFetchMap = make(map[uuid.UUID]struct{})
-	this.postLikersMap = make(map[uuid.UUID]uuid.UUIDs)
+	this.resourceLikersMap = make(map[uuid.UUID]uuid.UUIDs)
 	this.users = make([]*presenterdto.User, 0)
-	this.usersMap = make(map[uuid.UUID]*presenterdto.User)
+	this.usersMap = make(usersMap)
 	this.out = make(map[uuid.UUID]*presenterdto.Likes)
 }

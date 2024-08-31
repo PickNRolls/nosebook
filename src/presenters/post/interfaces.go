@@ -12,7 +12,7 @@ type userPresenter interface {
 }
 
 type commentPresenter interface {
-	FindByPostId(id uuid.UUID) *comments
+	FindByPostId(id uuid.UUID, auth *auth.Auth) *comments
 }
 
 type likePresenter interface {

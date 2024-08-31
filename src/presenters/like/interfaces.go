@@ -7,6 +7,11 @@ import (
 	"github.com/google/uuid"
 )
 
-type userPresenter interface {
+type UserPresenter interface {
 	FindByIds(ids uuid.UUIDs) ([]*presenterdto.User, *errors.Error)
+}
+
+type Resource interface {
+	IDColumn() string
+	Table() string
 }

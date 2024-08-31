@@ -28,7 +28,7 @@ func (this *RootHTTP) addCommentHandlers() {
 			Prev:   ctx.Query("prev"),
 			Last:   ctx.Query("last") == "true",
 			Limit:  5,
-		})
+		}, reqctx.Auth())
 
 		if output.Err != nil {
 			ctx.Error(output.Err)
