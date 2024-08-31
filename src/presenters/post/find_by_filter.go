@@ -27,7 +27,7 @@ type findByFilterQuery struct {
 	posts  []*post
 
 	postLikesMap      map[uuid.UUID]*likes
-	postDests         []*postDest
+	postDests         []*dest
 	postIds           uuid.UUIDs
 	userIdsToFetchMap map[uuid.UUID]struct{}
 	userIdsToFetch    uuid.UUIDs
@@ -240,7 +240,7 @@ func (this *findByFilterQuery) reset() {
 	this.next = ""
 	this.auth = nil
 	this.posts = make([]*post, 0)
-	this.postDests = make([]*postDest, 0)
+	this.postDests = make([]*dest, 0)
 	this.postIds = make(uuid.UUIDs, 0)
 	this.userIdsToFetchMap = make(map[uuid.UUID]struct{})
 	this.userIdsToFetch = make(uuid.UUIDs, 0)

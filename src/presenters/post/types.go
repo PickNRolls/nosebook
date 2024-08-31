@@ -1,7 +1,9 @@
 package presenterpost
 
 import (
+	"nosebook/src/errors"
 	presenterdto "nosebook/src/presenters/dto"
+	"nosebook/src/services/auth"
 	"time"
 
 	"github.com/google/uuid"
@@ -27,4 +29,16 @@ type post struct {
 	Likes          *likes    `json:"likes"`
 	RecentComments *comments `json:"recentComments"`
 	CreatedAt      time.Time `json:"createdAt"`
+}
+
+type userPresenter interface {
+	FindByIds(ids uuid.UUIDs) ([]*user, *errors.Error)
+}
+
+type commentPresenter interface {
+	FindByPostId(id uuid.UUID, auth *auth.Auth) *comments
+}
+
+type likePresenter interface {
+	FindByPostIds(ids uuid.UUIDs, auth *auth.Auth) (map[uuid.UUID]*likes, *errors.Error)
 }

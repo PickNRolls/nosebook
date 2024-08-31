@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type postDest struct {
+type dest struct {
 	Id        uuid.UUID `db:"id"`
 	AuthorId  uuid.UUID `db:"author_id"`
 	OwnerId   uuid.UUID `db:"owner_id"`
@@ -14,10 +14,10 @@ type postDest struct {
 	CreatedAt time.Time `db:"created_at"`
 }
 
-func (this *postDest) ID() uuid.UUID {
+func (this *dest) ID() uuid.UUID {
 	return this.Id
 }
 
-func (this *postDest) Timestamp() time.Time {
+func (this *dest) Timestamp() time.Time {
 	return this.CreatedAt
 }
