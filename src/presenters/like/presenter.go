@@ -77,7 +77,7 @@ func (this *Presenter) fetchLikes() {
 		Where("sub.row_number <= 5").
 		ToSql()
 
-	likeDests := []*likeDest{}
+	likeDests := []*dest{}
 	err := this.db.Select(&likeDests, sql, args...)
 	if err != nil {
 		this.err = errorFrom(err)
