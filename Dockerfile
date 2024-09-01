@@ -78,8 +78,3 @@ EXPOSE 8080
 # What the container should run when it is started.
 ENTRYPOINT [ "/bin/server" ]
 
-
-FROM build AS test
-
-ENTRYPOINT [ "go", "test", "./src/tests/...", "-v" ]
-

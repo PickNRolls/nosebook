@@ -1,0 +1,423 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`posts GET / 1`] = `
+{
+  "data": {
+    "data": [
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T14:36:59Z",
+        "id": "c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e2",
+        "likes": {
+          "count": 0,
+          "liked": false,
+          "randomFiveLikers": [],
+        },
+        "message": "post message 5",
+        "owner": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "recentComments": {
+          "data": [],
+        },
+      },
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T14:36:59Z",
+        "id": "c7b7bf17-38f9-4ed5-b0a8-011a90f7c8e2",
+        "likes": {
+          "count": 0,
+          "liked": false,
+          "randomFiveLikers": [],
+        },
+        "message": "post message 11",
+        "owner": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "recentComments": {
+          "data": [],
+        },
+      },
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T14:36:59Z",
+        "id": "c7b7bf17-38f9-4ed5-b0a8-001a90f7c8e2",
+        "likes": {
+          "count": 0,
+          "liked": false,
+          "randomFiveLikers": [],
+        },
+        "message": "post message 10",
+        "owner": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "recentComments": {
+          "data": [],
+        },
+      },
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T14:36:57Z",
+        "id": "c7b7bf17-38f9-4ed5-b0a8-901a90f7c8e0",
+        "likes": {
+          "count": 0,
+          "liked": false,
+          "randomFiveLikers": [],
+        },
+        "message": "post message 9",
+        "owner": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "recentComments": {
+          "data": [],
+        },
+      },
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T14:36:57Z",
+        "id": "c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e0",
+        "likes": {
+          "count": 0,
+          "liked": false,
+          "randomFiveLikers": [],
+        },
+        "message": "post message 4",
+        "owner": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "recentComments": {
+          "data": [],
+        },
+      },
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T14:36:53Z",
+        "id": "c7b7bf17-38f9-4ed5-b0a8-801a90f7c8e9",
+        "likes": {
+          "count": 0,
+          "liked": false,
+          "randomFiveLikers": [],
+        },
+        "message": "post message 8",
+        "owner": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "recentComments": {
+          "data": [],
+        },
+      },
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T14:36:53Z",
+        "id": "c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e9",
+        "likes": {
+          "count": 0,
+          "liked": false,
+          "randomFiveLikers": [],
+        },
+        "message": "post message 3",
+        "owner": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "recentComments": {
+          "data": [],
+        },
+      },
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T14:36:48Z",
+        "id": "c7b7bf17-38f9-4ed5-b0a8-701a90f7c8e8",
+        "likes": {
+          "count": 0,
+          "liked": false,
+          "randomFiveLikers": [],
+        },
+        "message": "post message 7",
+        "owner": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "recentComments": {
+          "data": [],
+        },
+      },
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T14:36:48Z",
+        "id": "c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e8",
+        "likes": {
+          "count": 2,
+          "liked": false,
+          "randomFiveLikers": [
+            {
+              "firstName": "Ilya",
+              "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+              "lastName": "Blinkov",
+              "nick": "drugtester",
+            },
+            {
+              "firstName": "Marina",
+              "id": "48683858-796c-45ad-a361-9e3d6d003354",
+              "lastName": "Graf",
+              "nick": "mmm",
+            },
+          ],
+        },
+        "message": "post message 2",
+        "owner": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "recentComments": {
+          "data": [],
+        },
+      },
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T14:36:38Z",
+        "id": "c7b7bf17-38f9-4ed5-b0a8-601a90f7c8e7",
+        "likes": {
+          "count": 0,
+          "liked": false,
+          "randomFiveLikers": [],
+        },
+        "message": "post message 6",
+        "owner": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "recentComments": {
+          "data": [],
+        },
+      },
+    ],
+    "next": "c7b7bf17-38f9-4ed5-b0a8-601a90f7c8e7/2024-02-16T14:36:38Z",
+  },
+  "ok": true,
+}
+`;
+
+exports[`posts GET / 2`] = `
+{
+  "data": {
+    "data": [
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T14:36:38Z",
+        "id": "c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7",
+        "likes": {
+          "count": 7,
+          "liked": false,
+          "randomFiveLikers": [
+            {
+              "firstName": "Ilya",
+              "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+              "lastName": "Blinkov",
+              "nick": "drugtester",
+            },
+            {
+              "firstName": "Marina",
+              "id": "48683858-796c-45ad-a361-9e3d6d003354",
+              "lastName": "Graf",
+              "nick": "mmm",
+            },
+            {
+              "firstName": "Sasha",
+              "id": "baa0e8bc-385f-4314-9580-29855aff2229",
+              "lastName": "Provodnikov",
+              "nick": "yyy",
+            },
+            {
+              "firstName": "Tolber",
+              "id": "37d28fdf-99bc-44b5-8df9-6a3b1a36f177",
+              "lastName": "Ovcharenko",
+              "nick": "tolber01",
+            },
+            {
+              "firstName": "Sanal",
+              "id": "2db640fd-7aa4-4bba-8ee6-3935b700297a",
+              "lastName": "Mandjiev",
+              "nick": "sanal",
+            },
+          ],
+        },
+        "message": "post message",
+        "owner": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "recentComments": {
+          "data": [
+            {
+              "author": {
+                "firstName": "Ilya",
+                "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+                "lastName": "Blinkov",
+                "nick": "drugtester",
+              },
+              "createdAt": "2024-02-16T15:36:55Z",
+              "id": "d0023f4d-8d7f-4907-9438-d2ed2a9661f0",
+              "likes": {
+                "count": 0,
+                "liked": false,
+                "randomFiveLikers": [],
+              },
+              "message": "3nd comment message",
+            },
+            {
+              "author": {
+                "firstName": "Ilya",
+                "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+                "lastName": "Blinkov",
+                "nick": "drugtester",
+              },
+              "createdAt": "2024-02-16T15:37:55Z",
+              "id": "d0023f4d-8d7f-4907-9438-d2ed2a9661f1",
+              "likes": {
+                "count": 0,
+                "liked": false,
+                "randomFiveLikers": [],
+              },
+              "message": "4nd comment message",
+            },
+            {
+              "author": {
+                "firstName": "Ilya",
+                "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+                "lastName": "Blinkov",
+                "nick": "drugtester",
+              },
+              "createdAt": "2024-02-16T15:38:55Z",
+              "id": "d0023f4d-8d7f-4907-9438-d2ed2a9661f2",
+              "likes": {
+                "count": 0,
+                "liked": false,
+                "randomFiveLikers": [],
+              },
+              "message": "5nd comment message",
+            },
+            {
+              "author": {
+                "firstName": "Ilya",
+                "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+                "lastName": "Blinkov",
+                "nick": "drugtester",
+              },
+              "createdAt": "2024-02-16T15:39:55Z",
+              "id": "d0023f4d-8d7f-4907-9438-d2ed2a9661f3",
+              "likes": {
+                "count": 0,
+                "liked": false,
+                "randomFiveLikers": [],
+              },
+              "message": "6nd comment message",
+            },
+            {
+              "author": {
+                "firstName": "Ilya",
+                "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+                "lastName": "Blinkov",
+                "nick": "drugtester",
+              },
+              "createdAt": "2024-02-16T15:40:55Z",
+              "id": "d0023f4d-8d7f-4907-9438-d2ed2a9661f4",
+              "likes": {
+                "count": 0,
+                "liked": false,
+                "randomFiveLikers": [],
+              },
+              "message": "7nd comment message",
+            },
+          ],
+          "next": "d0023f4d-8d7f-4907-9438-d2ed2a9661f4/2024-02-16T15:40:55Z",
+        },
+      },
+    ],
+  },
+  "ok": true,
+}
+`;
