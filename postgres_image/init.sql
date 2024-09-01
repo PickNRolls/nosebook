@@ -174,6 +174,12 @@ INSERT INTO
   comments (id, author_id, message, created_at)
 VALUES
   (
+    '120c79b8-3927-48b7-a308-1ffd3db6036f',
+    'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
+    'comment for permissions test',
+    TIMESTAMP '2024-02-16 15:36:38'
+  ),
+  (
     '620c79b7-3927-48b7-a308-1ffd3db6036f',
     '1ae02f69-ea1a-4308-b825-0e5896e652e4',
     'comment message',
@@ -226,6 +232,13 @@ VALUES
 INSERT INTO
   posts (id, author_id, owner_id, message, created_at)
 VALUES
+  (
+    '27b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
+    'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
+    'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
+    'test permissions post',
+    TIMESTAMP '2024-02-16 14:36:38'
+  ),
   (
     'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
     '1ae02f69-ea1a-4308-b825-0e5896e652e4',
@@ -384,6 +397,10 @@ VALUES
 INSERT INTO
   post_comments (post_id, comment_id)
 VALUES
+  (
+    'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
+    '120c79b8-3927-48b7-a308-1ffd3db6036f'
+  ),
   (
     'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
     'd0023f4d-8d7f-4907-9438-d2ed2a9661f0'

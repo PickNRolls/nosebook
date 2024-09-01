@@ -6,6 +6,26 @@ exports[`comments GET / 1`] = `
     "data": [
       {
         "author": {
+          "firstName": "Test",
+          "id": "ed1a3fd0-4d0b-4961-b4cd-cf212357740d",
+          "lastName": "Tester",
+          "nick": "test_tester",
+        },
+        "createdAt": "2024-02-16T15:36:38Z",
+        "id": "120c79b8-3927-48b7-a308-1ffd3db6036f",
+        "likes": {
+          "count": 0,
+          "liked": false,
+          "randomFiveLikers": [],
+        },
+        "message": "comment for permissions test",
+        "permissions": {
+          "remove": true,
+          "update": true,
+        },
+      },
+      {
+        "author": {
           "firstName": "Ilya",
           "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
           "lastName": "Blinkov",
@@ -84,6 +104,17 @@ exports[`comments GET / 1`] = `
           "update": false,
         },
       },
+    ],
+    "next": "d0023f4d-8d7f-4907-9438-d2ed2a9661f3/2024-02-16T15:39:55Z",
+  },
+  "ok": true,
+}
+`;
+
+exports[`comments GET / 2`] = `
+{
+  "data": {
+    "data": [
       {
         "author": {
           "firstName": "Ilya",
@@ -104,17 +135,6 @@ exports[`comments GET / 1`] = `
           "update": false,
         },
       },
-    ],
-    "next": "d0023f4d-8d7f-4907-9438-d2ed2a9661f4/2024-02-16T15:40:55Z",
-  },
-  "ok": true,
-}
-`;
-
-exports[`comments GET / 2`] = `
-{
-  "data": {
-    "data": [
       {
         "author": {
           "firstName": "Ilya",
@@ -156,6 +176,58 @@ exports[`comments GET / 2`] = `
         },
       },
     ],
+  },
+  "ok": true,
+}
+`;
+
+exports[`comments permissions GET /:id, has no permissions 1`] = `
+{
+  "data": {
+    "author": {
+      "firstName": "Ilya",
+      "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+      "lastName": "Blinkov",
+      "nick": "drugtester",
+    },
+    "createdAt": "2024-02-16T15:36:55Z",
+    "id": "d0023f4d-8d7f-4907-9438-d2ed2a9661f0",
+    "likes": {
+      "count": 0,
+      "liked": false,
+      "randomFiveLikers": [],
+    },
+    "message": "3nd comment message",
+    "permissions": {
+      "remove": false,
+      "update": false,
+    },
+  },
+  "ok": true,
+}
+`;
+
+exports[`comments permissions GET /:id, has permissions 1`] = `
+{
+  "data": {
+    "author": {
+      "firstName": "Test",
+      "id": "ed1a3fd0-4d0b-4961-b4cd-cf212357740d",
+      "lastName": "Tester",
+      "nick": "test_tester",
+    },
+    "createdAt": "2024-02-16T15:36:38Z",
+    "id": "120c79b8-3927-48b7-a308-1ffd3db6036f",
+    "likes": {
+      "count": 0,
+      "liked": false,
+      "randomFiveLikers": [],
+    },
+    "message": "comment for permissions test",
+    "permissions": {
+      "remove": true,
+      "update": true,
+    },
   },
   "ok": true,
 }

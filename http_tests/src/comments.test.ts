@@ -60,5 +60,23 @@ describe('comments', () => {
       ok: true,
     }));
   });
+
+  describe('permissions', () => {
+    test('GET /:id, has permissions', async () => {
+      let response = await comments
+        .get(`/120c79b8-3927-48b7-a308-1ffd3db6036f`)
+        .expect(200);
+
+      expect(response.body).toMatchSnapshot();
+    });
+
+    test('GET /:id, has no permissions', async () => {
+      let response = await comments
+        .get('/d0023f4d-8d7f-4907-9438-d2ed2a9661f0')
+        .expect(200);
+
+      expect(response.body).toMatchSnapshot();
+    });
+  });
 });
 
