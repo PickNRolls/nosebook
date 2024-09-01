@@ -135,35 +135,39 @@ VALUES
   );
 
 INSERT INTO
-  friendship_requests (requester_id, responder_id, message)
+  friendship_requests (requester_id, responder_id, message, created_at)
 VALUES
   (
     '1ae02f69-ea1a-4308-b825-0e5896e652e4',
     'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
-    'test request'
+    'test request',
+    TIMESTAMP '2024-02-16 15:36:38'
   ),
   (
     'baa0e8bc-385f-4314-9580-29855aff2229',
     'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
-    'test request'
+    'test request',
+    TIMESTAMP '2024-02-16 15:36:38'
   );
 
 INSERT INTO
-  friendship_requests (requester_id, responder_id, message, accepted, viewed)
+  friendship_requests (requester_id, responder_id, message, accepted, viewed, created_at)
 VALUES
   (
     '37d28fdf-99bc-44b5-8df9-6a3b1a36f177',
     'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
     'test',
     true,
-    true
+    true,
+    TIMESTAMP '2024-02-16 15:36:38'
   ),
   (
     'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
     '2db640fd-7aa4-4bba-8ee6-3935b700297a',
     'test',
     true,
-    true
+    true,
+    TIMESTAMP '2024-02-16 15:36:38'
   );
 
 INSERT INTO
