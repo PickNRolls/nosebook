@@ -2,6 +2,7 @@ package sessions
 
 import (
 	"errors"
+	"nosebook/src/lib/clock"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,7 +16,7 @@ type Session struct {
 }
 
 func NewSession(userId uuid.UUID) *Session {
-	now := time.Now()
+	now := clock.Now()
 
 	return &Session{
 		SessionId: uuid.New(),
@@ -26,7 +27,7 @@ func NewSession(userId uuid.UUID) *Session {
 }
 
 func (s *Session) Refresh() error {
-	now := time.Now()
+	now := clock.Now()
 
 	if s.ExpiresAt.Before(now) {
 		return errors.New("Can't refresh session, it is expired.")

@@ -3,8 +3,8 @@ package friendship
 import (
 	"nosebook/src/domain/friendship"
 	"nosebook/src/errors"
+	"nosebook/src/lib/clock"
 	"nosebook/src/services/auth"
-	"time"
 )
 
 type Service struct {
@@ -35,7 +35,7 @@ func (this *Service) SendRequest(c *SendRequestCommand, a *auth.Auth) (*domainfr
 			RequesterId(a.UserId).
 			ResponderId(c.ResponderId).
 			Message(c.Message).
-			CreatedAt(time.Now()).
+			CreatedAt(clock.Now()).
 			RaiseCreatedEvent().
 			Build()
 

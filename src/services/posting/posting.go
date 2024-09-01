@@ -2,9 +2,9 @@ package posting
 
 import (
 	"nosebook/src/domain/post"
+	"nosebook/src/lib/clock"
 	commandresult "nosebook/src/lib/command_result"
 	"nosebook/src/services/auth"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -25,7 +25,7 @@ func (this *Service) Publish(c *PublishPostCommand, a *auth.Auth) *commandresult
 		AuthorId(a.UserId).
 		OwnerId(c.OwnerId).
 		Message(c.Message).
-		CreatedAt(time.Now()).
+		CreatedAt(clock.Now()).
 		RaiseCreatedEvent().
 		Build()
 

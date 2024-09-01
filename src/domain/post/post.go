@@ -2,6 +2,7 @@ package domainpost
 
 import (
 	"database/sql"
+	"nosebook/src/lib/clock"
 	"time"
 
 	"github.com/google/uuid"
@@ -71,7 +72,7 @@ func (post *Post) RemoveBy(userId uuid.UUID) *PostError {
 	}
 
 	post.RemovedAt = sql.NullTime{
-		Time:  time.Now(),
+		Time:  clock.Now(),
 		Valid: true,
 	}
 	post.raiseEvent(NewPostRemovedEvent())

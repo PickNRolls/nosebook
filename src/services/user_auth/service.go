@@ -4,9 +4,9 @@ import (
 	"nosebook/src/domain/sessions"
 	"nosebook/src/domain/user"
 	"nosebook/src/errors"
+	"nosebook/src/lib/clock"
 	commandresult "nosebook/src/lib/command_result"
 	"nosebook/src/services/auth"
-	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -127,6 +127,6 @@ func (this *Service) MarkSessionActive(sessionId uuid.UUID) error {
 		return nil
 	}
 
-	err = this.userRepo.UpdateActivity(session.UserId, time.Now())
+	err = this.userRepo.UpdateActivity(session.UserId, clock.Now())
 	return err
 }

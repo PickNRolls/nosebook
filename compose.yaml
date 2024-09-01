@@ -20,6 +20,7 @@ services:
     environment:
       - POSTGRES_DB=nosebook
       - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+      - APP_ENV=$APP_ENV
     develop:
       watch:
         - action: rebuild

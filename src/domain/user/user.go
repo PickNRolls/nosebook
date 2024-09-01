@@ -1,8 +1,10 @@
 package domainuser
 
 import (
-	"github.com/google/uuid"
+	"nosebook/src/lib/clock"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type User struct {
@@ -22,7 +24,7 @@ func New(firstName string, lastName string, nick string, passhash string) *User 
 		LastName:       lastName,
 		Nick:           nick,
 		Passhash:       passhash,
-		CreatedAt:      time.Now(),
-		LastActivityAt: time.Now(),
+		CreatedAt:      clock.Now(),
+		LastActivityAt: clock.Now(),
 	}
 }

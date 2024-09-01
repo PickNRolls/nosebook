@@ -2,6 +2,7 @@ package domaincomment
 
 import (
 	"database/sql"
+	"nosebook/src/lib/clock"
 	"time"
 
 	"github.com/google/uuid"
@@ -72,7 +73,7 @@ func (this *Comment) RemoveBy(userId uuid.UUID) *CommentError {
 	}
 
 	this.RemovedAt = sql.NullTime{
-		Time:  time.Now(),
+		Time:  clock.Now(),
 		Valid: true,
 	}
 

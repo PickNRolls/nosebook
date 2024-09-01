@@ -2,9 +2,9 @@ package commenting
 
 import (
 	"nosebook/src/domain/comment"
+	"nosebook/src/lib/clock"
 	commandresult "nosebook/src/lib/command_result"
 	"nosebook/src/services/auth"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -31,7 +31,7 @@ func (this *Service) PublishOnPost(c *PublishPostCommentCommand, a *auth.Auth) *
 		AuthorId(a.UserId).
 		Message(c.Message).
 		PostId(c.Id).
-		CreatedAt(time.Now()).
+		CreatedAt(clock.Now()).
 		RaiseCreatedEvent().
 		Build()
 

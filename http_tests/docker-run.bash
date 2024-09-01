@@ -1,7 +1,7 @@
 cd ..
 docker container stop db
 docker container rm db
-docker compose up --build --wait
+APP_ENV=testing docker compose up --build --wait
 cd -
 
 docker build -t backend-http-tests .

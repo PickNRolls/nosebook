@@ -121,15 +121,17 @@ VALUES
   );
 
 INSERT INTO
-  user_sessions (user_id, session_id)
+  user_sessions (user_id, session_id, expires_at)
 VALUES
   (
     'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
-    'bb23af03-be50-4bce-b729-b259b2e02e54' -- for logout test
+    'bb23af03-be50-4bce-b729-b259b2e02e54',
+    TIMESTAMP '2050-02-16 15:36:55'
   ),
   (
     'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
-    'bb23af03-be50-4bce-b729-b259b2e02e55' -- for logout test
+    'bb23af03-be50-4bce-b729-b259b2e02e55',
+    TIMESTAMP '2050-02-16 15:36:55'
   );
 
 INSERT INTO
