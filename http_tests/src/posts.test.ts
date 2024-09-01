@@ -2,7 +2,7 @@ import supertest from 'supertest';
 import request from './request';
 
 describe('posts', () => {
-  let posts = request.extend('/posts');
+  let posts = request.extend({ prefixUrl: '/posts' });
   let createdPostId: string;
 
   test('GET /', async () => {
@@ -37,7 +37,7 @@ describe('posts', () => {
       })
       .expect(200);
 
-    expect(response.body).toEqual(expect.objectContaining({
+    expect(response.body).toStrictEqual(expect.objectContaining({
       data: {
         id: expect.any(String),
       },
@@ -53,7 +53,7 @@ describe('posts', () => {
         id: createdPostId,
       }).expect(200);
 
-    expect(response.body).toEqual(expect.objectContaining({
+    expect(response.body).toStrictEqual(expect.objectContaining({
       data: {
         id: createdPostId,
       },

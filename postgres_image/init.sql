@@ -126,6 +126,10 @@ VALUES
   (
     'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
     'bb23af03-be50-4bce-b729-b259b2e02e54' -- for logout test
+  ),
+  (
+    'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
+    'bb23af03-be50-4bce-b729-b259b2e02e55' -- for logout test
   );
 
 INSERT INTO
@@ -207,7 +211,7 @@ VALUES
   ),
   (
     'd0023f4d-8d7f-4907-9438-d2ed2a9661f6',
-    '1ae02f69-ea1a-4308-b825-0y5896e652e4',
+    '1ae02f69-ea1a-4308-b825-0e5896e652e4',
     '9nd comment message',
     TIMESTAMP '2024-02-16 15:42:55'
   );

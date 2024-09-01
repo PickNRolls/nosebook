@@ -1,0 +1,134 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`comments GET / 1`] = `
+{
+  "data": {
+    "data": [
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T15:36:55Z",
+        "id": "d0023f4d-8d7f-4907-9438-d2ed2a9661f0",
+        "likes": {
+          "count": 0,
+          "liked": false,
+          "randomFiveLikers": [],
+        },
+        "message": "3nd comment message",
+      },
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T15:37:55Z",
+        "id": "d0023f4d-8d7f-4907-9438-d2ed2a9661f1",
+        "likes": {
+          "count": 0,
+          "liked": false,
+          "randomFiveLikers": [],
+        },
+        "message": "4nd comment message",
+      },
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T15:38:55Z",
+        "id": "d0023f4d-8d7f-4907-9438-d2ed2a9661f2",
+        "likes": {
+          "count": 0,
+          "liked": false,
+          "randomFiveLikers": [],
+        },
+        "message": "5nd comment message",
+      },
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T15:39:55Z",
+        "id": "d0023f4d-8d7f-4907-9438-d2ed2a9661f3",
+        "likes": {
+          "count": 0,
+          "liked": false,
+          "randomFiveLikers": [],
+        },
+        "message": "6nd comment message",
+      },
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T15:40:55Z",
+        "id": "d0023f4d-8d7f-4907-9438-d2ed2a9661f4",
+        "likes": {
+          "count": 0,
+          "liked": false,
+          "randomFiveLikers": [],
+        },
+        "message": "7nd comment message",
+      },
+    ],
+    "next": "d0023f4d-8d7f-4907-9438-d2ed2a9661f4/2024-02-16T15:40:55Z",
+  },
+  "ok": true,
+}
+`;
+
+exports[`comments GET / 2`] = `
+{
+  "data": {
+    "data": [
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T15:41:55Z",
+        "id": "d0023f4d-8d7f-4907-9438-d2ed2a9661f5",
+        "likes": {
+          "count": 0,
+          "liked": false,
+          "randomFiveLikers": [],
+        },
+        "message": "8nd comment message",
+      },
+      {
+        "author": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "nick": "drugtester",
+        },
+        "createdAt": "2024-02-16T15:42:55Z",
+        "id": "d0023f4d-8d7f-4907-9438-d2ed2a9661f6",
+        "likes": {
+          "count": 0,
+          "liked": false,
+          "randomFiveLikers": [],
+        },
+        "message": "9nd comment message",
+      },
+    ],
+  },
+  "ok": true,
+}
+`;
