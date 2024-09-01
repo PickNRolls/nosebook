@@ -5,6 +5,7 @@
 # https://docs.docker.com/go/build-context-dockerignore/
 
 http_tests/**/*
+postgres_image/**/*
 
 **/.DS_Store
 **/.classpath

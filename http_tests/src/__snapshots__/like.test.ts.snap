@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`like POST /comment 1`] = `
+{
+  "data": {
+    "commentId": "620c79b7-3927-48b7-a308-1ffd3db6036f",
+    "liked": true,
+  },
+  "ok": true,
+}
+`;
+
+exports[`like POST /comment 2`] = `
+{
+  "data": {
+    "commentId": "620c79b7-3927-48b7-a308-1ffd3db6036f",
+    "liked": false,
+  },
+  "ok": true,
+}
+`;
+
+exports[`like POST /post 1`] = `
+{
+  "data": {
+    "liked": true,
+    "postId": "c7b7bf17-38f9-4ed5-b0a8-501a90f7c829",
+  },
+  "ok": true,
+}
+`;
+
+exports[`like POST /post 2`] = `
+{
+  "data": {
+    "liked": false,
+    "postId": "c7b7bf17-38f9-4ed5-b0a8-501a90f7c829",
+  },
+  "ok": true,
+}
+`;
