@@ -1,10 +1,10 @@
 package roothttp
 
 import (
+	userauth "nosebook/src/application/services/user_auth"
 	"nosebook/src/deps_root/http/middleware"
 	reqcontext "nosebook/src/deps_root/http/req_context"
 	"nosebook/src/infra/postgres/repositories"
-	userauth "nosebook/src/services/user_auth"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"

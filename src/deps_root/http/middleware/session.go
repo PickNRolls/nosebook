@@ -1,8 +1,8 @@
 package middleware
 
 import (
+	userauth "nosebook/src/application/services/user_auth"
 	reqcontext "nosebook/src/deps_root/http/req_context"
-	userauth "nosebook/src/services/user_auth"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

@@ -1,11 +1,11 @@
 package roothttp
 
 import (
+	presenterpost "nosebook/src/application/presenters/post"
+	"nosebook/src/application/services/posting"
 	reqcontext "nosebook/src/deps_root/http/req_context"
 	rootpostpresenter "nosebook/src/deps_root/post_presenter"
 	rootpostservice "nosebook/src/deps_root/post_service"
-	presenterpost "nosebook/src/presenters/post"
-	"nosebook/src/services/posting"
 
 	"github.com/gin-gonic/gin"
 )

@@ -1,11 +1,11 @@
 package roothttp
 
 import (
+	presentercomment "nosebook/src/application/presenters/comment"
+	"nosebook/src/application/services/commenting"
 	rootcommentpresenter "nosebook/src/deps_root/comment_presenter"
 	rootcommentservice "nosebook/src/deps_root/comment_service"
 	reqcontext "nosebook/src/deps_root/http/req_context"
-	presentercomment "nosebook/src/presenters/comment"
-	"nosebook/src/services/commenting"
 
 	"github.com/gin-gonic/gin"
 )

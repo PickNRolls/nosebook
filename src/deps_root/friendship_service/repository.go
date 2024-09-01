@@ -1,10 +1,10 @@
 package rootfriendshipservice
 
 import (
+	"nosebook/src/application/services/friendship"
 	"nosebook/src/domain/friendship"
 	"nosebook/src/errors"
 	"nosebook/src/infra/postgres"
-	"nosebook/src/services/friendship"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"

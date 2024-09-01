@@ -1,9 +1,9 @@
 package roothttp
 
 import (
+	presenterdto "nosebook/src/application/presenters/dto"
+	"nosebook/src/application/presenters/user"
 	reqcontext "nosebook/src/deps_root/http/req_context"
-	presenterdto "nosebook/src/presenters/dto"
-	"nosebook/src/presenters/user"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

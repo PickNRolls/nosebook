@@ -1,8 +1,8 @@
 package repos
 
 import (
+	userauth "nosebook/src/application/services/user_auth"
 	"nosebook/src/domain/sessions"
-	userauth "nosebook/src/services/user_auth"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"

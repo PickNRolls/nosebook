@@ -1,7 +1,7 @@
 package rootpostservice
 
 import (
-	"nosebook/src/services/posting"
+	"nosebook/src/application/services/posting"
 
 	"github.com/jmoiron/sqlx"
 )

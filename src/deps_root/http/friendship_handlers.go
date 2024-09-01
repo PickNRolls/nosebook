@@ -1,8 +1,8 @@
 package roothttp
 
 import (
+	"nosebook/src/application/services/friendship"
 	rootfriendshipservice "nosebook/src/deps_root/friendship_service"
-	"nosebook/src/services/friendship"
 )
 
 func (this *RootHTTP) addFriendshipHandlers() {

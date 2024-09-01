@@ -1,7 +1,7 @@
 package rootlikeservice
 
 import (
-	"nosebook/src/services/like"
+	"nosebook/src/application/services/like"
 
 	"github.com/jmoiron/sqlx"
 )

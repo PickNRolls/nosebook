@@ -14,7 +14,7 @@ type CommentBuilder struct {
 	postId            uuid.UUID
 	createdAt         time.Time
 	removedAt         sql.NullTime
-	permissions       permissions
+	permissions       Permissions
 	raiseCreatedEvent bool
 }
 
@@ -71,7 +71,7 @@ func (this *CommentBuilder) RemovedAt(t time.Time) *CommentBuilder {
 	return this
 }
 
-func (this *CommentBuilder) Permissions(p permissions) *CommentBuilder {
+func (this *CommentBuilder) Permissions(p Permissions) *CommentBuilder {
 	this.permissions = p
 	return this
 }

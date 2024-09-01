@@ -1,9 +1,9 @@
 package rootcommentpresenter
 
 import (
-	presentercomment "nosebook/src/presenters/comment"
-	presentercommentlike "nosebook/src/presenters/comment_like"
-	presenteruser "nosebook/src/presenters/user"
+	presentercomment "nosebook/src/application/presenters/comment"
+	presentercommentlike "nosebook/src/application/presenters/comment_like"
+	presenteruser "nosebook/src/application/presenters/user"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -11,10 +11,12 @@ import (
 func New(db *sqlx.DB) *presentercomment.Presenter {
 	userPresenter := presenteruser.New(db)
 	likePresenter := presentercommentlike.New(db, userPresenter)
+
 	presenter := presentercomment.New(
 		db,
 		likePresenter,
 		userPresenter,
+		&permissions{},
 	)
 
 	return presenter

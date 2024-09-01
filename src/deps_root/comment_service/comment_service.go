@@ -1,8 +1,8 @@
 package rootcommentservice
 
 import (
+	"nosebook/src/application/services/commenting"
 	rootpostservice "nosebook/src/deps_root/post_service"
-	"nosebook/src/services/commenting"
 
 	"github.com/jmoiron/sqlx"
 )

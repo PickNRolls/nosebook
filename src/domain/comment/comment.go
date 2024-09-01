@@ -16,7 +16,7 @@ type Comment struct {
 	RemovedAt sql.NullTime
 	PostId    uuid.UUID
 
-	permissions permissions
+	permissions Permissions
 
 	events []CommentEvent
 }
@@ -28,7 +28,7 @@ func newComment(
 	postId uuid.UUID,
 	createdAt time.Time,
 	removedAt sql.NullTime,
-	permissions permissions,
+	permissions Permissions,
 	raiseCreatedEvent bool,
 ) *Comment {
 	comment := &Comment{

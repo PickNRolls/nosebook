@@ -1,7 +1,7 @@
 package rootfriendshipservice
 
 import (
-	"nosebook/src/services/friendship"
+	"nosebook/src/application/services/friendship"
 
 	"github.com/jmoiron/sqlx"
 )

@@ -2,10 +2,10 @@ package rootlikeservice
 
 import (
 	"fmt"
+	"nosebook/src/application/services/like"
 	domainlike "nosebook/src/domain/like"
 	"nosebook/src/errors"
 	"nosebook/src/infra/postgres"
-	"nosebook/src/services/like"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"

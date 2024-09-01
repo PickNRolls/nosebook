@@ -1,10 +1,10 @@
 package rootpostpresenter
 
 import (
+	presenterpost "nosebook/src/application/presenters/post"
+	"nosebook/src/application/presenters/post_like"
+	presenteruser "nosebook/src/application/presenters/user"
 	rootcommentpresenter "nosebook/src/deps_root/comment_presenter"
-	presenterpost "nosebook/src/presenters/post"
-	"nosebook/src/presenters/post_like"
-	presenteruser "nosebook/src/presenters/user"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -17,6 +17,7 @@ func New(db *sqlx.DB) *presenterpost.Presenter {
 		userPresenter,
 		rootcommentpresenter.New(db),
 		likePresenter,
+		&permissions{},
 	)
 
 	return presenter

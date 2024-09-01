@@ -1,8 +1,8 @@
 package repos
 
 import (
+	userauth "nosebook/src/application/services/user_auth"
 	"nosebook/src/domain/user"
-	userauth "nosebook/src/services/user_auth"
 	"time"
 
 	"github.com/google/uuid"

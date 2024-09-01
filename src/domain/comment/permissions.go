@@ -2,7 +2,7 @@ package domaincomment
 
 import "github.com/google/uuid"
 
-type permissions interface {
+type Permissions interface {
 	CanRemoveBy(comment *Comment, userId uuid.UUID) *Error
 	CanUpdateBy(comment *Comment, userId uuid.UUID) *Error
 }

@@ -3,10 +3,10 @@ package reqcontext
 import (
 	"fmt"
 	"net/http"
+	"nosebook/src/application/services/auth"
 	"nosebook/src/domain/user"
 	"nosebook/src/errors"
 	infraerrors "nosebook/src/infra/errors"
-	"nosebook/src/services/auth"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
