@@ -19,6 +19,10 @@ exports[`comments GET / 1`] = `
           "randomFiveLikers": [],
         },
         "message": "3nd comment message",
+        "permissions": {
+          "remove": false,
+          "update": false,
+        },
       },
       {
         "author": {
@@ -35,6 +39,10 @@ exports[`comments GET / 1`] = `
           "randomFiveLikers": [],
         },
         "message": "4nd comment message",
+        "permissions": {
+          "remove": false,
+          "update": false,
+        },
       },
       {
         "author": {
@@ -51,6 +59,10 @@ exports[`comments GET / 1`] = `
           "randomFiveLikers": [],
         },
         "message": "5nd comment message",
+        "permissions": {
+          "remove": false,
+          "update": false,
+        },
       },
       {
         "author": {
@@ -67,6 +79,10 @@ exports[`comments GET / 1`] = `
           "randomFiveLikers": [],
         },
         "message": "6nd comment message",
+        "permissions": {
+          "remove": false,
+          "update": false,
+        },
       },
       {
         "author": {
@@ -83,6 +99,10 @@ exports[`comments GET / 1`] = `
           "randomFiveLikers": [],
         },
         "message": "7nd comment message",
+        "permissions": {
+          "remove": false,
+          "update": false,
+        },
       },
     ],
     "next": "d0023f4d-8d7f-4907-9438-d2ed2a9661f4/2024-02-16T15:40:55Z",
@@ -110,6 +130,10 @@ exports[`comments GET / 2`] = `
           "randomFiveLikers": [],
         },
         "message": "8nd comment message",
+        "permissions": {
+          "remove": false,
+          "update": false,
+        },
       },
       {
         "author": {
@@ -126,6 +150,10 @@ exports[`comments GET / 2`] = `
           "randomFiveLikers": [],
         },
         "message": "9nd comment message",
+        "permissions": {
+          "remove": false,
+          "update": false,
+        },
       },
     ],
   },
