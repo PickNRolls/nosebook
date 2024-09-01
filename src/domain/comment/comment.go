@@ -16,6 +16,8 @@ type Comment struct {
 	RemovedAt sql.NullTime
 	PostId    uuid.UUID
 
+	permissions permissions
+
 	events []CommentEvent
 }
 
@@ -26,6 +28,7 @@ func newComment(
 	postId uuid.UUID,
 	createdAt time.Time,
 	removedAt sql.NullTime,
+	permissions permissions,
 	raiseCreatedEvent bool,
 ) *Comment {
 	comment := &Comment{
@@ -35,6 +38,8 @@ func newComment(
 		PostId:    postId,
 		CreatedAt: createdAt,
 		RemovedAt: removedAt,
+
+		permissions: permissions,
 
 		events: make([]CommentEvent, 0),
 	}
@@ -54,15 +59,15 @@ func (this *Comment) Events() []CommentEvent {
 	return this.events
 }
 
-func (c *Comment) CanBeRemovedBy(userId uuid.UUID) *CommentError {
-	if c.AuthorId != userId {
-		return NewError("Только автор комментария может его удалить")
-	}
-
-	return nil
+func (this *Comment) CanBeUpdatedBy(userId uuid.UUID) *Error {
+	return this.permissions.CanUpdateBy(this, userId)
 }
 
-func (this *Comment) RemoveBy(userId uuid.UUID) *CommentError {
+func (this *Comment) CanBeRemovedBy(userId uuid.UUID) *Error {
+	return this.permissions.CanRemoveBy(this, userId)
+}
+
+func (this *Comment) RemoveBy(userId uuid.UUID) *Error {
 	err := this.CanBeRemovedBy(userId)
 	if err != nil {
 		return err

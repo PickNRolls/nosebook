@@ -2,8 +2,8 @@ package domaincomment
 
 import "nosebook/src/errors"
 
-type CommentError = errors.Error
+type Error = errors.Error
 
-func NewError(message string) *CommentError {
-	return errors.New("CommentError", message)
+func NewError(message string) *Error {
+	return errors.New("Comment Error", message)
 }

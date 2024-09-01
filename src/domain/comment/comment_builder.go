@@ -14,6 +14,7 @@ type CommentBuilder struct {
 	postId            uuid.UUID
 	createdAt         time.Time
 	removedAt         sql.NullTime
+	permissions       permissions
 	raiseCreatedEvent bool
 }
 
@@ -22,6 +23,11 @@ func NewBuilder() *CommentBuilder {
 }
 
 func (this *CommentBuilder) Build() *Comment {
+	permissions := this.permissions
+	if permissions == nil {
+		permissions = &defaultPermissions{}
+	}
+
 	return newComment(
 		this.id,
 		this.authorId,
@@ -29,6 +35,7 @@ func (this *CommentBuilder) Build() *Comment {
 		this.postId,
 		this.createdAt,
 		this.removedAt,
+		permissions,
 		this.raiseCreatedEvent,
 	)
 }
@@ -61,6 +68,11 @@ func (this *CommentBuilder) CreatedAt(t time.Time) *CommentBuilder {
 func (this *CommentBuilder) RemovedAt(t time.Time) *CommentBuilder {
 	this.removedAt.Valid = true
 	this.removedAt.Time = t
+	return this
+}
+
+func (this *CommentBuilder) Permissions(p permissions) *CommentBuilder {
+	this.permissions = p
 	return this
 }
 
