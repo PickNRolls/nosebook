@@ -16,7 +16,7 @@ func New(db *sqlx.DB) *presentercomment.Presenter {
 		db,
 		likePresenter,
 		userPresenter,
-		&permissions{},
+		newPermissions(db),
 	)
 
 	return presenter

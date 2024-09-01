@@ -2,17 +2,17 @@ package permissionscomment
 
 import "github.com/google/uuid"
 
-func CanUpdateBy(comment Comment, userId uuid.UUID) *Error {
+func CanUpdateBy(comment CommentToUpdate, userId uuid.UUID) *Error {
 	if comment.AuthorId() != userId {
-		return newError("Только автор комментария может его редактировать")
+		return newError("Вы не можете редактировать комментарий")
 	}
 
 	return nil
 }
 
-func CanRemoveBy(comment Comment, userId uuid.UUID) *Error {
-	if comment.AuthorId() != userId {
-		return newError("Только автор комментария может его удалить")
+func CanRemoveBy(comment CommentToRemove, userId uuid.UUID) *Error {
+	if comment.AuthorId() != userId && comment.ResourceOwnerId() != userId {
+		return newError("Вы не можете удалить комментарий")
 	}
 
 	return nil
