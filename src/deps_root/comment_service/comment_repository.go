@@ -12,12 +12,14 @@ import (
 )
 
 type commentRepository struct {
-	db *sqlx.DB
+	db          *sqlx.DB
+	permissions domaincomment.Permissions
 }
 
-func newCommentRepository(db *sqlx.DB) *commentRepository {
+func newCommentRepository(db *sqlx.DB, permissions domaincomment.Permissions) *commentRepository {
 	return &commentRepository{
-		db: db,
+		db:          db,
+		permissions: permissions,
 	}
 }
 
@@ -61,7 +63,8 @@ func (this *commentRepository) FindById(id uuid.UUID, includeRemoved bool) *doma
 		AuthorId(dest.AuthorId).
 		PostId(dest.PostId).
 		Message(dest.Message).
-		CreatedAt(dest.CreatedAt)
+		CreatedAt(dest.CreatedAt).
+		Permissions(this.permissions)
 
 	if dest.RemovedAt.Valid {
 		builder.RemovedAt(dest.RemovedAt.Time)

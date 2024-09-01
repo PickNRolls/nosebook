@@ -1,7 +1,7 @@
 package rootpostpresenter
 
 import (
-	"nosebook/src/application/permissions/permissionspost"
+	"nosebook/src/application/permissions/post"
 	presenterpost "nosebook/src/application/presenters/post"
 
 	"github.com/google/uuid"
