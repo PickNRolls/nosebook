@@ -38,7 +38,7 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *Fin
 	return this.findByFilterQuery.FindByFilter(input, a)
 }
 
-func (this *Presenter) FindById(id string, a *auth.Auth) *post {
+func (this *Presenter) FindById(id string, a *auth.Auth) *Post {
 	out := this.FindByFilter(&FindByFilterInput{
 		Ids: []string{id},
 	}, a)

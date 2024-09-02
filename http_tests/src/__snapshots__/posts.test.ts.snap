@@ -31,6 +31,7 @@ exports[`posts GET / 1`] = `
         },
         "recentComments": {
           "data": [],
+          "totalCount": 0,
         },
       },
       {
@@ -60,6 +61,7 @@ exports[`posts GET / 1`] = `
         },
         "recentComments": {
           "data": [],
+          "totalCount": 0,
         },
       },
       {
@@ -89,6 +91,7 @@ exports[`posts GET / 1`] = `
         },
         "recentComments": {
           "data": [],
+          "totalCount": 0,
         },
       },
       {
@@ -118,6 +121,7 @@ exports[`posts GET / 1`] = `
         },
         "recentComments": {
           "data": [],
+          "totalCount": 0,
         },
       },
       {
@@ -147,6 +151,7 @@ exports[`posts GET / 1`] = `
         },
         "recentComments": {
           "data": [],
+          "totalCount": 0,
         },
       },
       {
@@ -176,6 +181,7 @@ exports[`posts GET / 1`] = `
         },
         "recentComments": {
           "data": [],
+          "totalCount": 0,
         },
       },
       {
@@ -205,6 +211,7 @@ exports[`posts GET / 1`] = `
         },
         "recentComments": {
           "data": [],
+          "totalCount": 0,
         },
       },
       {
@@ -234,6 +241,7 @@ exports[`posts GET / 1`] = `
         },
         "recentComments": {
           "data": [],
+          "totalCount": 0,
         },
       },
       {
@@ -276,6 +284,7 @@ exports[`posts GET / 1`] = `
         },
         "recentComments": {
           "data": [],
+          "totalCount": 0,
         },
       },
       {
@@ -305,10 +314,12 @@ exports[`posts GET / 1`] = `
         },
         "recentComments": {
           "data": [],
+          "totalCount": 0,
         },
       },
     ],
     "next": "c7b7bf17-38f9-4ed5-b0a8-601a90f7c8e7/2024-02-16T14:36:38Z",
+    "totalCount": 11,
   },
   "ok": true,
 }
@@ -478,9 +489,11 @@ exports[`posts GET / 2`] = `
             },
           ],
           "next": "d0023f4d-8d7f-4907-9438-d2ed2a9661f3/2024-02-16T15:39:55Z",
+          "totalCount": 8,
         },
       },
     ],
+    "totalCount": 11,
   },
   "ok": true,
 }
@@ -515,6 +528,7 @@ exports[`posts permissions GET /:id, has no permissions 1`] = `
     },
     "recentComments": {
       "data": [],
+      "totalCount": 0,
     },
   },
   "ok": true,
@@ -550,6 +564,7 @@ exports[`posts permissions GET /:id, has permissions auth.user == post.author 1`
     },
     "recentComments": {
       "data": [],
+      "totalCount": 0,
     },
   },
   "ok": true,
@@ -585,6 +600,7 @@ exports[`posts permissions GET /:id, has permissions auth.user == post.owner 1`]
     },
     "recentComments": {
       "data": [],
+      "totalCount": 0,
     },
   },
   "ok": true,

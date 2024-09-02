@@ -26,9 +26,10 @@ type Input struct {
 	OrderAsc bool
 }
 
-type Cursors struct {
-	Next string
-	Prev string
+type Output struct {
+	TotalCount int
+	Next       string
+	Prev       string
 }
 
 const DEFAULT_LIMIT = 10
@@ -49,7 +50,7 @@ func addOrder(query squirrel.SelectBuilder, asc bool) squirrel.SelectBuilder {
 	return query.OrderBy("created_at desc, id desc")
 }
 
-func Do[T destType](db *sqlx.DB, input *Input, dest *[]T) (*Cursors, *errors.Error) {
+func Do[T destType](db *sqlx.DB, input *Input, dest *[]T) (*Output, *errors.Error) {
 	if input.Prev != "" && input.Next != "" {
 		return nil, newError("Использовать Prev и Next одновременно невозможно")
 	}
@@ -106,6 +107,20 @@ func Do[T destType](db *sqlx.DB, input *Input, dest *[]T) (*Cursors, *errors.Err
 		return nil, errorFrom(err)
 	}
 
+	totalCount, err := func() (int, *errors.Error) {
+		count := struct {
+			Count int `db:"count"`
+		}{}
+		query := input.Query.RemoveColumns().Column("count(*)")
+		sql, args, _ := query.ToSql()
+		err := db.Get(&count, sql, args...)
+		if err != nil {
+			return 0, errorFrom(err)
+		}
+
+		return count.Count, nil
+	}()
+
 	slice := *dest
 	lengthGreaterLimit := len(slice) > int(limit)
 	shouldBeNext := lengthGreaterLimit
@@ -116,7 +131,9 @@ func Do[T destType](db *sqlx.DB, input *Input, dest *[]T) (*Cursors, *errors.Err
 		slice = *dest
 	}
 
-	output := &Cursors{}
+	output := &Output{
+		TotalCount: totalCount,
+	}
 
 	if shouldBeNext {
 		last := slice[len(slice)-1]

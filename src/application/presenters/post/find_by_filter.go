@@ -23,10 +23,11 @@ type findByFilterQuery struct {
 	likePresenter    LikePresenter
 	permissions      Permissions
 
-	doSkip bool
-	err    *errors.Error
-	next   string
-	posts  []*post
+	doSkip     bool
+	err        *errors.Error
+	next       string
+	posts      []*Post
+	totalCount int
 
 	postLikesMap      map[uuid.UUID]*likes
 	postDests         []*Dest
@@ -146,7 +147,7 @@ func (this *findByFilterQuery) fetchPosts(input *FindByFilterInput) {
 		)
 	}
 
-	cursors, err := cursorquery.Do(this.db, &cursorquery.Input{
+	cursorQueryOut, err := cursorquery.Do(this.db, &cursorquery.Input{
 		Query:    query,
 		Next:     input.Cursor,
 		Limit:    limit,
@@ -156,7 +157,8 @@ func (this *findByFilterQuery) fetchPosts(input *FindByFilterInput) {
 		this.err = errorFrom(err)
 	}
 
-	this.next = cursors.Next
+	this.next = cursorQueryOut.Next
+	this.totalCount = cursorQueryOut.TotalCount
 
 	this.postIds = make(uuid.UUIDs, len(this.postDests))
 	for i, post := range this.postDests {
@@ -225,10 +227,10 @@ func (this *findByFilterQuery) mapPosts() {
 		return
 	}
 
-	this.posts = make([]*post, 0, len(this.postDests))
+	this.posts = make([]*Post, 0, len(this.postDests))
 
 	for _, dest := range this.postDests {
-		postDTO := &post{}
+		postDTO := &Post{}
 		postDTO.Id = dest.Id
 		postDTO.Author = this.usersMap[dest.AuthorId]
 		postDTO.Owner = this.usersMap[dest.OwnerId]
@@ -250,8 +252,9 @@ func (this *findByFilterQuery) mapPosts() {
 
 func (this *findByFilterQuery) output() *FindByFilterOutput {
 	output := &FindByFilterOutput{
-		Err:  this.err,
-		Next: this.next,
+		Err:        this.err,
+		TotalCount: this.totalCount,
+		Next:       this.next,
 	}
 
 	if output.Err == nil {
@@ -268,7 +271,7 @@ func (this *findByFilterQuery) reset() {
 	this.err = nil
 	this.next = ""
 	this.auth = nil
-	this.posts = make([]*post, 0)
+	this.posts = make([]*Post, 0)
 	this.postDests = make([]*Dest, 0)
 	this.postIds = make(uuid.UUIDs, 0)
 	this.userIdsToFetchMap = make(map[uuid.UUID]struct{})

@@ -89,7 +89,7 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 	}
 
 	dest := []*Dest{}
-	cursors, error := cursorquery.Do(this.db, &cursorquery.Input{
+	cursorQueryOut, error := cursorquery.Do(this.db, &cursorquery.Input{
 		Query:    query,
 		Next:     input.Next,
 		Prev:     input.Prev,
@@ -134,9 +134,10 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 	}
 
 	output := &FindByFilterOutput{
-		Data: make([]*comment, len(dest)),
-		Next: cursors.Next,
-		Prev: cursors.Prev,
+		Data:       make([]*comment, len(dest)),
+		TotalCount: cursorQueryOut.TotalCount,
+		Next:       cursorQueryOut.Next,
+		Prev:       cursorQueryOut.Prev,
 	}
 
 	for i, destComment := range dest {

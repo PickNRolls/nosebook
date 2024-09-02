@@ -16,13 +16,13 @@ type FindByFilterInput struct {
 	Cursor   string
 }
 
-type FindByFilterOutput presenterdto.FindOut[*post]
+type FindByFilterOutput presenterdto.FindOut[*Post]
 
 type user = presenterdto.User
 type comments = presenterdto.FindOut[*presenterdto.Comment]
 type likes = presenterdto.Likes
 
-type post struct {
+type Post struct {
 	Id             uuid.UUID                 `json:"id"`
 	Author         *user                     `json:"author"`
 	Owner          *user                     `json:"owner"`
