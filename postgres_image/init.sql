@@ -235,8 +235,15 @@ VALUES
   (
     '27b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
     'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
+    '1ae02f69-ea1a-4308-b825-0e5896e652e4',
+    'test permissions post with only author id',
+    TIMESTAMP '2024-02-16 14:36:38'
+  ),
+  (
+    '27b7bf27-38f9-4ed5-b0a8-501a90f7c8e7',
+    '1ae02f69-ea1a-4308-b825-0e5896e652e4',
     'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
-    'test permissions post',
+    'test permissions post with only owner id',
     TIMESTAMP '2024-02-16 14:36:38'
   ),
   (

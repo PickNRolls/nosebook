@@ -521,7 +521,7 @@ exports[`posts permissions GET /:id, has no permissions 1`] = `
 }
 `;
 
-exports[`posts permissions GET /:id, has permissions 1`] = `
+exports[`posts permissions GET /:id, has permissions auth.user == post.author 1`] = `
 {
   "data": {
     "author": {
@@ -537,7 +537,42 @@ exports[`posts permissions GET /:id, has permissions 1`] = `
       "liked": false,
       "randomFiveLikers": [],
     },
-    "message": "test permissions post",
+    "message": "test permissions post with only author id",
+    "owner": {
+      "firstName": "Ilya",
+      "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+      "lastName": "Blinkov",
+      "nick": "drugtester",
+    },
+    "permissions": {
+      "remove": true,
+      "update": true,
+    },
+    "recentComments": {
+      "data": [],
+    },
+  },
+  "ok": true,
+}
+`;
+
+exports[`posts permissions GET /:id, has permissions auth.user == post.owner 1`] = `
+{
+  "data": {
+    "author": {
+      "firstName": "Ilya",
+      "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+      "lastName": "Blinkov",
+      "nick": "drugtester",
+    },
+    "createdAt": "2024-02-16T14:36:38Z",
+    "id": "27b7bf27-38f9-4ed5-b0a8-501a90f7c8e7",
+    "likes": {
+      "count": 0,
+      "liked": false,
+      "randomFiveLikers": [],
+    },
+    "message": "test permissions post with only owner id",
     "owner": {
       "firstName": "Test",
       "id": "ed1a3fd0-4d0b-4961-b4cd-cf212357740d",
@@ -546,7 +581,7 @@ exports[`posts permissions GET /:id, has permissions 1`] = `
     },
     "permissions": {
       "remove": true,
-      "update": true,
+      "update": false,
     },
     "recentComments": {
       "data": [],

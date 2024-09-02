@@ -62,12 +62,22 @@ describe('posts', () => {
   });
 
   describe('permissions', () => {
-    test('GET /:id, has permissions', async () => {
-      let response = await posts
-        .get(`/27b7bf17-38f9-4ed5-b0a8-501a90f7c8e7`)
-        .expect(200);
+    describe('GET /:id, has permissions', () => {
+      test('auth.user == post.author', async () => {
+        let response = await posts
+          .get(`/27b7bf17-38f9-4ed5-b0a8-501a90f7c8e7`)
+          .expect(200);
 
-      expect(response.body).toMatchSnapshot();
+        expect(response.body).toMatchSnapshot();
+      });
+
+      test('auth.user == post.owner', async () => {
+        let response = await posts
+          .get(`/27b7bf27-38f9-4ed5-b0a8-501a90f7c8e7`)
+          .expect(200);
+
+        expect(response.body).toMatchSnapshot();
+      });
     });
 
     test('GET /:id, has no permissions', async () => {
