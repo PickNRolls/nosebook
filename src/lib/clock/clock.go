@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-var testingMockedTime = time.Date(2024, 10, 10, 10, 10, 10, 10, time.UTC)
+var testingMockedTime = time.Date(2024, 8, 10, 10, 10, 10, 10, time.UTC)
 
 func Now() time.Time {
 	appEnv := os.Getenv("APP_ENV")

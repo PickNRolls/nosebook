@@ -3,6 +3,7 @@ package repos
 import (
 	userauth "nosebook/src/application/services/user_auth"
 	"nosebook/src/domain/sessions"
+	"nosebook/src/lib/clock"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -75,8 +76,8 @@ func (repo *SessionRepository) FindByUserId(userId uuid.UUID) *sessions.Session 
 		created_at,
 		expires_at
 			FROM user_sessions WHERE
-		user_id = $1 AND expires_at > NOW()
-	`, userId)
+		user_id = $1 AND expires_at > $2
+	`, userId, clock.Now())
 
 	if err != nil {
 		return nil
@@ -93,8 +94,8 @@ func (repo *SessionRepository) FindById(id uuid.UUID) *sessions.Session {
 		created_at,
 		expires_at
 			FROM user_sessions WHERE
-		session_id = $1 AND expires_at > NOW()
-	`, id)
+		session_id = $1 AND expires_at > $2
+	`, id, clock.Now())
 
 	if err != nil {
 		return nil
