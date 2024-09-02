@@ -16,176 +16,137 @@ type Presenter struct {
 	qb            squirrel.StatementBuilderType
 	userPresenter UserPresenter
 	resource      Resource
+}
 
-	err               *errors.Error
-	auth              *auth.Auth
-	linkedResourceIds uuid.UUIDs
-	userIdsToFetchMap map[uuid.UUID]struct{}
-	userIdsToFetch    uuid.UUIDs
-	resourceLikersMap map[uuid.UUID]uuid.UUIDs
-	users             []*presenterdto.User
-	usersMap          usersMap
-	out               likesMap
+type additionalDest struct {
+	ResourceId uuid.UUID `db:"resource_id"`
+	Count      int       `db:"count"`
+	Liked      bool      `db:"liked"`
 }
 
 func New(db *sqlx.DB, userPresenter UserPresenter, resource Resource) *Presenter {
-	out := &Presenter{
+	return &Presenter{
 		db:            db,
 		qb:            postgres.NewSquirrel(),
 		userPresenter: userPresenter,
 		resource:      resource,
 	}
-
-	out.reset()
-
-	return out
 }
 
 func (this *Presenter) FindByResourceIds(ids uuid.UUIDs, auth *auth.Auth) (likesMap, *errors.Error) {
-	this.linkedResourceIds = ids
-	this.auth = auth
+	userIdsMap := map[uuid.UUID]struct{}{}
+	userIds := []uuid.UUID{}
+	userMap := map[uuid.UUID]*presenterdto.User{}
+	resourceLikerIdsMap := map[uuid.UUID]uuid.UUIDs{}
+	dests := []*dest{}
 
-	this.fetchLikes()
-	this.fetchLikeAdditionals()
-	this.fetchUsers()
+	err := func() error {
+		idColumn := this.resource.IDColumn()
+		whereEq := squirrel.Eq{}
+		whereEq[idColumn] = ids
 
-	return this.output()
-}
+		sql, args, _ := this.qb.
+			Select("sub."+idColumn+" as resource_id", "sub.user_id").
+			FromSelect(
+				this.qb.
+					Select(
+						idColumn,
+						"user_id",
+						"row_number() over(partition by "+idColumn+") as row_number",
+					).
+					From(this.resource.Table()).
+					Where(whereEq),
+				"sub",
+			).
+			Where("sub.row_number <= 5").
+			ToSql()
 
-func (this *Presenter) fetchLikes() {
-	if this.err != nil {
-		return
-	}
+		err := this.db.Select(&dests, sql, args...)
+		if err != nil {
+			return err
+		}
 
-	idColumn := this.resource.IDColumn()
-	whereEq := squirrel.Eq{}
-	whereEq[idColumn] = this.linkedResourceIds
+		for _, like := range dests {
+			if _, has := userIdsMap[like.UserId]; !has {
+				userIds = append(userIds, like.UserId)
+				userIdsMap[like.UserId] = struct{}{}
+			}
 
-	sql, args, _ := this.qb.
-		Select("sub."+idColumn+" as resource_id", "sub.user_id").
-		FromSelect(
-			this.qb.
-				Select(
-					idColumn,
-					"user_id",
-					"row_number() over(partition by "+idColumn+") as row_number",
-				).
-				From(this.resource.Table()).
-				Where(whereEq),
-			"sub",
-		).
-		Where("sub.row_number <= 5").
-		ToSql()
+			if _, has := resourceLikerIdsMap[like.ResourceId]; !has {
+				resourceLikerIdsMap[like.ResourceId] = make(uuid.UUIDs, 0)
+			}
+			resourceLikerIdsMap[like.ResourceId] = append(resourceLikerIdsMap[like.ResourceId], like.UserId)
+		}
 
-	likeDests := []*dest{}
-	err := this.db.Select(&likeDests, sql, args...)
+		users, error := this.userPresenter.FindByIds(userIds)
+		if error != nil {
+			return error.Unwrap()
+		}
+
+		for _, user := range users {
+			userMap[user.Id] = user
+		}
+
+		return nil
+	}()
 	if err != nil {
-		this.err = errorFrom(err)
-		return
+		return nil, errorFrom(err)
 	}
 
-	for _, like := range likeDests {
-		if _, has := this.userIdsToFetchMap[like.UserId]; !has {
-			this.userIdsToFetch = append(this.userIdsToFetch, like.UserId)
-			this.userIdsToFetchMap[like.UserId] = struct{}{}
+	additional, error := func() ([]*additionalDest, *errors.Error) {
+		idColumn := this.resource.IDColumn()
+		table := this.resource.Table()
+		whereEq := squirrel.Eq{}
+		whereEq[idColumn] = ids
+
+		sql, args, _ := this.qb.
+			Select("a."+idColumn+" as resource_id", "count", "b.user_id IS NOT NULL AS liked").
+			FromSelect(
+				this.qb.
+					Select(idColumn, "count(*)").
+					From(table).
+					Where(whereEq).
+					GroupBy(idColumn),
+				"a",
+			).
+			JoinClause("LEFT OUTER JOIN "+table+" AS b").
+			Suffix("ON a."+idColumn+" = b."+idColumn+" AND b.user_id = ?", auth.UserId).
+			ToSql()
+
+		additional := []*additionalDest{}
+		err := this.db.Select(&additional, sql, args...)
+		if err != nil {
+			return nil, errorFrom(err)
 		}
 
-		if _, has := this.resourceLikersMap[like.ResourceId]; !has {
-			this.resourceLikersMap[like.ResourceId] = make(uuid.UUIDs, 0)
+		return additional, nil
+	}()
+	if error != nil {
+		return nil, error
+	}
+
+	out := func() likesMap {
+		out := likesMap{}
+
+		for _, resourceId := range ids {
+			out[resourceId] = &presenterdto.Likes{
+				RandomFiveLikers: make([]*presenterdto.User, 0),
+			}
 		}
-		this.resourceLikersMap[like.ResourceId] = append(this.resourceLikersMap[like.ResourceId], like.UserId)
-	}
-}
 
-func (this *Presenter) fetchLikeAdditionals() {
-	if this.err != nil {
-		return
-	}
-
-	idColumn := this.resource.IDColumn()
-	table := this.resource.Table()
-	whereEq := squirrel.Eq{}
-	whereEq[idColumn] = this.linkedResourceIds
-
-	sql, args, _ := this.qb.
-		Select("a."+idColumn+" as resource_id", "count", "b.user_id IS NOT NULL AS liked").
-		FromSelect(
-			this.qb.
-				Select(idColumn, "count(*)").
-				From(table).
-				Where(whereEq).
-				GroupBy(idColumn),
-			"a",
-		).
-		JoinClause("LEFT OUTER JOIN "+table+" AS b").
-		Suffix("ON a."+idColumn+" = b."+idColumn+" AND b.user_id = ?", this.auth.UserId).
-		ToSql()
-
-	additional := []struct {
-		ResourceId uuid.UUID `db:"resource_id"`
-		Count      int       `db:"count"`
-		Liked      bool      `db:"liked"`
-	}{}
-	err := this.db.Select(&additional, sql, args...)
-	if err != nil {
-		this.err = errorFrom(err)
-		return
-	}
-
-	for _, resourceId := range this.linkedResourceIds {
-		this.out[resourceId] = &presenterdto.Likes{
-			RandomFiveLikers: make([]*presenterdto.User, 0),
+		for _, add := range additional {
+			out[add.ResourceId].Count = add.Count
+			out[add.ResourceId].Liked = add.Liked
 		}
-	}
 
-	for _, add := range additional {
-		this.out[add.ResourceId].Count = add.Count
-		this.out[add.ResourceId].Liked = add.Liked
-	}
-}
-
-func (this *Presenter) fetchUsers() {
-	if this.err != nil {
-		return
-	}
-
-	this.users, this.err = this.userPresenter.FindByIds(this.userIdsToFetch)
-	if this.err != nil {
-		return
-	}
-
-	this.usersMap = usersMap{}
-	for _, user := range this.users {
-		this.usersMap[user.Id] = user
-	}
-}
-
-func (this *Presenter) output() (likesMap, *errors.Error) {
-	if this.err != nil {
-		err := this.err
-		this.reset()
-		return nil, err
-	}
-
-	for resourceId, likerIds := range this.resourceLikersMap {
-		for _, userId := range likerIds {
-			this.out[resourceId].RandomFiveLikers = append(this.out[resourceId].RandomFiveLikers, this.usersMap[userId])
+		for resourceId, likerIds := range resourceLikerIdsMap {
+			for _, userId := range likerIds {
+				out[resourceId].RandomFiveLikers = append(out[resourceId].RandomFiveLikers, userMap[userId])
+			}
 		}
-	}
 
-	out := this.out
-	this.reset()
+		return out
+	}()
+
 	return out, nil
-}
-
-func (this *Presenter) reset() {
-	this.err = nil
-	this.auth = nil
-	this.linkedResourceIds = make(uuid.UUIDs, 0)
-	this.userIdsToFetch = make(uuid.UUIDs, 0)
-	this.userIdsToFetchMap = make(map[uuid.UUID]struct{})
-	this.resourceLikersMap = make(map[uuid.UUID]uuid.UUIDs)
-	this.users = make([]*presenterdto.User, 0)
-	this.usersMap = make(usersMap)
-	this.out = make(map[uuid.UUID]*presenterdto.Likes)
 }
