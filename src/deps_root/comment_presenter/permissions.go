@@ -1,66 +1,47 @@
 package rootcommentpresenter
 
 import (
-	permissionscomment "nosebook/src/application/permissions/comment"
 	presentercomment "nosebook/src/application/presenters/comment"
-	"nosebook/src/infra/postgres"
+	rootcommentpermissions "nosebook/src/deps_root/comment_permissions"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
 type permissions struct {
-	db *sqlx.DB
+	original *rootcommentpermissions.Permissions
 }
 
 func newPermissions(db *sqlx.DB) *permissions {
 	return &permissions{
-		db: db,
+		original: rootcommentpermissions.New(db),
 	}
 }
 
 type comment struct {
-	authorId        uuid.UUID
-	resourceOwnerId uuid.UUID
+	id       uuid.UUID
+	authorId uuid.UUID
+}
+
+func (this *comment) Id() uuid.UUID {
+	return this.id
 }
 
 func (this *comment) AuthorId() uuid.UUID {
 	return this.authorId
 }
 
-func (this *comment) ResourceOwnerId() uuid.UUID {
-	return this.resourceOwnerId
-}
-
 func (this *permissions) CanRemoveBy(dest *presentercomment.Dest, userId uuid.UUID) bool {
-	qb := postgres.NewSquirrel()
-	sql, args, _ := qb.
-		Select("owner_id as id").
-		From("post_comments as pc").
-		Join("posts as p on pc.post_id = p.id").
-		Where("pc.comment_id = ?", dest.Id).
-		ToSql()
-
-	var resourceOwner struct {
-		Id uuid.UUID `db:"id"`
-	}
-	err := this.db.Get(&resourceOwner, sql, args...)
-	if err != nil {
-		return false
-	}
-
-	comment := &comment{
-		authorId:        dest.AuthorId,
-		resourceOwnerId: resourceOwner.Id,
-	}
-	error := permissionscomment.CanRemoveBy(comment, userId)
+	error := this.original.CanRemoveBy(&comment{
+		id:       dest.Id,
+		authorId: dest.AuthorId,
+	}, userId)
 	return error == nil
 }
 
 func (this *permissions) CanUpdateBy(dest *presentercomment.Dest, userId uuid.UUID) bool {
-	comment := &comment{
+	err := this.original.CanUpdateBy(&comment{
 		authorId: dest.AuthorId,
-	}
-	err := permissionscomment.CanUpdateBy(comment, userId)
+	}, userId)
 	return err == nil
 }
