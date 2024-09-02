@@ -3,7 +3,7 @@ package rootcommentpermissions
 import (
 	permissionscomment "nosebook/src/application/permissions/comment"
 	"nosebook/src/errors"
-	"nosebook/src/infra/postgres"
+	querybuilder "nosebook/src/infra/query_builder"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -40,7 +40,7 @@ func (this *comment) ResourceOwnerId() uuid.UUID {
 }
 
 func (this *Permissions) CanRemoveBy(commentToRemove CommentToRemove, userId uuid.UUID) *errors.Error {
-	qb := postgres.NewSquirrel()
+	qb := querybuilder.New()
 	sql, args, _ := qb.
 		Select("owner_id as id").
 		From("post_comments as pc").

@@ -1,5 +1,32 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`friendship GET / 1`] = `
+{
+  "data": {
+    "data": [
+      {
+        "firstName": "Tolber",
+        "id": "37d28fdf-99bc-44b5-8df9-6a3b1a36f177",
+        "lastName": "Ovcharenko",
+        "lastOnlineAt": "2024-08-10T10:10:02Z",
+        "nick": "tolber01",
+        "online": true,
+      },
+      {
+        "firstName": "Ilya",
+        "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+        "lastName": "Blinkov",
+        "lastOnlineAt": "2024-08-10T10:01:02Z",
+        "nick": "drugtester",
+        "online": false,
+      },
+    ],
+    "totalCount": 2,
+  },
+  "ok": true,
+}
+`;
+
 exports[`friendship POST /accept-request 1`] = `
 {
   "data": {

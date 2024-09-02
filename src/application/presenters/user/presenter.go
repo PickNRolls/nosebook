@@ -2,7 +2,7 @@ package presenteruser
 
 import (
 	"nosebook/src/errors"
-	"nosebook/src/infra/postgres"
+	querybuilder "nosebook/src/infra/query_builder"
 	"nosebook/src/lib/clock"
 	"time"
 
@@ -22,7 +22,7 @@ func New(db *sqlx.DB) *Presenter {
 }
 
 func (this *Presenter) FindByIds(ids uuid.UUIDs) ([]*User, *errors.Error) {
-	qb := postgres.NewSquirrel()
+	qb := querybuilder.New()
 	sql, args, _ := qb.Select(
 		"id", "first_name", "last_name", "nick", "last_activity_at",
 	).From(

@@ -38,6 +38,7 @@ services:
     container_name: db
     restart: always
     user: postgres
+    # command: ["postgres", "-c", "log_statement=all"]
     secrets:
       - db-password
     environment:

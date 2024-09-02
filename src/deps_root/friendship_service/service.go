@@ -7,6 +7,7 @@ import (
 )
 
 func New(db *sqlx.DB) *friendship.Service {
+	// TODO: concurrency bug, stateful repository
 	service := friendship.New(newRepository(db))
 
 	return service

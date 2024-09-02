@@ -4,7 +4,7 @@ import (
 	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/application/services/auth"
 	"nosebook/src/errors"
-	"nosebook/src/infra/postgres"
+	querybuilder "nosebook/src/infra/query_builder"
 	"nosebook/src/lib/cursor_query"
 
 	"github.com/Masterminds/squirrel"
@@ -93,7 +93,7 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *Fin
 			return nil, nil, newError("Отсутствует фильтр")
 		}
 
-		qb := postgres.NewSquirrel()
+		qb := querybuilder.New()
 
 		query := qb.
 			Select("id", "author_id", "owner_id", "message", "created_at").

@@ -2,9 +2,9 @@ package rootcommentservice
 
 import (
 	"database/sql"
-	"nosebook/src/domain/comment"
+	domaincomment "nosebook/src/domain/comment"
 	"nosebook/src/errors"
-	"nosebook/src/infra/postgres"
+	querybuilder "nosebook/src/infra/query_builder"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,7 +30,7 @@ var select_columns = []string{"id", "author_id", "message", "created_at", "remov
 var insert_columns = select_columns
 
 func (this *commentRepository) FindById(id uuid.UUID, includeRemoved bool) *domaincomment.Comment {
-	qb := postgres.NewSquirrel()
+	qb := querybuilder.New()
 
 	query := qb.Select(append(select_columns, "post_id")...).
 		From(comments_table).
@@ -74,7 +74,7 @@ func (this *commentRepository) FindById(id uuid.UUID, includeRemoved bool) *doma
 }
 
 func (this *commentRepository) Save(comment *domaincomment.Comment) *errors.Error {
-	qb := postgres.NewSquirrel()
+	qb := querybuilder.New()
 	tx, err := this.db.Beginx()
 	if err != nil {
 		return errors.From(err)

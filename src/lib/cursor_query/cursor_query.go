@@ -2,7 +2,7 @@ package cursorquery
 
 import (
 	"nosebook/src/errors"
-	"nosebook/src/infra/postgres"
+	querybuilder "nosebook/src/infra/query_builder"
 	"nosebook/src/lib/boolean"
 	"nosebook/src/lib/cursor"
 	"time"
@@ -62,14 +62,18 @@ func Do[T destType](db *sqlx.DB, input *Input, dest *[]T) (*Output, *errors.Erro
 		limit = DEFAULT_LIMIT
 	}
 
-	query := input.Query.Limit(limit + 1)
+	qb := querybuilder.New()
+	query := qb.Select("*").
+		FromSelect(input.Query, "sub").
+		Limit(limit + 1)
+
 	query = addOrder(query, boolean.Xor(input.OrderAsc, input.Last))
 
 	if input.Last {
 		next = ""
 		prev = ""
 
-		qb := postgres.NewSquirrel()
+		qb := querybuilder.New()
 		query := qb.Select("*").
 			FromSelect(query, "inner")
 		query = addOrder(query, input.OrderAsc)
@@ -111,7 +115,7 @@ func Do[T destType](db *sqlx.DB, input *Input, dest *[]T) (*Output, *errors.Erro
 		count := struct {
 			Count int `db:"count"`
 		}{}
-		query := input.Query.RemoveColumns().Column("count(*)")
+		query := qb.Select("count(*)").FromSelect(input.Query, "sub")
 		sql, args, _ := query.ToSql()
 		err := db.Get(&count, sql, args...)
 		if err != nil {

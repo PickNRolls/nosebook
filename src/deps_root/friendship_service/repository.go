@@ -2,9 +2,9 @@ package rootfriendshipservice
 
 import (
 	"nosebook/src/application/services/friendship"
-	"nosebook/src/domain/friendship"
+	domainfriendship "nosebook/src/domain/friendship"
 	"nosebook/src/errors"
-	"nosebook/src/infra/postgres"
+	querybuilder "nosebook/src/infra/query_builder"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -54,7 +54,7 @@ func (this *repository) FindOne() *domainfriendship.FriendRequest {
 		this.onlyAccepted = false
 	}()
 
-	qb := postgres.NewSquirrel()
+	qb := querybuilder.New()
 	query := qb.
 		Select(
 			"requester_id",
@@ -88,7 +88,7 @@ func (this *repository) FindOne() *domainfriendship.FriendRequest {
 }
 
 func (this *repository) Save(request *domainfriendship.FriendRequest) *errors.Error {
-	qb := postgres.NewSquirrel()
+	qb := querybuilder.New()
 	events := request.Events()
 
 	for _, event := range events {
@@ -120,6 +120,7 @@ func (this *repository) Save(request *domainfriendship.FriendRequest) *errors.Er
 			}
 
 		case domainfriendship.ACCEPTED:
+			fallthrough
 		case domainfriendship.DENIED:
 			sql, args, _ := qb.
 				Update("friendship_requests").
@@ -131,8 +132,8 @@ func (this *repository) Save(request *domainfriendship.FriendRequest) *errors.Er
 					"viewed",
 					request.Viewed,
 				).
-				Where("requester_id = ?", this.requesterId).
-				Where("responder_id = ?", this.responderId).
+				Where("requester_id = ?", request.RequesterId).
+				Where("responder_id = ?", request.ResponderId).
 				ToSql()
 
 			_, err := this.db.Exec(sql, args...)
@@ -172,8 +173,8 @@ func (this *repository) Save(request *domainfriendship.FriendRequest) *errors.Er
 					"viewed",
 					request.Viewed,
 				).
-				Where("requester_id = ?", this.requesterId).
-				Where("responder_id = ?", this.responderId).
+				Where("requester_id = ?", request.RequesterId).
+				Where("responder_id = ?", request.ResponderId).
 				ToSql()
 
 			_, err := this.db.Exec(sql, args...)

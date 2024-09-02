@@ -2,9 +2,9 @@ package rootpostservice
 
 import (
 	"database/sql"
-	"nosebook/src/domain/post"
+	domainpost "nosebook/src/domain/post"
 	"nosebook/src/errors"
-	"nosebook/src/infra/postgres"
+	querybuilder "nosebook/src/infra/query_builder"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,7 +26,7 @@ func NewRepository(db *sqlx.DB) *Repository {
 }
 
 func (this *Repository) FindById(id uuid.UUID) *domainpost.Post {
-	qb := postgres.NewSquirrel()
+	qb := querybuilder.New()
 
 	dest := struct {
 		Id        uuid.UUID    `db:"id"`
@@ -66,7 +66,7 @@ func (this *Repository) FindById(id uuid.UUID) *domainpost.Post {
 }
 
 func (this *Repository) Save(post *domainpost.Post) *errors.Error {
-	qb := postgres.NewSquirrel()
+	qb := querybuilder.New()
 
 	for _, event := range post.Events() {
 		switch event.Type() {

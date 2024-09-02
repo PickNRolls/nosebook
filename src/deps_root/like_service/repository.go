@@ -5,7 +5,7 @@ import (
 	"nosebook/src/application/services/like"
 	domainlike "nosebook/src/domain/like"
 	"nosebook/src/errors"
-	"nosebook/src/infra/postgres"
+	querybuilder "nosebook/src/infra/query_builder"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -64,7 +64,7 @@ func ownerIdColumn(owner domainlike.Owner) string {
 }
 
 func (this *repository) Save(like *domainlike.Like) *errors.Error {
-	qb := postgres.NewSquirrel()
+	qb := querybuilder.New()
 
 	if like.Event.Type() == domainlike.LIKED {
 		sql, args, _ := qb.Insert(resourceTable(like.Resource)).
@@ -113,7 +113,7 @@ func (this *repository) WithUserId(id uuid.UUID) like.Repository {
 }
 
 func findByCommentAndUser(db *sqlx.DB, commentId uuid.UUID, userId uuid.UUID) (*domainlike.Like, *errors.Error) {
-	qb := postgres.NewSquirrel()
+	qb := querybuilder.New()
 
 	sql, args, _ := qb.Select("id").
 		From("comments").
@@ -148,7 +148,7 @@ func findByCommentAndUser(db *sqlx.DB, commentId uuid.UUID, userId uuid.UUID) (*
 }
 
 func findByPostAndUser(db *sqlx.DB, postId uuid.UUID, userId uuid.UUID) (*domainlike.Like, *errors.Error) {
-	qb := postgres.NewSquirrel()
+	qb := querybuilder.New()
 
 	sql, args, _ := qb.Select("id").
 		From("posts").

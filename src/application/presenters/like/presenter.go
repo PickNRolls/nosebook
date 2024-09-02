@@ -4,7 +4,7 @@ import (
 	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/application/services/auth"
 	"nosebook/src/errors"
-	"nosebook/src/infra/postgres"
+	querybuilder "nosebook/src/infra/query_builder"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -27,7 +27,7 @@ type additionalDest struct {
 func New(db *sqlx.DB, userPresenter UserPresenter, resource Resource) *Presenter {
 	return &Presenter{
 		db:            db,
-		qb:            postgres.NewSquirrel(),
+		qb:            querybuilder.New(),
 		userPresenter: userPresenter,
 		resource:      resource,
 	}

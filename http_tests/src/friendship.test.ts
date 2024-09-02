@@ -49,5 +49,16 @@ describe('friendship', () => {
 
     expect(response.body).toMatchSnapshot();
   });
+
+  test('GET /', async () => {
+    let response = await friends
+      .get('/')
+      .query({
+        userId: 'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
+      })
+      .expect(200);
+
+    expect(response.body).toMatchSnapshot();
+  });
 });
 

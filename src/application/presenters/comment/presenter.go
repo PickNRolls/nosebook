@@ -4,8 +4,8 @@ import (
 	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/application/services/auth"
 	"nosebook/src/errors"
-	"nosebook/src/infra/postgres"
-	"nosebook/src/lib/cursor_query"
+	querybuilder "nosebook/src/infra/query_builder"
+	cursorquery "nosebook/src/lib/cursor_query"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -73,7 +73,7 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 		}
 	}
 
-	qb := postgres.NewSquirrel()
+	qb := querybuilder.New()
 	query := qb.
 		Select("id", "author_id", "message", "created_at").
 		From("comments as c").
