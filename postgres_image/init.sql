@@ -61,63 +61,71 @@ CREATE TABLE comment_likes (
 
 -- Data samples
 INSERT INTO
-  users (id, first_name, last_name, nick, passhash)
+  users (id, first_name, last_name, nick, passhash, last_activity_at)
 VALUES
   (
     'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
     'Test',
     'Tester',
     'test_tester',
-    '$2a$04$PFIkrnjZ62TLHhcU3a6Breh1sLUVMXzwlrLNo2dqQSTM9d02py.oa' -- 123123123 unhashed
+    '$2a$04$PFIkrnjZ62TLHhcU3a6Breh1sLUVMXzwlrLNo2dqQSTM9d02py.oa', -- 123123123 unhashed
+    TIMESTAMP '2024-10-10 10:10:02'
   ),
   (
     '1ae02f69-ea1a-4308-b825-0e5896e652e4',
     'Ilya',
     'Blinkov',
     'drugtester',
-    '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS'
+    '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS',
+    TIMESTAMP '2024-10-10 10:01:02'
   ),
   (
     '48683858-796c-45ad-a361-9e3d6d003354',
     'Marina',
     'Graf',
     'mmm',
-    '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS'
+    '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS',
+    TIMESTAMP '2024-10-10 10:10:02'
   ),
   (
     'baa0e8bc-385f-4314-9580-29855aff2229',
     'Sasha',
     'Provodnikov',
     'yyy',
-    '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS'
+    '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS',
+    TIMESTAMP '2024-10-10 10:10:02'
   ),
   (
     '37d28fdf-99bc-44b5-8df9-6a3b1a36f177',
     'Tolber',
     'Ovcharenko',
     'tolber01',
-    '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS'
+    '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS',
+    TIMESTAMP '2024-10-10 10:10:02'
   ),
   (
     '2db640fd-7aa4-4bba-8ee6-3935b700297a',
     'Sanal',
     'Mandjiev',
     'sanal',
-    '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS'
+    '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS',
+    TIMESTAMP '2024-10-10 10:10:02'
   ),
   (
     '12d28fdf-99bc-44b5-8df9-6a3b1a36f177',
     'Somebody',
     'Some',
     'somebody',
-    '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS'
+    '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS',
+    TIMESTAMP '2024-10-10 10:10:02'
   ),
   (
     '78b640fd-7aa4-4bba-8ee6-3935b700297a',
     'john',
     'wick',
     'killer',
-    '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS'
+    '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS',
+    TIMESTAMP '2024-10-10 10:10:02'
   );
 
 INSERT INTO

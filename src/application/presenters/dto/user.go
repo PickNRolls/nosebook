@@ -1,6 +1,8 @@
 package presenterdto
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -9,4 +11,7 @@ type User struct {
 	FirstName string    `json:"firstName" db:"first_name"`
 	LastName  string    `json:"lastName" db:"last_name"`
 	Nick      string    `json:"nick" db:"nick"`
+
+	LastOnlineAt time.Time `json:"lastOnlineAt"`
+	Online       bool      `json:"online"`
 }
