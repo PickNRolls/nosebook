@@ -33,6 +33,7 @@ type Output struct {
 }
 
 const DEFAULT_LIMIT = 10
+const MAX_LIMIT = 20
 
 func newError(message string) *errors.Error {
 	return errors.New("Cursor Query Error", message)
@@ -53,6 +54,10 @@ func addOrder(query squirrel.SelectBuilder, asc bool) squirrel.SelectBuilder {
 func Do[T destType](db *sqlx.DB, input *Input, dest *[]T) (*Output, *errors.Error) {
 	if input.Prev != "" && input.Next != "" {
 		return nil, newError("Использовать Prev и Next одновременно невозможно")
+	}
+
+	if input.Limit > MAX_LIMIT {
+		return nil, newError("Максимальный Limit = " + string(MAX_LIMIT))
 	}
 
 	next := input.Next
