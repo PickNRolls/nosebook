@@ -1,6 +1,7 @@
 package presenterfriendship
 
 import (
+	"fmt"
 	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/application/services/auth"
 	domainuser "nosebook/src/domain/user"
@@ -14,18 +15,18 @@ import (
 )
 
 type FindByFilterInput struct {
-	UserId     string
-	Text       string
-	OnlyMutual bool
-	OnlyOnline bool
-	Shuffle    bool
+	UserId        string
+	Accepted      bool
+	OnlyIncoming  bool
+	OnlyOutcoming bool
+	OnlyOnline    bool
 
 	Next  string
 	Prev  string
 	Limit uint64
 }
 
-type FindByFilterOutput = presenterdto.FindOut[*user]
+type FindByFilterOutput = presenterdto.FindOut[*Request]
 
 func errMsgOut(message string) *FindByFilterOutput {
 	return &FindByFilterOutput{
@@ -47,23 +48,35 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 		return errOut(err)
 	}
 
-	union := querybuilder.Union(
-		squirrel.StatementBuilder.
-			Select("requester_id as id, created_at").
-			From("friendship_requests").
-			Where("accepted = true").
-			Where("responder_id = ?", userId),
+	incomingQuery := squirrel.StatementBuilder.
+		Select("requester_id as id, created_at, accepted, 'incoming' as type").
+		From("friendship_requests").
+		Where("accepted = ?", input.Accepted).
+		Where("responder_id = ?", userId)
 
-		squirrel.StatementBuilder.
-			Select("responder_id as id, created_at").
-			From("friendship_requests").
-			Where("accepted = true").
-			Where("requester_id = ?", userId),
+	outcomingQuery := squirrel.StatementBuilder.
+		Select("responder_id as id, created_at, accepted, 'outcoming' as type").
+		From("friendship_requests").
+		Where("accepted = ?", input.Accepted).
+		Where("requester_id = ?", userId)
+
+	union := querybuilder.Union(
+		incomingQuery,
+		outcomingQuery,
 	).PlaceholderFormat(squirrel.Dollar)
 
+	innerQuery := union
+	if input.OnlyIncoming {
+		innerQuery = incomingQuery
+	}
+
+	if input.OnlyOutcoming {
+		innerQuery = outcomingQuery
+	}
+
 	query := querybuilder.New().
-		Select("f.id", "f.created_at").
-		FromSelect(union, "f")
+		Select("f.id", "f.created_at", "f.accepted", "f.type").
+		FromSelect(innerQuery, "f")
 
 	if input.OnlyOnline {
 		query = query.
@@ -101,9 +114,14 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 	}()
 
 	output := &FindByFilterOutput{}
-	output.Data = make([]*user, len(dests))
+	output.Data = make([]*Request, len(dests))
 	for i, dest := range dests {
-		output.Data[i] = userMap[dest.Id]
+		fmt.Println(dest)
+		output.Data[i] = &Request{
+			Type:     dest.Type,
+			Accepted: dest.Accepted,
+			User:     userMap[dest.Id],
+		}
 	}
 	output.Next = cursorQueryOut.Next
 	output.Prev = cursorQueryOut.Prev

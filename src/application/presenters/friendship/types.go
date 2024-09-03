@@ -9,6 +9,19 @@ import (
 
 type user = presenterdto.User
 
+type RequestType = string
+
+const (
+	INCOMING  RequestType = "incoming"
+	OUTCOMING RequestType = "outcoming"
+)
+
+type Request struct {
+	Type     RequestType `json:"type"`
+	Accepted bool        `json:"accepted"`
+	User     *user       `json:"user"`
+}
+
 type UserPresenter interface {
 	FindByIds(ids uuid.UUIDs) ([]*user, *errors.Error)
 }

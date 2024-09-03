@@ -56,17 +56,19 @@ describe('friendship', () => {
         .get('/')
         .query({
           userId: 'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
+          accepted: true,
         })
         .expect(200);
 
       expect(response.body).toMatchSnapshot();
     });
 
-    test('filter with userId, limit', async () => {
+    test('filter with limit', async () => {
       let response = await friends
         .get('/')
         .query({
           userId: 'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
+          accepted: true,
           limit: 1,
         })
         .expect(200);
@@ -78,6 +80,7 @@ describe('friendship', () => {
         .query({
           userId: 'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
           limit: 1,
+          accepted: true,
           next: response.body.data.next,
         })
         .expect(200);
@@ -85,12 +88,37 @@ describe('friendship', () => {
       expect(response.body).toMatchSnapshot();
     });
 
-    test('filter userId, onlyOnline', async () => {
+    test('filter with onlyOnline', async () => {
       let response = await friends
         .get('/')
         .query({
           userId: 'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
           onlyOnline: true,
+          accepted: true,
+        })
+        .expect(200);
+
+      expect(response.body).toMatchSnapshot();
+    });
+
+    test('filter only incoming requests', async () => {
+      let response = await friends
+        .get('/')
+        .query({
+          userId: 'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
+          onlyIncoming: true,
+        })
+        .expect(200);
+
+      expect(response.body).toMatchSnapshot();
+    });
+
+    test('filter only outcoming requests', async () => {
+      let response = await friends
+        .get('/')
+        .query({
+          userId: 'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
+          onlyOutcoming: true,
         })
         .expect(200);
 

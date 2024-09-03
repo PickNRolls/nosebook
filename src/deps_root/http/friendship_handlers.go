@@ -26,6 +26,9 @@ func (this *RootHTTP) addFriendshipHandlers() {
 		reqctx := reqcontext.From(ctx)
 		userId := ctx.Query("userId")
 		_, onlyOnline := ctx.GetQuery("onlyOnline")
+		_, accepted := ctx.GetQuery("accepted")
+		_, onlyIncoming := ctx.GetQuery("onlyIncoming")
+		_, onlyOutcoming := ctx.GetQuery("onlyOutcoming")
 
 		var limit uint64
 		if ctx.Query("limit") != "" {
@@ -38,11 +41,15 @@ func (this *RootHTTP) addFriendshipHandlers() {
 		}
 
 		output := presenter.FindByFilter(&presenterfriendship.FindByFilterInput{
-			UserId:     userId,
-			OnlyOnline: onlyOnline,
-			Limit:      limit,
-			Next:       ctx.Query("next"),
-			Prev:       ctx.Query("prev"),
+			UserId:        userId,
+			Accepted:      accepted,
+			OnlyIncoming:  onlyIncoming,
+			OnlyOutcoming: onlyOutcoming,
+			OnlyOnline:    onlyOnline,
+
+			Limit: limit,
+			Next:  ctx.Query("next"),
+			Prev:  ctx.Query("prev"),
 		}, reqctx.Auth())
 		_, ok := handle(output, output.Err)(reqctx)
 		if !ok {
