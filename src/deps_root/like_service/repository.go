@@ -1,7 +1,6 @@
 package rootlikeservice
 
 import (
-	"fmt"
 	"nosebook/src/application/services/like"
 	domainlike "nosebook/src/domain/like"
 	"nosebook/src/errors"
@@ -86,8 +85,6 @@ func (this *repository) Save(like *domainlike.Like) *errors.Error {
 		Where(resourceIdColumn(like.Resource)+" = ?", like.Resource.Id()).
 		Where(ownerIdColumn(like.Owner)+" = ?", like.Owner.Id()).
 		ToSql()
-
-	fmt.Println(sql)
 
 	_, err := this.db.Exec(sql, args...)
 	if err != nil {

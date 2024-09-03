@@ -1,7 +1,6 @@
 package presenterfriendship
 
 import (
-	"fmt"
 	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/application/services/auth"
 	domainuser "nosebook/src/domain/user"
@@ -116,7 +115,6 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 	output := &FindByFilterOutput{}
 	output.Data = make([]*Request, len(dests))
 	for i, dest := range dests {
-		fmt.Println(dest)
 		output.Data[i] = &Request{
 			Type:     dest.Type,
 			Accepted: dest.Accepted,
