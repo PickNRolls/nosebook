@@ -52,4 +52,22 @@ func (this *RootHTTP) addFriendshipHandlers() {
 		reqctx.SetResponseData(output)
 		reqctx.SetResponseOk(true)
 	})
+
+	group.GET("/relation-between", func(ctx *gin.Context) {
+		reqctx := reqcontext.From(ctx)
+		sourceUserId := ctx.Query("sourceUserId")
+		targetUserIds := ctx.QueryArray("targetUserIds")
+
+		out, ok := handle(presenter.DescribeRelation(&presenterfriendship.DescribeRelationInput{
+			SourceUserId:  sourceUserId,
+			TargetUserIds: targetUserIds,
+		}, reqctx.Auth()))(reqctx)
+
+		if !ok {
+			return
+		}
+
+		reqctx.SetResponseData(out)
+		reqctx.SetResponseOk(true)
+	})
 }
