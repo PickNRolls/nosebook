@@ -1,7 +1,6 @@
 package reqcontext
 
 import (
-	"fmt"
 	"net/http"
 	"nosebook/src/application/services/auth"
 	"nosebook/src/domain/user"
@@ -28,7 +27,6 @@ func From(ctx *gin.Context) *ReqContext {
 func Handle[T any](data T, err *errors.Error) func(*ReqContext) (T, bool) {
 	return func(reqctx *ReqContext) (T, bool) {
 		if err != nil {
-			fmt.Println(reqctx)
 			reqctx.ctx.Error(err)
 			reqctx.ctx.Abort()
 

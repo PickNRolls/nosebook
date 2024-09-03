@@ -1,10 +1,10 @@
 package presenteruser
 
 import (
+	domainuser "nosebook/src/domain/user"
 	"nosebook/src/errors"
 	querybuilder "nosebook/src/infra/query_builder"
 	"nosebook/src/lib/clock"
-	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -49,7 +49,7 @@ func (this *Presenter) FindByIds(ids uuid.UUIDs) ([]*User, *errors.Error) {
 				LastName:     userDest.LastName,
 				Nick:         userDest.Nick,
 				LastOnlineAt: userDest.LastActivityAt,
-				Online:       userDest.LastActivityAt.After(now.Add(-5 * time.Minute)),
+				Online:       userDest.LastActivityAt.After(now.Add(-domainuser.ONLINE_DURATION)),
 			}
 		}
 

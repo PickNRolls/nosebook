@@ -2,8 +2,10 @@ package presenterfriendship
 
 import (
 	"nosebook/src/application/services/auth"
+	domainuser "nosebook/src/domain/user"
 	"nosebook/src/errors"
 	querybuilder "nosebook/src/infra/query_builder"
+	"nosebook/src/lib/clock"
 	cursorquery "nosebook/src/lib/cursor_query"
 
 	"github.com/Masterminds/squirrel"
@@ -43,7 +45,7 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 		return errOut(err)
 	}
 
-	query := querybuilder.Union(
+	union := querybuilder.Union(
 		squirrel.StatementBuilder.
 			Select("requester_id as id, created_at").
 			From("friendship_requests").
@@ -56,6 +58,16 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 			Where("accepted = true").
 			Where("requester_id = ?", userId),
 	).PlaceholderFormat(squirrel.Dollar)
+
+	query := querybuilder.New().
+		Select("f.id", "f.created_at").
+		FromSelect(union, "f")
+
+	if input.OnlyOnline {
+		query = query.
+			Join("users as u on u.id = f.id").
+			Where("u.last_activity_at > ?", clock.Now().Add(-domainuser.ONLINE_DURATION))
+	}
 
 	dests := []*dest{}
 	cursorQueryOut, error := cursorquery.Do(this.db, &cursorquery.Input{

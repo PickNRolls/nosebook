@@ -6,6 +6,8 @@ import (
 	rootfriendshippresenter "nosebook/src/deps_root/friendship_presenter"
 	rootfriendshipservice "nosebook/src/deps_root/friendship_service"
 	reqcontext "nosebook/src/deps_root/http/req_context"
+	"nosebook/src/errors"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,11 +23,26 @@ func (this *RootHTTP) addFriendshipHandlers() {
 	group.POST("/remove-friend", execDefaultHandler(&friendship.RemoveFriendCommand{}, service.RemoveFriend))
 
 	group.GET("/", func(ctx *gin.Context) {
-		userId := ctx.Query("userId")
 		reqctx := reqcontext.From(ctx)
+		userId := ctx.Query("userId")
+		_, onlyOnline := ctx.GetQuery("onlyOnline")
+
+		var limit uint64
+		if ctx.Query("limit") != "" {
+			var err error
+			limit, err = strconv.ParseUint(ctx.Query("limit"), 10, 0)
+			_, ok := handle(limit, errors.From(err))(reqctx)
+			if !ok {
+				return
+			}
+		}
 
 		output := presenter.FindByFilter(&presenterfriendship.FindByFilterInput{
-			UserId: userId,
+			UserId:     userId,
+			OnlyOnline: onlyOnline,
+			Limit:      limit,
+			Next:       ctx.Query("next"),
+			Prev:       ctx.Query("prev"),
 		}, reqctx.Auth())
 		_, ok := handle(output, output.Err)(reqctx)
 		if !ok {
