@@ -76,7 +76,7 @@ VALUES
     'Ilya',
     'Blinkov',
     'drugtester',
-    '$2a$04$A08tmv8hEQkc75GbpRlpMO6ClwAwEfEO0I1YG2qB56o/jsOdtn3hS',
+    '$2a$04$PFIkrnjZ62TLHhcU3a6Breh1sLUVMXzwlrLNo2dqQSTM9d02py.oa',
     TIMESTAMP '2024-08-10 10:01:02'
   ),
   (
