@@ -51,7 +51,7 @@ describe('friendship', () => {
   });
 
   describe('GET /', () => {
-    test('filter with userId', async () => {
+    test('filter friends for userId', async () => {
       let response = await friends
         .get('/')
         .query({
@@ -63,7 +63,7 @@ describe('friendship', () => {
       expect(response.body).toMatchSnapshot();
     });
 
-    test('filter with limit', async () => {
+    test('filter friends with limit', async () => {
       let response = await friends
         .get('/')
         .query({
@@ -88,7 +88,7 @@ describe('friendship', () => {
       expect(response.body).toMatchSnapshot();
     });
 
-    test('filter with onlyOnline', async () => {
+    test('filter online friends', async () => {
       let response = await friends
         .get('/')
         .query({
@@ -101,24 +101,26 @@ describe('friendship', () => {
       expect(response.body).toMatchSnapshot();
     });
 
-    test('filter only incoming requests', async () => {
+    test('filter incoming pending requests', async () => {
       let response = await friends
         .get('/')
         .query({
           userId: 'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
           onlyIncoming: true,
+          accepted: false,
         })
         .expect(200);
 
       expect(response.body).toMatchSnapshot();
     });
 
-    test('filter only outcoming requests', async () => {
+    test('filter outcoming pending requests', async () => {
       let response = await friends
         .get('/')
         .query({
           userId: 'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
           onlyOutcoming: true,
+          accepted: false,
         })
         .expect(200);
 

@@ -6,6 +6,8 @@ import (
 	"nosebook/src/domain/user"
 	"nosebook/src/errors"
 	infraerrors "nosebook/src/infra/errors"
+	"nosebook/src/lib/nullable"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -36,6 +38,38 @@ func Handle[T any](data T, err *errors.Error) func(*ReqContext) (T, bool) {
 
 		return data, true
 	}
+}
+
+func (this *ReqContext) QueryNullableBool(key string) nullable.Bool {
+	value, exists := this.ctx.GetQuery(key)
+	out := nullable.Bool{
+		Valid: exists,
+		Value: value == "true",
+	}
+	return out
+}
+
+func (this *ReqContext) QueryNullableUint64(key string) (nullable.Uint64, bool) {
+	if _, exists := this.ctx.GetQuery(key); !exists {
+		return nullable.Uint64{
+			Valid: false,
+			Value: 0,
+		}, true
+	}
+
+	value, ok := this.QueryUint64(key)
+	return nullable.Uint64{
+		Valid: true,
+		Value: value,
+	}, ok
+}
+
+func (this *ReqContext) QueryUint64(key string) (uint64, bool) {
+	value, ok := Handle(errors.Using(strconv.ParseUint(this.ctx.Query(key), 10, 0)))(this)
+	if !ok {
+		return 0, ok
+	}
+	return value, ok
 }
 
 func (this *ReqContext) ParamUUID(key string) (uuid.UUID, bool) {

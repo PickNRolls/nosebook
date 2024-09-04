@@ -6,8 +6,6 @@ import (
 	rootfriendshippresenter "nosebook/src/deps_root/friendship_presenter"
 	rootfriendshipservice "nosebook/src/deps_root/friendship_service"
 	reqcontext "nosebook/src/deps_root/http/req_context"
-	"nosebook/src/errors"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,33 +23,31 @@ func (this *RootHTTP) addFriendshipHandlers() {
 	group.GET("/", func(ctx *gin.Context) {
 		reqctx := reqcontext.From(ctx)
 		userId := ctx.Query("userId")
-		_, onlyOnline := ctx.GetQuery("onlyOnline")
-		_, accepted := ctx.GetQuery("accepted")
-		_, onlyIncoming := ctx.GetQuery("onlyIncoming")
-		_, onlyOutcoming := ctx.GetQuery("onlyOutcoming")
-
-		var limit uint64
-		if ctx.Query("limit") != "" {
-			var err error
-			limit, err = strconv.ParseUint(ctx.Query("limit"), 10, 0)
-			_, ok := handle(limit, errors.From(err))(reqctx)
-			if !ok {
-				return
-			}
+		accepted := reqctx.QueryNullableBool("accepted")
+		viewed := reqctx.QueryNullableBool("viewed")
+		limit, ok := reqctx.QueryNullableUint64("limit")
+		if !ok {
+			return
 		}
 
+		_, onlyIncoming := ctx.GetQuery("onlyIncoming")
+		_, onlyOutcoming := ctx.GetQuery("onlyOutcoming")
+		_, onlyOnline := ctx.GetQuery("onlyOnline")
+
 		output := presenter.FindByFilter(&presenterfriendship.FindByFilterInput{
-			UserId:        userId,
-			Accepted:      accepted,
+			UserId:   userId,
+			Accepted: accepted,
+			Viewed:   viewed,
+
 			OnlyIncoming:  onlyIncoming,
 			OnlyOutcoming: onlyOutcoming,
 			OnlyOnline:    onlyOnline,
 
-			Limit: limit,
+			Limit: limit.Value,
 			Next:  ctx.Query("next"),
 			Prev:  ctx.Query("prev"),
 		}, reqctx.Auth())
-		_, ok := handle(output, output.Err)(reqctx)
+		_, ok = handle(output, output.Err)(reqctx)
 		if !ok {
 			return
 		}

@@ -8,14 +8,18 @@ import (
 	querybuilder "nosebook/src/infra/query_builder"
 	"nosebook/src/lib/clock"
 	cursorquery "nosebook/src/lib/cursor_query"
+	"nosebook/src/lib/nullable"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 )
 
 type FindByFilterInput struct {
-	UserId        string
-	Accepted      bool
+	UserId string
+
+	Accepted nullable.Bool
+	Viewed   nullable.Bool
+
 	OnlyIncoming  bool
 	OnlyOutcoming bool
 	OnlyOnline    bool
@@ -50,14 +54,22 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 	incomingQuery := squirrel.StatementBuilder.
 		Select("requester_id as id, created_at, accepted, 'incoming' as type").
 		From("friendship_requests").
-		Where("accepted = ?", input.Accepted).
 		Where("responder_id = ?", userId)
 
 	outcomingQuery := squirrel.StatementBuilder.
 		Select("responder_id as id, created_at, accepted, 'outcoming' as type").
 		From("friendship_requests").
-		Where("accepted = ?", input.Accepted).
 		Where("requester_id = ?", userId)
+
+	if input.Accepted.Valid {
+		incomingQuery = incomingQuery.Where("accepted = ?", input.Accepted.Value)
+		outcomingQuery = outcomingQuery.Where("accepted = ?", input.Accepted.Value)
+	}
+
+	if input.Viewed.Valid {
+		incomingQuery = incomingQuery.Where("viewed = ?", input.Viewed.Value)
+		outcomingQuery = outcomingQuery.Where("viewed = ?", input.Viewed.Value)
+	}
 
 	union := querybuilder.Union(
 		incomingQuery,

@@ -1,6 +1,88 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`friendship GET / filter only incoming requests 1`] = `
+exports[`friendship GET / filter friends for userId 1`] = `
+{
+  "data": {
+    "data": [
+      {
+        "accepted": true,
+        "type": "incoming",
+        "user": {
+          "firstName": "Tolber",
+          "id": "37d28fdf-99bc-44b5-8df9-6a3b1a36f177",
+          "lastName": "Ovcharenko",
+          "lastOnlineAt": "2024-08-10T10:10:02Z",
+          "nick": "tolber01",
+          "online": true,
+        },
+      },
+      {
+        "accepted": true,
+        "type": "incoming",
+        "user": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "lastOnlineAt": "2024-08-10T10:01:02Z",
+          "nick": "drugtester",
+          "online": false,
+        },
+      },
+    ],
+    "totalCount": 2,
+  },
+  "ok": true,
+}
+`;
+
+exports[`friendship GET / filter friends with limit 1`] = `
+{
+  "data": {
+    "data": [
+      {
+        "accepted": true,
+        "type": "incoming",
+        "user": {
+          "firstName": "Tolber",
+          "id": "37d28fdf-99bc-44b5-8df9-6a3b1a36f177",
+          "lastName": "Ovcharenko",
+          "lastOnlineAt": "2024-08-10T10:10:02Z",
+          "nick": "tolber01",
+          "online": true,
+        },
+      },
+    ],
+    "next": "37d28fdf-99bc-44b5-8df9-6a3b1a36f177/2024-02-16T15:36:38Z",
+    "totalCount": 2,
+  },
+  "ok": true,
+}
+`;
+
+exports[`friendship GET / filter friends with limit 2`] = `
+{
+  "data": {
+    "data": [
+      {
+        "accepted": true,
+        "type": "incoming",
+        "user": {
+          "firstName": "Ilya",
+          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
+          "lastName": "Blinkov",
+          "lastOnlineAt": "2024-08-10T10:01:02Z",
+          "nick": "drugtester",
+          "online": false,
+        },
+      },
+    ],
+    "totalCount": 2,
+  },
+  "ok": true,
+}
+`;
+
+exports[`friendship GET / filter incoming pending requests 1`] = `
 {
   "data": {
     "data": [
@@ -35,7 +117,30 @@ exports[`friendship GET / filter only incoming requests 1`] = `
 }
 `;
 
-exports[`friendship GET / filter only outcoming requests 1`] = `
+exports[`friendship GET / filter online friends 1`] = `
+{
+  "data": {
+    "data": [
+      {
+        "accepted": true,
+        "type": "incoming",
+        "user": {
+          "firstName": "Tolber",
+          "id": "37d28fdf-99bc-44b5-8df9-6a3b1a36f177",
+          "lastName": "Ovcharenko",
+          "lastOnlineAt": "2024-08-10T10:10:02Z",
+          "nick": "tolber01",
+          "online": true,
+        },
+      },
+    ],
+    "totalCount": 1,
+  },
+  "ok": true,
+}
+`;
+
+exports[`friendship GET / filter outcoming pending requests 1`] = `
 {
   "data": {
     "data": [
@@ -53,111 +158,6 @@ exports[`friendship GET / filter only outcoming requests 1`] = `
       },
     ],
     "totalCount": 1,
-  },
-  "ok": true,
-}
-`;
-
-exports[`friendship GET / filter with limit 1`] = `
-{
-  "data": {
-    "data": [
-      {
-        "accepted": true,
-        "type": "incoming",
-        "user": {
-          "firstName": "Tolber",
-          "id": "37d28fdf-99bc-44b5-8df9-6a3b1a36f177",
-          "lastName": "Ovcharenko",
-          "lastOnlineAt": "2024-08-10T10:10:02Z",
-          "nick": "tolber01",
-          "online": true,
-        },
-      },
-    ],
-    "next": "37d28fdf-99bc-44b5-8df9-6a3b1a36f177/2024-02-16T15:36:38Z",
-    "totalCount": 2,
-  },
-  "ok": true,
-}
-`;
-
-exports[`friendship GET / filter with limit 2`] = `
-{
-  "data": {
-    "data": [
-      {
-        "accepted": true,
-        "type": "incoming",
-        "user": {
-          "firstName": "Ilya",
-          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
-          "lastName": "Blinkov",
-          "lastOnlineAt": "2024-08-10T10:01:02Z",
-          "nick": "drugtester",
-          "online": false,
-        },
-      },
-    ],
-    "totalCount": 2,
-  },
-  "ok": true,
-}
-`;
-
-exports[`friendship GET / filter with onlyOnline 1`] = `
-{
-  "data": {
-    "data": [
-      {
-        "accepted": true,
-        "type": "incoming",
-        "user": {
-          "firstName": "Tolber",
-          "id": "37d28fdf-99bc-44b5-8df9-6a3b1a36f177",
-          "lastName": "Ovcharenko",
-          "lastOnlineAt": "2024-08-10T10:10:02Z",
-          "nick": "tolber01",
-          "online": true,
-        },
-      },
-    ],
-    "totalCount": 1,
-  },
-  "ok": true,
-}
-`;
-
-exports[`friendship GET / filter with userId 1`] = `
-{
-  "data": {
-    "data": [
-      {
-        "accepted": true,
-        "type": "incoming",
-        "user": {
-          "firstName": "Tolber",
-          "id": "37d28fdf-99bc-44b5-8df9-6a3b1a36f177",
-          "lastName": "Ovcharenko",
-          "lastOnlineAt": "2024-08-10T10:10:02Z",
-          "nick": "tolber01",
-          "online": true,
-        },
-      },
-      {
-        "accepted": true,
-        "type": "incoming",
-        "user": {
-          "firstName": "Ilya",
-          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
-          "lastName": "Blinkov",
-          "lastOnlineAt": "2024-08-10T10:01:02Z",
-          "nick": "drugtester",
-          "online": false,
-        },
-      },
-    ],
-    "totalCount": 2,
   },
   "ok": true,
 }
