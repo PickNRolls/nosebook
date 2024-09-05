@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"log"
 	"net/http"
+	reqcontext "nosebook/src/deps_root/http/req_context"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -29,13 +31,14 @@ var upgrader = websocket.Upgrader{
 }
 
 type client struct {
-	mu   sync.Mutex
-	conn *websocket.Conn
-	send chan []byte
-	hub  *hub
+	mu     sync.Mutex
+	userId uuid.UUID
+	conn   *websocket.Conn
+	send   chan []byte
+	hub    *Hub
 }
 
-func NewClient(hub *hub) *client {
+func NewClient(hub *Hub) *client {
 	return &client{
 		send: make(chan []byte, 256),
 		hub:  hub,
@@ -48,7 +51,7 @@ func (this *client) Send() chan []byte {
 
 func (this *client) read() {
 	defer func() {
-		this.hub.Unsubscribe(this)
+		this.hub.Unsubscribe(this.userId)
 	}()
 
 	this.conn.SetReadLimit(maxMessageSize)
@@ -113,6 +116,9 @@ func (this *client) write() {
 }
 
 func (this *client) Run(ctx *gin.Context) {
+	reqctx := reqcontext.From(ctx)
+	auth := reqctx.Auth()
+
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		log.Println(err)
@@ -121,7 +127,7 @@ func (this *client) Run(ctx *gin.Context) {
 	}
 
 	this.conn = conn
-	this.hub.Subscribe(this)
+	this.hub.Subscribe(auth.UserId, this)
 
 	go this.read()
 	go this.write()

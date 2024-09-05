@@ -1,41 +1,50 @@
 package socket
 
-import "log"
+import (
+	"log"
+
+	"github.com/google/uuid"
+)
 
 type Client interface {
 	Send() chan []byte
 }
 
-type hub struct {
-	clients map[Client]struct{}
+type Hub struct {
+	clients map[uuid.UUID]Client
 }
 
-func NewHub() *hub {
-	return &hub{
-		clients: map[Client]struct{}{},
+func NewHub() *Hub {
+	return &Hub{
+		clients: map[uuid.UUID]Client{},
 	}
 }
 
-func (this *hub) Subscribe(client Client) {
-	this.clients[client] = struct{}{}
-	log.Printf("New hub client: %v\n", client)
+func (this *Hub) Client(userId uuid.UUID) Client {
+	return this.clients[userId]
 }
 
-func (this *hub) Unsubscribe(client Client) {
-	if _, has := this.clients[client]; has {
-		log.Printf("Unsubscribe client: %v\n", client)
-		delete(this.clients, client)
+func (this *Hub) Subscribe(userId uuid.UUID, client Client) {
+	this.clients[userId] = client
+	log.Printf("New hub client for user(id:%v)\n", userId)
+}
+
+func (this *Hub) Unsubscribe(userId uuid.UUID) {
+	if _, has := this.clients[userId]; has {
+		log.Printf("Unsubscribe client for user(id:%v)\n", userId)
+		client := this.clients[userId]
+		delete(this.clients, userId)
 		close(client.Send())
 	}
 }
 
-func (this *hub) Broadcast(message []byte) {
-	for client := range this.clients {
+func (this *Hub) Broadcast(message []byte) {
+	for userId, client := range this.clients {
 		select {
 		case client.Send() <- message:
 
 		default:
-			this.Unsubscribe(client)
+			this.Unsubscribe(userId)
 		}
 	}
 }

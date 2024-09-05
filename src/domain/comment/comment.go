@@ -21,6 +21,12 @@ type Comment struct {
 	events []CommentEvent
 }
 
+// TODO: refactor to remove builder, use struct instead:
+//
+//	New(Config{
+//	  id: ...,
+//	  authorId: ...,
+//	})
 func newComment(
 	id uuid.UUID,
 	authorId uuid.UUID,

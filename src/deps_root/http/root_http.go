@@ -1,6 +1,7 @@
 package roothttp
 
 import (
+	"nosebook/src/application/services/socket"
 	userauth "nosebook/src/application/services/user_auth"
 	"nosebook/src/deps_root/http/middleware"
 	reqcontext "nosebook/src/deps_root/http/req_context"
@@ -15,13 +16,15 @@ type RootHTTP struct {
 	router       *gin.Engine
 	authRouter   *gin.RouterGroup
 	unauthRouter *gin.RouterGroup
+	hub          *socket.Hub
 }
 
-func New(db *sqlx.DB) *RootHTTP {
+func New(db *sqlx.DB, hub *socket.Hub) *RootHTTP {
 	router := gin.Default()
 	output := &RootHTTP{
 		db:     db,
 		router: router,
+		hub:    hub,
 	}
 
 	userAuthService := userauth.New(repos.NewUserRepository(db), repos.NewSessionRepository(db))
@@ -57,6 +60,7 @@ func New(db *sqlx.DB) *RootHTTP {
 	output.addFriendshipHandlers()
 	output.addUserHandlers()
 	output.addWebsocketHandlers()
+	output.addConversationHandlers()
 
 	return output
 }

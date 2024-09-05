@@ -1,11 +1,14 @@
 package nullable
 
-type Bool struct {
+import (
+	"database/sql"
+)
+
+type nullable[T any] struct {
 	Valid bool
-	Value bool
+	Value T
 }
 
-type Uint64 struct {
-	Valid bool
-	Value uint64
-}
+type Bool = nullable[bool]
+type Uint64 = nullable[uint64]
+type Time = sql.NullTime

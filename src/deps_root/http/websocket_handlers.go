@@ -7,12 +7,10 @@ import (
 )
 
 func (this *RootHTTP) addWebsocketHandlers() {
-	hub := socket.NewHub()
-
-	group := this.authRouter.Group("/chat")
+	group := this.authRouter.Group("/ws")
 
 	group.GET("/", func(ctx *gin.Context) {
-		client := socket.NewClient(hub)
+		client := socket.NewClient(this.hub)
 		client.Run(ctx)
 	})
 }
