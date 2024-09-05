@@ -56,6 +56,7 @@ func New(db *sqlx.DB) *RootHTTP {
 	output.addCommentHandlers()
 	output.addFriendshipHandlers()
 	output.addUserHandlers()
+	output.addWebsocketHandlers()
 
 	return output
 }

@@ -11,6 +11,10 @@ func NewPresenter() func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		ctx.Next()
 
+		if ctx.Writer.Written() {
+			return
+		}
+
 		reqContext := reqcontext.From(ctx)
 
 		ctx.JSON(ctx.Writer.Status(), &commandresult.Result{
