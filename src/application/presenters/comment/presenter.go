@@ -89,13 +89,13 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 	}
 
 	dest := []*Dest{}
-	cursorQueryOut, error := cursorquery.Do(this.db, &cursorquery.Input{
-		Query:    query,
-		Next:     input.Next,
-		Prev:     input.Prev,
-		Last:     input.Last,
-		OrderAsc: true,
-		Limit:    input.Limit,
+	cursorQueryOut, error := cursorquery.Do(this.db, &cursorquery.Input[*Dest]{
+		Query: query,
+		Next:  input.Next,
+		Prev:  input.Prev,
+		Last:  input.Last,
+		Order: &order{},
+		Limit: input.Limit,
 	}, &dest)
 	if error != nil {
 		return errOut(error)

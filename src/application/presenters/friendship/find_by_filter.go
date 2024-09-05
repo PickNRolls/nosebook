@@ -96,8 +96,9 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 	}
 
 	dests := []*find_by_filter_dest{}
-	cursorQueryOut, error := cursorquery.Do(this.db, &cursorquery.Input{
+	cursorQueryOut, error := cursorquery.Do(this.db, &cursorquery.Input[*find_by_filter_dest]{
 		Query: query,
+		Order: &find_by_filter_order{},
 		Next:  input.Next,
 		Limit: input.Limit,
 	}, &dests)

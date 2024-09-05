@@ -117,11 +117,11 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *Fin
 			)
 		}
 
-		cursorQueryOut, err := cursorquery.Do(this.db, &cursorquery.Input{
-			Query:    query,
-			Next:     input.Cursor,
-			Limit:    10,
-			OrderAsc: false,
+		cursorQueryOut, err := cursorquery.Do(this.db, &cursorquery.Input[*Dest]{
+			Query: query,
+			Next:  input.Cursor,
+			Limit: 10,
+			Order: &order{},
 		}, &out)
 		if err != nil {
 			return nil, nil, errorFrom(err)

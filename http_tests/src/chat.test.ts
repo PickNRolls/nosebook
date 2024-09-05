@@ -1,4 +1,5 @@
-import request from './request';
+import request, { ASSER_ID, ASSER_SESSION } from "./request";
+import { WebSocket } from "./websocket";
 
 describe('posts', () => {
   let chats = request.extend({ prefixUrl: '/chats' });
@@ -30,6 +31,41 @@ describe('posts', () => {
           next: response.body.data.next,
         })
         .expect(200);
+
+      expect(response.body).toMatchSnapshot();
+    });
+  });
+
+  const conv = request.extend({ prefixUrl: '/conversations' });
+
+  test('POST /send-message', async () => {
+    const websocket = new WebSocket(ASSER_SESSION).unwrap();
+
+    const message = new Promise(res => {
+      websocket.once('message', (data) => {
+        res(data.toString());
+      });
+    });
+
+    let response = await conv
+      .post('/send-message')
+      .send({
+        recipientId: ASSER_ID,
+        text: 'Hello asser'
+      })
+      .expect(200);
+
+    expect(response.body).toMatchSnapshot();
+    expect(await message).toMatchSnapshot();
+
+    websocket.terminate();
+  });
+
+  describe('GET / after sending the message', () => {
+    test('result list of 3 chats', async () => {
+      let response = await chats
+        .get('')
+        .expect(200)
 
       expect(response.body).toMatchSnapshot();
     });

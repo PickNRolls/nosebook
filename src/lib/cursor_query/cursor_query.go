@@ -12,18 +12,20 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type destType interface {
-	Timestamp() time.Time
-	ID() uuid.UUID
+type Order[T any] interface {
+	Column() string
+	Timestamp(dest T) time.Time
+	Id(dest T) uuid.UUID
+	Asc() bool
 }
 
-type Input struct {
-	Query    squirrel.SelectBuilder
-	Limit    uint64
-	Prev     string
-	Next     string
-	Last     bool
-	OrderAsc bool
+type Input[T any] struct {
+	Query squirrel.SelectBuilder
+	Limit uint64
+	Prev  string
+	Next  string
+	Last  bool
+	Order Order[T]
 }
 
 type Output struct {
@@ -43,21 +45,27 @@ func errorFrom(err error) *errors.Error {
 	return newError(err.Error())
 }
 
-func addOrder(query squirrel.SelectBuilder, asc bool) squirrel.SelectBuilder {
+func addOrder(query squirrel.SelectBuilder, column string, asc bool) squirrel.SelectBuilder {
 	if asc {
-		return query.OrderBy("created_at asc, id asc")
+		return query.OrderBy(column + " asc, id asc")
 	}
 
-	return query.OrderBy("created_at desc, id desc")
+	return query.OrderBy(column + " desc, id desc")
 }
 
-func Do[T destType](db *sqlx.DB, input *Input, dest *[]T) (*Output, *errors.Error) {
+func Do[T any](db *sqlx.DB, input *Input[T], dest *[]T) (*Output, *errors.Error) {
 	if input.Prev != "" && input.Next != "" {
 		return nil, newError("Использовать Prev и Next одновременно невозможно")
 	}
 
 	if input.Limit > MAX_LIMIT {
 		return nil, newError("Максимальный Limit = " + string(MAX_LIMIT))
+	}
+
+	order := input.Order
+	orderColumn := order.Column()
+	if orderColumn == "" {
+		orderColumn = "created_at"
 	}
 
 	next := input.Next
@@ -72,7 +80,7 @@ func Do[T destType](db *sqlx.DB, input *Input, dest *[]T) (*Output, *errors.Erro
 		FromSelect(input.Query, "sub").
 		Limit(limit + 1)
 
-	query = addOrder(query, boolean.Xor(input.OrderAsc, input.Last))
+	query = addOrder(query, orderColumn, boolean.Xor(order.Asc(), input.Last))
 
 	if input.Last {
 		next = ""
@@ -81,7 +89,7 @@ func Do[T destType](db *sqlx.DB, input *Input, dest *[]T) (*Output, *errors.Erro
 		qb := querybuilder.New()
 		query := qb.Select("*").
 			FromSelect(query, "inner")
-		query = addOrder(query, input.OrderAsc)
+		query = addOrder(query, orderColumn, order.Asc())
 	}
 
 	if next != "" {
@@ -90,10 +98,10 @@ func Do[T destType](db *sqlx.DB, input *Input, dest *[]T) (*Output, *errors.Erro
 			return nil, errorFrom(err)
 		}
 
-		if input.OrderAsc {
-			query = query.Where("(created_at, id) > (?, ?)", timestamp, id)
+		if order.Asc() {
+			query = query.Where("("+orderColumn+", id) > (?, ?)", timestamp, id)
 		} else {
-			query = query.Where("(created_at, id) < (?, ?)", timestamp, id)
+			query = query.Where("("+orderColumn+", id) < (?, ?)", timestamp, id)
 		}
 	}
 
@@ -103,10 +111,10 @@ func Do[T destType](db *sqlx.DB, input *Input, dest *[]T) (*Output, *errors.Erro
 			return nil, errorFrom(err)
 		}
 
-		if input.OrderAsc {
-			query = query.Where("(created_at, id) < (?, ?)", timestamp, id)
+		if order.Asc() {
+			query = query.Where("("+orderColumn+", id) < (?, ?)", timestamp, id)
 		} else {
-			query = query.Where("(created_at, id) > (?, ?)", timestamp, id)
+			query = query.Where("("+orderColumn+", id) > (?, ?)", timestamp, id)
 		}
 	}
 
@@ -146,12 +154,12 @@ func Do[T destType](db *sqlx.DB, input *Input, dest *[]T) (*Output, *errors.Erro
 
 	if shouldBeNext {
 		last := slice[len(slice)-1]
-		output.Next = cursor.Encode(last.Timestamp(), last.ID())
+		output.Next = cursor.Encode(input.Order.Timestamp(last), input.Order.Id(last))
 	}
 
 	if shouldBePrev {
 		first := slice[0]
-		output.Prev = cursor.Encode(first.Timestamp(), first.ID())
+		output.Prev = cursor.Encode(input.Order.Timestamp(first), input.Order.Id(first))
 	}
 
 	return output, nil

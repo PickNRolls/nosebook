@@ -6,6 +6,7 @@ import (
 	"nosebook/src/errors"
 	querybuilder "nosebook/src/infra/query_builder"
 	cursorquery "nosebook/src/lib/cursor_query"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -23,14 +24,36 @@ func errOut(err error) *FindByFilterOutput {
 	}
 }
 
+type order struct{}
+
+func (this *order) Column() string {
+	return "updated_at"
+}
+func (this *order) Timestamp(dest *conv_dest) time.Time {
+	return dest.UpdatedAt
+}
+func (this *order) Id(dest *conv_dest) uuid.UUID {
+	return dest.Id
+}
+func (this *order) Asc() bool {
+	return false
+}
+
 func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *FindByFilterOutput {
 	qb := querybuilder.New()
-	query := qb.Select("id", "created_at", "interlocutor_id", "last_message_id").
+	query := qb.Select(
+		"id",
+		"interlocutor_id",
+		"last_message_id",
+		"created_at",
+		"updated_at",
+	).
 		FromSelect(qb.Select(
 			"c.id",
 			"c.created_at",
 			"cm2.user_id as interlocutor_id",
 			"m.id as last_message_id",
+			"m.created_at as updated_at",
 			"row_number() over (partition by c.id order by m.created_at desc) as row_number",
 		).
 			From("chats as c").
@@ -43,8 +66,9 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 		).Where("c.row_number <= 1")
 
 	dests := []*conv_dest{}
-	cursorQueryOut, err := cursorquery.Do(this.db, &cursorquery.Input{
+	cursorQueryOut, err := cursorquery.Do(this.db, &cursorquery.Input[*conv_dest]{
 		Query: query,
+		Order: &order{},
 		Next:  input.Next,
 		Limit: input.Limit,
 	}, &dests)

@@ -11,12 +11,5 @@ type conv_dest struct {
 	CreatedAt      time.Time `db:"created_at"`
 	LastMessageId  uuid.UUID `db:"last_message_id"`
 	InterlocutorId uuid.UUID `db:"interlocutor_id"`
-}
-
-func (this *conv_dest) ID() uuid.UUID {
-	return this.Id
-}
-
-func (this *conv_dest) Timestamp() time.Time {
-	return this.CreatedAt
+	UpdatedAt      time.Time `db:"updated_at"`
 }

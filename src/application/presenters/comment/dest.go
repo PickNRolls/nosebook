@@ -13,11 +13,3 @@ type Dest struct {
 	Message   string    `db:"message"`
 	CreatedAt time.Time `db:"created_at"`
 }
-
-func (this *Dest) ID() uuid.UUID {
-	return this.Id
-}
-
-func (this *Dest) Timestamp() time.Time {
-	return this.CreatedAt
-}

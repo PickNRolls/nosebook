@@ -14,10 +14,17 @@ type Dest struct {
 	CreatedAt time.Time `db:"created_at"`
 }
 
-func (this *Dest) ID() uuid.UUID {
-	return this.Id
-}
+type order struct{}
 
-func (this *Dest) Timestamp() time.Time {
-	return this.CreatedAt
+func (this *order) Column() string {
+	return "created_at"
+}
+func (this *order) Timestamp(dest *Dest) time.Time {
+	return dest.CreatedAt
+}
+func (this *order) Id(dest *Dest) uuid.UUID {
+	return dest.Id
+}
+func (this *order) Asc() bool {
+	return false
 }
