@@ -19,7 +19,7 @@ func (this *RootHTTP) addCommentHandlers() {
 	group.POST("/publish-on-post", execResultHandler(&commenting.PublishPostCommentCommand{}, service.PublishOnPost))
 	group.POST("/remove", execResultHandler(&commenting.RemoveCommentCommand{}, service.Remove))
 
-	group.GET("/", func(ctx *gin.Context) {
+	group.GET("", func(ctx *gin.Context) {
 		reqctx := reqcontext.From(ctx)
 
 		output := presenter.FindByFilter(&presentercomment.FindByFilterInput{

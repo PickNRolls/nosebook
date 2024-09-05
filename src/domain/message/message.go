@@ -13,7 +13,7 @@ type Message struct {
 	Id        uuid.UUID
 	AuthorId  uuid.UUID
 	Text      string
-	ReplyTo   uuid.UUID
+	ReplyTo   nullable.UUID
 	CreatedAt time.Time
 	RemovedAt nullable.Time
 
@@ -25,7 +25,7 @@ func New(
 	id uuid.UUID,
 	authorId uuid.UUID,
 	text string,
-	replyTo uuid.UUID,
+	replyTo nullable.UUID,
 	createdAt time.Time,
 	removedAt sql.NullTime,
 	permissions Permissions,

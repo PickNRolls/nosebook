@@ -59,10 +59,48 @@ CREATE TABLE comment_likes (
   UNIQUE (user_id, comment_id)
 );
 
+CREATE TABLE chats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE chat_members (
+  chat_id UUID REFERENCES chats (id),
+  user_id UUID REFERENCES users (id),
+  UNIQUE (chat_id, user_id)
+);
+
+CREATE TABLE private_chats (
+  chat_id UUID REFERENCES chats (id)
+);
+
+CREATE TABLE group_chats (
+  chat_id UUID REFERENCES chats (id),
+  title VARCHAR(128)
+);
+
+CREATE TABLE messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  author_id UUID REFERENCES users (id),
+  text VARCHAR(4096),
+  reply_to UUID REFERENCES messages (id),
+  chat_id UUID REFERENCES chats (id),
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  removed_at TIMESTAMP
+);
+
 -- Data samples
 INSERT INTO
   users (id, first_name, last_name, nick, passhash, last_activity_at)
 VALUES
+  (
+    'ed1a3fd0-4d0b-4961-b4cd-cf2123577666',
+    'Ass',
+    'Asser',
+    'ass_asser',
+    '$2a$04$PFIkrnjZ62TLHhcU3a6Breh1sLUVMXzwlrLNo2dqQSTM9d02py.oa', -- 123123123 unhashed
+    TIMESTAMP '2024-08-10 10:10:02'
+  ),
   (
     'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
     'Test',
@@ -139,6 +177,11 @@ VALUES
   (
     'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
     'bb23af03-be50-4bce-b729-b259b2e02e55',
+    TIMESTAMP '2050-02-16 15:36:55'
+  ),
+  (
+    'ed1a3fd0-4d0b-4961-b4cd-cf2123577666',
+    'bb23af03-be50-4bce-b729-b259b2e02e56',
     TIMESTAMP '2050-02-16 15:36:55'
   );
 

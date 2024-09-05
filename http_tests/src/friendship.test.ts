@@ -53,7 +53,7 @@ describe('friendship', () => {
   describe('GET /', () => {
     test('filter friends for userId', async () => {
       let response = await friends
-        .get('/')
+        .get('')
         .query({
           userId: 'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
           accepted: true,
@@ -65,7 +65,7 @@ describe('friendship', () => {
 
     test('filter friends with limit', async () => {
       let response = await friends
-        .get('/')
+        .get('')
         .query({
           userId: 'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
           accepted: true,
@@ -76,7 +76,7 @@ describe('friendship', () => {
       expect(response.body).toMatchSnapshot();
 
       response = await friends
-        .get('/')
+        .get('')
         .query({
           userId: 'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
           limit: 1,
@@ -90,7 +90,7 @@ describe('friendship', () => {
 
     test('filter online friends', async () => {
       let response = await friends
-        .get('/')
+        .get('')
         .query({
           userId: 'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
           onlyOnline: true,
@@ -103,7 +103,7 @@ describe('friendship', () => {
 
     test('filter incoming pending requests', async () => {
       let response = await friends
-        .get('/')
+        .get('')
         .query({
           userId: 'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
           onlyIncoming: true,
@@ -116,7 +116,7 @@ describe('friendship', () => {
 
     test('filter outcoming pending requests', async () => {
       let response = await friends
-        .get('/')
+        .get('')
         .query({
           userId: 'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
           onlyOutcoming: true,

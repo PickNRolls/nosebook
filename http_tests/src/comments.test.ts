@@ -9,7 +9,7 @@ describe('comments', () => {
     const postId = 'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7';
 
     let lastResponse = await comments
-      .get('/')
+      .get('')
       .query({
         postId,
       })
@@ -18,7 +18,7 @@ describe('comments', () => {
     expect(lastResponse.body).toMatchSnapshot();
 
     lastResponse = await comments
-      .get('/')
+      .get('')
       .query({
         postId,
         next: lastResponse.body.data.next,

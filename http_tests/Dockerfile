@@ -27,7 +27,7 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 
 COPY . .
 
-RUN chown -R node /usr/src/app
+RUN chown -R node /usr/src/app/src
 
 USER node
 

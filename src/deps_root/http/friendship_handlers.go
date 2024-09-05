@@ -20,7 +20,7 @@ func (this *RootHTTP) addFriendshipHandlers() {
 	group.POST("/deny-request", execDefaultHandler(&friendship.DenyRequestCommand{}, service.DenyRequest))
 	group.POST("/remove-friend", execDefaultHandler(&friendship.RemoveFriendCommand{}, service.RemoveFriend))
 
-	group.GET("/", func(ctx *gin.Context) {
+	group.GET("", func(ctx *gin.Context) {
 		reqctx := reqcontext.From(ctx)
 		userId := ctx.Query("userId")
 		accepted := reqctx.QueryNullableBool("accepted")

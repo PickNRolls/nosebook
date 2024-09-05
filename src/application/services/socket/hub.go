@@ -20,7 +20,7 @@ func NewHub() *Hub {
 	}
 }
 
-func (this *Hub) Client(userId uuid.UUID) Client {
+func (this *Hub) UserClient(userId uuid.UUID) Client {
 	return this.clients[userId]
 }
 

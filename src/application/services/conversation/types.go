@@ -8,7 +8,7 @@ import (
 )
 
 type ChatRepository interface {
-	FindByRecipientId(id uuid.UUID) *domainchat.Chat
+	FindByMemberIds(leftId uuid.UUID, rightId uuid.UUID) (*domainchat.Chat, *errors.Error)
 	Save(chat *domainchat.Chat) *errors.Error
 }
 

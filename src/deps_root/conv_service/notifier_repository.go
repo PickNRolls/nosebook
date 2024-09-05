@@ -35,7 +35,7 @@ func newNotifierRepository(hub *socket.Hub) *notifierRepository {
 }
 
 func (this *notifierRepository) FindByRecipientId(id uuid.UUID) conversation.Notifier {
-	client := this.hub.Client(id)
+	client := this.hub.UserClient(id)
 	if client == nil {
 		return nil
 	}

@@ -1,8 +1,11 @@
 import supertest, { Test } from 'supertest';
 import TestAgent from 'supertest/lib/agent';
 
-const HOST = 'http://backend:8080';
+export const HOST = 'http://backend:8080';
 export const SESSION_HEADER_KEY = 'X-Auth-Session-Id';
+export const ASSER_ID = 'ed1a3fd0-4d0b-4961-b4cd-cf2123577666';
+export const ASSER_SESSION = 'bb23af03-be50-4bce-b729-b259b2e02e56';
+export const TEST_TESTER_SESSION = 'bb23af03-be50-4bce-b729-b259b2e02e54'
 
 class TestAgentWrapper {
   private host: string;
@@ -34,7 +37,7 @@ class TestAgentWrapper {
     const test = this.agent[method](url);
 
     if (this.auth) {
-      test.set(SESSION_HEADER_KEY, 'bb23af03-be50-4bce-b729-b259b2e02e54');
+      test.set(SESSION_HEADER_KEY, TEST_TESTER_SESSION);
     }
 
     return test;

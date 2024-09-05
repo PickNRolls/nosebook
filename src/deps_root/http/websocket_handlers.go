@@ -9,7 +9,7 @@ import (
 func (this *RootHTTP) addWebsocketHandlers() {
 	group := this.authRouter.Group("/ws")
 
-	group.GET("/", func(ctx *gin.Context) {
+	group.GET("", func(ctx *gin.Context) {
 		client := socket.NewClient(this.hub)
 		client.Run(ctx)
 	})

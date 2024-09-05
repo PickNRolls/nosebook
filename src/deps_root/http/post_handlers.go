@@ -18,7 +18,7 @@ func (this *RootHTTP) addPostHandlers() {
 	group.POST("/publish", execResultHandler(&posting.PublishPostCommand{}, service.Publish))
 	group.POST("/remove", execResultHandler(&posting.RemovePostCommand{}, service.Remove))
 
-	group.GET("/", func(ctx *gin.Context) {
+	group.GET("", func(ctx *gin.Context) {
 		authorId := ctx.Query("authorId")
 		ownerId := ctx.Query("ownerId")
 		cursor := ctx.Query("cursor")

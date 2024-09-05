@@ -4,6 +4,7 @@ import (
 	"nosebook/src/application/services/auth"
 	domainchat "nosebook/src/domain/chat"
 	"nosebook/src/errors"
+	"nosebook/src/lib/clock"
 
 	"github.com/google/uuid"
 )
@@ -33,13 +34,18 @@ func (this *Service) SendMessage(command *SendMessageCommand, auth *auth.Auth) (
 		return false, newError("Пользователь с id:" + command.RecipientId.String() + " отсуствует")
 	}
 
-	chat := this.chatRepository.FindByRecipientId(command.RecipientId)
+	chat, err := this.chatRepository.FindByMemberIds(command.RecipientId, auth.UserId)
+	if err != nil {
+		return false, err
+	}
+
 	if chat == nil {
 		chat, err = domainchat.New(
 			uuid.New(),
 			[]uuid.UUID{auth.UserId, command.RecipientId},
 			"",
 			true,
+			clock.Now(),
 			nil,
 			true,
 		)

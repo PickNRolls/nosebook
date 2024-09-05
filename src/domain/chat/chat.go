@@ -4,6 +4,7 @@ import (
 	domainmessage "nosebook/src/domain/message"
 	"nosebook/src/lib/clock"
 	"nosebook/src/lib/nullable"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -13,6 +14,7 @@ type Chat struct {
 	MemberIds   uuid.UUIDs
 	Name        string
 	Private     bool
+	CreatedAt   time.Time
 	permissions Permissions
 	events      []Event
 }
@@ -22,6 +24,7 @@ func New(
 	memberIds uuid.UUIDs,
 	name string,
 	private bool,
+	createdAt time.Time,
 	permissions Permissions,
 	raiseCreatedEvent bool,
 ) (*Chat, *Error) {
@@ -34,6 +37,7 @@ func New(
 		MemberIds:   memberIds,
 		Name:        name,
 		Private:     private,
+		CreatedAt:   createdAt,
 		permissions: permissions,
 	}
 
@@ -64,7 +68,7 @@ func (this *Chat) CanSendMessageBy(userId uuid.UUID) *Error {
 	return this.permissions.CanSendMessageBy(this, userId)
 }
 
-func (this *Chat) SendMessageBy(text string, replyTo uuid.UUID, userId uuid.UUID) *Error {
+func (this *Chat) SendMessageBy(text string, replyTo uuid.NullUUID, userId uuid.UUID) *Error {
 	if err := this.CanSendMessageBy(userId); err != nil {
 		return err
 	}
