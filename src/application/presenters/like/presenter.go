@@ -40,7 +40,7 @@ func (this *Presenter) FindByResourceIds(ids uuid.UUIDs, auth *auth.Auth) (likes
 	resourceLikerIdsMap := map[uuid.UUID]uuid.UUIDs{}
 	dests := []*dest{}
 
-	err := func() error {
+	err := func() *errors.Error {
 		idColumn := this.resource.IDColumn()
 		whereEq := squirrel.Eq{}
 		whereEq[idColumn] = ids
@@ -63,7 +63,7 @@ func (this *Presenter) FindByResourceIds(ids uuid.UUIDs, auth *auth.Auth) (likes
 
 		err := this.db.Select(&dests, sql, args...)
 		if err != nil {
-			return err
+			return errors.From(err)
 		}
 
 		for _, like := range dests {
@@ -79,18 +79,11 @@ func (this *Presenter) FindByResourceIds(ids uuid.UUIDs, auth *auth.Auth) (likes
 		}
 
 		users, error := this.userPresenter.FindByIds(userIds)
-		if error != nil {
-			return error.Unwrap()
-		}
-
-		for _, user := range users {
-			userMap[user.Id] = user
-		}
-
-		return nil
+		userMap = users
+		return error
 	}()
 	if err != nil {
-		return nil, errorFrom(err)
+		return nil, err
 	}
 
 	additional, error := func() ([]*additionalDest, *errors.Error) {

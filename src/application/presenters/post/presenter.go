@@ -53,7 +53,6 @@ func outZero() *FindByFilterOutput {
 }
 
 func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *FindByFilterOutput {
-
 	dests, cursorQueryOut, err := func() ([]*Dest, *cursorquery.Output, *errors.Error) {
 		out := []*Dest{}
 
@@ -146,7 +145,6 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *Fin
 	usersMap, err := func() (map[uuid.UUID]*presenterdto.User, *errors.Error) {
 		userIds := []uuid.UUID{}
 		userIdsMap := map[uuid.UUID]struct{}{}
-		out := map[uuid.UUID]*presenterdto.User{}
 
 		for _, dest := range dests {
 			if _, has := userIdsMap[dest.AuthorId]; !has {
@@ -162,16 +160,7 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *Fin
 			userIds = append(userIds, id)
 		}
 
-		users, err := this.userPresenter.FindByIds(userIds)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, dto := range users {
-			out[dto.Id] = dto
-		}
-
-		return out, nil
+		return this.userPresenter.FindByIds(userIds)
 	}()
 
 	commentsMap := map[uuid.UUID]*presenterdto.FindOut[*presenterdto.Comment]{}

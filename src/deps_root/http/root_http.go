@@ -61,6 +61,7 @@ func New(db *sqlx.DB, hub *socket.Hub) *RootHTTP {
 	output.addUserHandlers()
 	output.addWebsocketHandlers()
 	output.addConversationHandlers()
+	output.addChatHandlers()
 
 	return output
 }

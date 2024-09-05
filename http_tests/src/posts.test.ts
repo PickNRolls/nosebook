@@ -1,5 +1,4 @@
-import supertest from 'supertest';
-import request from './request';
+import request, { DRUGTESTER_ID } from './request';
 
 describe('posts', () => {
   let posts = request.extend({ prefixUrl: '/posts' });
@@ -33,7 +32,7 @@ describe('posts', () => {
     let response = await posts
       .post('/publish')
       .send({
-        ownerId: '1ae02f69-ea1a-4308-b825-0e5896e652e4',
+        ownerId: DRUGTESTER_ID,
         message: 'my test message',
       })
       .expect(200);

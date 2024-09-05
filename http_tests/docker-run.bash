@@ -1,8 +1,8 @@
-set -e
-
 cd ..
 docker container stop db
 docker container rm db
+
+set -e
 APP_ENV=testing docker compose up --build --wait
 cd -
 

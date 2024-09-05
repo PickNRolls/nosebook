@@ -118,16 +118,7 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 			ids = append(ids, destComment.AuthorId)
 		}
 
-		users, err := this.userPresenter.FindByIds(ids)
-		if err != nil {
-			return nil, err
-		}
-
-		m := map[uuid.UUID]*presenterdto.User{}
-		for _, user := range users {
-			m[user.Id] = user
-		}
-		return m, nil
+		return this.userPresenter.FindByIds(ids)
 	}()
 	if err != nil {
 		errOut(err)

@@ -6,6 +6,7 @@ export const SESSION_HEADER_KEY = 'X-Auth-Session-Id';
 export const ASSER_ID = 'ed1a3fd0-4d0b-4961-b4cd-cf2123577666';
 export const ASSER_SESSION = 'bb23af03-be50-4bce-b729-b259b2e02e56';
 export const TEST_TESTER_SESSION = 'bb23af03-be50-4bce-b729-b259b2e02e54'
+export const DRUGTESTER_ID = '1ae02f69-ea1a-4308-b825-0e5896e652e4';
 
 class TestAgentWrapper {
   private host: string;

@@ -34,7 +34,7 @@ type Post struct {
 }
 
 type UserPresenter interface {
-	FindByIds(ids uuid.UUIDs) ([]*user, *errors.Error)
+	FindByIds(ids uuid.UUIDs) (map[uuid.UUID]*user, *errors.Error)
 }
 
 type CommentPresenter interface {

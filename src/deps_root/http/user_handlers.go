@@ -28,7 +28,7 @@ func (this *RootHTTP) addUserHandlers() {
 
 		var user *presenterdto.User
 		if len(users) > 0 {
-			user = users[0]
+			user = users[id]
 		}
 
 		reqctx.SetResponseData(user)

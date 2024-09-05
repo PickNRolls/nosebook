@@ -13,7 +13,7 @@ type LikePresenter interface {
 }
 
 type UserPresenter interface {
-	FindByIds(ids uuid.UUIDs) ([]*presenterdto.User, *errors.Error)
+	FindByIds(ids uuid.UUIDs) (map[uuid.UUID]*presenterdto.User, *errors.Error)
 }
 
 type Permissions interface {

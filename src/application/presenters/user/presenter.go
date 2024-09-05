@@ -21,7 +21,7 @@ func New(db *sqlx.DB) *Presenter {
 	}
 }
 
-func (this *Presenter) FindByIds(ids uuid.UUIDs) ([]*User, *errors.Error) {
+func (this *Presenter) FindByIds(ids uuid.UUIDs) (map[uuid.UUID]*User, *errors.Error) {
 	qb := querybuilder.New()
 	sql, args, _ := qb.Select(
 		"id", "first_name", "last_name", "nick", "last_activity_at",
@@ -31,30 +31,23 @@ func (this *Presenter) FindByIds(ids uuid.UUIDs) ([]*User, *errors.Error) {
 		squirrel.Eq{"id": ids},
 	).ToSql()
 
-	dest := []*dest{}
-	err := errors.From(this.db.Select(&dest, sql, args...))
+	dests := []*dest{}
+	err := errors.From(this.db.Select(&dests, sql, args...))
 	if err != nil {
 		return nil, err
 	}
 
-	output := func() []*User {
-		out := make([]*User, len(dest))
-
-		now := clock.Now()
-
-		for i, userDest := range dest {
-			out[i] = &User{
-				Id:           userDest.Id,
-				FirstName:    userDest.FirstName,
-				LastName:     userDest.LastName,
-				Nick:         userDest.Nick,
-				LastOnlineAt: userDest.LastActivityAt,
-				Online:       userDest.LastActivityAt.After(now.Add(-domainuser.ONLINE_DURATION)),
-			}
+	m := make(map[uuid.UUID]*User, len(dests))
+	now := clock.Now()
+	for _, dest := range dests {
+		m[dest.Id] = &User{
+			Id:           dest.Id,
+			FirstName:    dest.FirstName,
+			LastName:     dest.LastName,
+			Nick:         dest.Nick,
+			LastOnlineAt: dest.LastActivityAt,
+			Online:       dest.LastActivityAt.After(now.Add(-domainuser.ONLINE_DURATION)),
 		}
-
-		return out
-	}()
-
-	return output, nil
+	}
+	return m, nil
 }

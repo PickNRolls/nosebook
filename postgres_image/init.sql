@@ -422,7 +422,6 @@ VALUES
     '48683858-796c-45ad-a361-9e3d6d003354'
   ),
   -- post 1
-
   (
     'c7b7bf17-38f9-4ed5-b0a8-501a90f7c8e7',
     '1ae02f69-ea1a-4308-b825-0e5896e652e4'
@@ -488,3 +487,68 @@ VALUES
     'd0023f4d-8d7f-4907-9438-d2ed2a9661f6'
   );
 
+INSERT INTO
+  chats (id, created_at)
+VALUES
+  (
+  'ad9ae3dd-9a07-4d68-a66e-db721928e8dd',
+  TIMESTAMP '2024-08-10 10:06:02'
+  ),
+  (
+  'ad9ae3dd-9a07-4d68-a66e-db721928e8da',
+  TIMESTAMP '2024-08-10 10:06:02'
+  );
+
+INSERT INTO
+  chat_members (chat_id, user_id)
+VALUES
+  (
+  'ad9ae3dd-9a07-4d68-a66e-db721928e8dd',
+  'ed1a3fd0-4d0b-4961-b4cd-cf212357740d'
+  ),
+  (
+  'ad9ae3dd-9a07-4d68-a66e-db721928e8dd',
+  '1ae02f69-ea1a-4308-b825-0e5896e652e4'
+  ),
+  (
+  'ad9ae3dd-9a07-4d68-a66e-db721928e8da',
+  'ed1a3fd0-4d0b-4961-b4cd-cf212357740d'
+  ),
+  (
+  'ad9ae3dd-9a07-4d68-a66e-db721928e8da',
+  '48683858-796c-45ad-a361-9e3d6d003354'
+  );
+
+INSERT INTO
+  private_chats (chat_id)
+VALUES (
+  'ad9ae3dd-9a07-4d68-a66e-db721928e8dd'
+  ),
+  (
+  'ad9ae3dd-9a07-4d68-a66e-db721928e8da'
+  );
+
+INSERT INTO
+  messages (id, author_id, text, chat_id, created_at)
+VALUES
+  (
+  'e5bba43d-2888-4bb9-b5be-9c60face9330',
+  'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
+  'Hello asser sample message',
+  'ad9ae3dd-9a07-4d68-a66e-db721928e8dd', 
+  TIMESTAMP '2024-08-10 10:06:09'
+  ),
+  (
+  'e5bba43d-2888-4bb9-b5be-9c60face9331',
+  'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
+  'Hello asser sample message 2',
+  'ad9ae3dd-9a07-4d68-a66e-db721928e8dd', 
+  TIMESTAMP '2024-08-10 10:06:19'
+  ),
+  (
+  'e5bba43d-2888-4bb9-b5be-9c60face9332',
+  'ed1a3fd0-4d0b-4961-b4cd-cf212357740d',
+  'Hello marina sample message',
+  'ad9ae3dd-9a07-4d68-a66e-db721928e8da', 
+  TIMESTAMP '2024-08-10 10:06:19'
+  );
