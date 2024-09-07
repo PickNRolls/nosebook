@@ -49,7 +49,7 @@ func (this *Client) Send() chan []byte {
 
 func (this *Client) read() {
 	defer func() {
-		this.hub.Unsubscribe(this.userId)
+		this.hub.Unsubscribe(this.userId, this)
 	}()
 
 	this.conn.SetReadLimit(maxMessageSize)
@@ -68,7 +68,7 @@ func (this *Client) read() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		this.hub.Broadcast(message)
+		this.hub.Broadcast(message, nil)
 	}
 }
 

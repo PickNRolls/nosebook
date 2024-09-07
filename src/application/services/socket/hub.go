@@ -7,40 +7,75 @@ import (
 )
 
 type Hub struct {
-	clients map[uuid.UUID]*Client
+	clients map[uuid.UUID][]*Client
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		clients: map[uuid.UUID]*Client{},
+		clients: map[uuid.UUID][]*Client{},
 	}
 }
 
-func (this *Hub) UserClient(userId uuid.UUID) *Client {
+func (this *Hub) UserClients(userId uuid.UUID) []*Client {
 	return this.clients[userId]
 }
 
 func (this *Hub) Subscribe(client *Client) {
-	this.clients[client.userId] = client
-	log.Printf("Subscribe new client for user(id:%v)\n", client.userId)
-}
-
-func (this *Hub) Unsubscribe(userId uuid.UUID) {
-	if _, has := this.clients[userId]; has {
-		log.Printf("Unsubscribe client for user(id:%v)\n", userId)
-		client := this.clients[userId]
-		delete(this.clients, userId)
-		close(client.Send())
+	if _, has := this.clients[client.userId]; !has {
+		this.clients[client.userId] = []*Client{}
 	}
+	this.clients[client.userId] = append(this.clients[client.userId], client)
+
+	log.Printf("Subscribe new client for user(id:%v)\n", client.userId)
+	log.Printf("Total amount of clients for user(id:%v) = %v\n", client.userId, len(this.clients[client.userId]))
 }
 
-func (this *Hub) Broadcast(message []byte) {
-	for userId, client := range this.clients {
-		select {
-		case client.Send() <- message:
+func (this *Hub) Unsubscribe(userId uuid.UUID, client *Client) {
+	clients := this.clients[userId]
+	if clients == nil {
+		return
+	}
 
-		default:
-			this.Unsubscribe(userId)
+	index := -1
+	for i, c := range clients {
+		if c == client {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		return
+	}
+
+	log.Printf("Unsubscribe client for user(id:%v)\n", userId)
+	clients[index] = clients[len(clients)-1]
+	this.clients[userId] = clients[:len(clients)-1]
+
+	if len(this.clients[userId]) == 0 {
+		delete(this.clients, userId)
+	}
+	close(client.Send())
+
+	log.Printf("Total amount of clients for user(id:%v) = %v\n", client.userId, len(this.clients[client.userId]))
+}
+
+type BroadcastFilter struct {
+	UserId uuid.UUID
+}
+
+func (this *Hub) Broadcast(message []byte, filter *BroadcastFilter) {
+	for userId, userClients := range this.clients {
+		if filter != nil && userId != filter.UserId {
+			continue
+		}
+
+		for _, client := range userClients {
+			select {
+			case client.Send() <- message:
+
+			default:
+				this.Unsubscribe(userId, client)
+			}
 		}
 	}
 }

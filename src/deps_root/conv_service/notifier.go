@@ -11,7 +11,8 @@ import (
 )
 
 type socketNotifier struct {
-	client    *socket.Client
+	hub       *socket.Hub
+	userId    uuid.UUID
 	presenter *presentermessage.Presenter
 }
 
@@ -36,7 +37,9 @@ func (this *socketNotifier) Notify(chat *domainchat.Chat) *errors.Error {
 				return err
 			}
 
-			this.client.Send() <- json
+			this.hub.Broadcast(json, &socket.BroadcastFilter{
+				UserId: this.userId,
+			})
 		}
 	}
 

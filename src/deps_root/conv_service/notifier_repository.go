@@ -24,13 +24,13 @@ func newNotifierRepository(hub *socket.Hub, db *sqlx.DB) *notifierRepository {
 }
 
 func (this *notifierRepository) FindByUserId(id uuid.UUID) conversation.Notifier {
-	client := this.hub.UserClient(id)
-	if client == nil {
+	if this.hub.UserClients(id) == nil {
 		return nil
 	}
 
 	return &socketNotifier{
-		client:    client,
+		hub:       this.hub,
+		userId:    id,
 		presenter: this.presenter,
 	}
 }

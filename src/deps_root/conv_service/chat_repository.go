@@ -31,10 +31,10 @@ func (this *chatRepository) FindByMemberIds(leftId uuid.UUID, rightId uuid.UUID)
 		) as l join (
 			select pc.chat_id from private_chats as pc
 			join chat_members as cm on pc.chat_id = cm.chat_id
-			where user_id = ?
+			where user_id = ? and user_id != ?
 		) as r on l.chat_id = r.chat_id
 		join chats as c on l.chat_id = c.id`,
-			leftId, rightId,
+			leftId, rightId, leftId,
 		).ToSql()
 
 	dest := chatDest{}
