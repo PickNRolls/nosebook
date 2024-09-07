@@ -1,36 +1,25 @@
 package rootconvservice
 
 import (
+	presentermessage "nosebook/src/application/presenters/message"
+	presenteruser "nosebook/src/application/presenters/user"
 	"nosebook/src/application/services/conversation"
 	"nosebook/src/application/services/socket"
-	domainchat "nosebook/src/domain/chat"
 
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
-type socketNotifier struct {
-	client socket.Client
-}
-
-func (this *socketNotifier) Notify(chat *domainchat.Chat) {
-	events := chat.Events()
-
-	for _, event := range events {
-		if event.Type() == domainchat.MESSAGE_SENT {
-			messageSent := event.(*domainchat.MessageSentEvent)
-
-			this.client.Send() <- []byte(messageSent.Message.Text)
-		}
-	}
-}
-
 type notifierRepository struct {
-	hub *socket.Hub
+	hub       *socket.Hub
+	db        *sqlx.DB
+	presenter *presentermessage.Presenter
 }
 
-func newNotifierRepository(hub *socket.Hub) *notifierRepository {
+func newNotifierRepository(hub *socket.Hub, db *sqlx.DB) *notifierRepository {
 	return &notifierRepository{
-		hub: hub,
+		hub:       hub,
+		presenter: presentermessage.New(db, presenteruser.New(db)),
 	}
 }
 
@@ -41,6 +30,7 @@ func (this *notifierRepository) FindByRecipientId(id uuid.UUID) conversation.Not
 	}
 
 	return &socketNotifier{
-		client: client,
+		client:    client,
+		presenter: this.presenter,
 	}
 }

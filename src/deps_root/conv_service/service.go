@@ -10,7 +10,7 @@ import (
 func New(db *sqlx.DB, hub *socket.Hub) *conversation.Service {
 	service := conversation.New(
 		newChatRepository(db),
-		newNotifierRepository(hub),
+		newNotifierRepository(hub, db),
 		newUserRepository(db),
 	)
 

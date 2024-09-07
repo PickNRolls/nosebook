@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	reqcontext "nosebook/src/deps_root/http/req_context"
-	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -30,26 +29,25 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-type client struct {
-	mu     sync.Mutex
+type Client struct {
 	userId uuid.UUID
 	conn   *websocket.Conn
 	send   chan []byte
 	hub    *Hub
 }
 
-func NewClient(hub *Hub) *client {
-	return &client{
+func NewClient(hub *Hub) *Client {
+	return &Client{
 		send: make(chan []byte, 256),
 		hub:  hub,
 	}
 }
 
-func (this *client) Send() chan []byte {
+func (this *Client) Send() chan []byte {
 	return this.send
 }
 
-func (this *client) read() {
+func (this *Client) read() {
 	defer func() {
 		this.hub.Unsubscribe(this.userId)
 	}()
@@ -74,7 +72,7 @@ func (this *client) read() {
 	}
 }
 
-func (this *client) write() {
+func (this *Client) write() {
 	ticker := time.NewTicker(pingPeriod)
 
 	defer func() {
@@ -115,7 +113,7 @@ func (this *client) write() {
 	}
 }
 
-func (this *client) Run(ctx *gin.Context) {
+func (this *Client) Run(ctx *gin.Context) {
 	reqctx := reqcontext.From(ctx)
 	auth := reqctx.Auth()
 

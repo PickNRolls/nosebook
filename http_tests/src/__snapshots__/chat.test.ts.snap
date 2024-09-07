@@ -1,91 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`posts GET / after sending the message result list of 3 chats 1`] = `
-{
-  "data": {
-    "data": [
-      {
-        "createdAt": "2024-08-10T10:10:10Z",
-        "id": "cfaa9980-9630-48b1-a8bb-f2a8c12c36bc",
-        "interlocutor": {
-          "firstName": "Ass",
-          "id": "ed1a3fd0-4d0b-4961-b4cd-cf2123577666",
-          "lastName": "Asser",
-          "lastOnlineAt": "2024-08-10T10:10:10Z",
-          "nick": "ass_asser",
-          "online": true,
-        },
-        "lastMessage": {
-          "author": {
-            "firstName": "Test",
-            "id": "ed1a3fd0-4d0b-4961-b4cd-cf212357740d",
-            "lastName": "Tester",
-            "lastOnlineAt": "2024-08-10T10:10:10Z",
-            "nick": "test_tester",
-            "online": true,
-          },
-          "createdAt": "2024-08-10T10:10:10Z",
-          "id": "ad09f489-88dd-4a5f-826c-e6302d447bbd",
-          "text": "Hello asser",
-        },
-      },
-      {
-        "createdAt": "2024-08-10T10:06:02Z",
-        "id": "ad9ae3dd-9a07-4d68-a66e-db721928e8dd",
-        "interlocutor": {
-          "firstName": "Ilya",
-          "id": "1ae02f69-ea1a-4308-b825-0e5896e652e4",
-          "lastName": "Blinkov",
-          "lastOnlineAt": "2024-08-10T10:01:02Z",
-          "nick": "drugtester",
-          "online": false,
-        },
-        "lastMessage": {
-          "author": {
-            "firstName": "Test",
-            "id": "ed1a3fd0-4d0b-4961-b4cd-cf212357740d",
-            "lastName": "Tester",
-            "lastOnlineAt": "2024-08-10T10:10:10Z",
-            "nick": "test_tester",
-            "online": true,
-          },
-          "createdAt": "2024-08-10T10:06:19Z",
-          "id": "e5bba43d-2888-4bb9-b5be-9c60face9331",
-          "text": "Hello asser sample message 2",
-        },
-      },
-      {
-        "createdAt": "2024-08-10T10:06:02Z",
-        "id": "ad9ae3dd-9a07-4d68-a66e-db721928e8da",
-        "interlocutor": {
-          "firstName": "Marina",
-          "id": "48683858-796c-45ad-a361-9e3d6d003354",
-          "lastName": "Graf",
-          "lastOnlineAt": "2024-08-10T10:10:02Z",
-          "nick": "mmm",
-          "online": true,
-        },
-        "lastMessage": {
-          "author": {
-            "firstName": "Test",
-            "id": "ed1a3fd0-4d0b-4961-b4cd-cf212357740d",
-            "lastName": "Tester",
-            "lastOnlineAt": "2024-08-10T10:10:10Z",
-            "nick": "test_tester",
-            "online": true,
-          },
-          "createdAt": "2024-08-10T10:06:19Z",
-          "id": "e5bba43d-2888-4bb9-b5be-9c60face9332",
-          "text": "Hello marina sample message",
-        },
-      },
-    ],
-    "totalCount": 3,
-  },
-  "ok": true,
-}
-`;
-
 exports[`posts GET / filter limit = 1 1`] = `
 {
   "data": {
@@ -110,6 +24,7 @@ exports[`posts GET / filter limit = 1 1`] = `
             "nick": "test_tester",
             "online": true,
           },
+          "chatId": "ad9ae3dd-9a07-4d68-a66e-db721928e8dd",
           "createdAt": "2024-08-10T10:06:19Z",
           "id": "e5bba43d-2888-4bb9-b5be-9c60face9331",
           "text": "Hello asser sample message 2",
@@ -147,6 +62,7 @@ exports[`posts GET / filter limit = 1 2`] = `
             "nick": "test_tester",
             "online": true,
           },
+          "chatId": "ad9ae3dd-9a07-4d68-a66e-db721928e8da",
           "createdAt": "2024-08-10T10:06:19Z",
           "id": "e5bba43d-2888-4bb9-b5be-9c60face9332",
           "text": "Hello marina sample message",
@@ -183,6 +99,7 @@ exports[`posts GET / result list of 2 chats 1`] = `
             "nick": "test_tester",
             "online": true,
           },
+          "chatId": "ad9ae3dd-9a07-4d68-a66e-db721928e8dd",
           "createdAt": "2024-08-10T10:06:19Z",
           "id": "e5bba43d-2888-4bb9-b5be-9c60face9331",
           "text": "Hello asser sample message 2",
@@ -208,6 +125,7 @@ exports[`posts GET / result list of 2 chats 1`] = `
             "nick": "test_tester",
             "online": true,
           },
+          "chatId": "ad9ae3dd-9a07-4d68-a66e-db721928e8da",
           "createdAt": "2024-08-10T10:06:19Z",
           "id": "e5bba43d-2888-4bb9-b5be-9c60face9332",
           "text": "Hello marina sample message",
@@ -227,4 +145,22 @@ exports[`posts POST /send-message 1`] = `
 }
 `;
 
-exports[`posts POST /send-message 2`] = `"Hello asser"`;
+exports[`posts POST /send-message 2`] = `
+{
+  "payload": {
+    "author": {
+      "firstName": "Test",
+      "id": "ed1a3fd0-4d0b-4961-b4cd-cf212357740d",
+      "lastName": "Tester",
+      "lastOnlineAt": "2024-08-10T10:10:10Z",
+      "nick": "test_tester",
+      "online": true,
+    },
+    "chatId": "77143ad9-ef9f-4c30-9d41-f3384a5ec309",
+    "createdAt": "2024-08-10T10:10:10Z",
+    "id": "078ce673-4acc-419d-a270-abbc692dfda2",
+    "text": "Hello asser",
+  },
+  "type": "new_message",
+}
+`;

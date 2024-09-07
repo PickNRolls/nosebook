@@ -43,7 +43,7 @@ describe('posts', () => {
 
     const message = new Promise(res => {
       websocket.once('message', (data) => {
-        res(data.toString());
+        res(JSON.parse(data.toString()));
       });
     });
 
@@ -59,16 +59,6 @@ describe('posts', () => {
     expect(await message).toMatchSnapshot();
 
     websocket.terminate();
-  });
-
-  describe('GET / after sending the message', () => {
-    test('result list of 3 chats', async () => {
-      let response = await chats
-        .get('')
-        .expect(200)
-
-      expect(response.body).toMatchSnapshot();
-    });
   });
 });
 

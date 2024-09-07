@@ -4,7 +4,6 @@ import (
 	domainchat "nosebook/src/domain/chat"
 	"nosebook/src/errors"
 	querybuilder "nosebook/src/infra/query_builder"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -12,11 +11,6 @@ import (
 
 type chatRepository struct {
 	db *sqlx.DB
-}
-
-type chatDest struct {
-	Id        uuid.UUID `db:"id"`
-	CreatedAt time.Time `db:"created_at"`
 }
 
 func newChatRepository(db *sqlx.DB) *chatRepository {

@@ -12,5 +12,6 @@ type Message struct {
 	Author    *User          `json:"author"`
 	Text      string         `json:"text"`
 	ReplyTo   *nullable.UUID `json:"replyTo,omitempty"`
+	ChatId    uuid.UUID      `json:"chatId"`
 	CreatedAt time.Time      `json:"createdAt"`
 }

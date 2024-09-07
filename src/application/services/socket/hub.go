@@ -6,25 +6,21 @@ import (
 	"github.com/google/uuid"
 )
 
-type Client interface {
-	Send() chan []byte
-}
-
 type Hub struct {
-	clients map[uuid.UUID]Client
+	clients map[uuid.UUID]*Client
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		clients: map[uuid.UUID]Client{},
+		clients: map[uuid.UUID]*Client{},
 	}
 }
 
-func (this *Hub) UserClient(userId uuid.UUID) Client {
+func (this *Hub) UserClient(userId uuid.UUID) *Client {
 	return this.clients[userId]
 }
 
-func (this *Hub) Subscribe(userId uuid.UUID, client Client) {
+func (this *Hub) Subscribe(userId uuid.UUID, client *Client) {
 	this.clients[userId] = client
 	log.Printf("New hub client for user(id:%v)\n", userId)
 }

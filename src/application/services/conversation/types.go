@@ -17,7 +17,7 @@ type UserRepository interface {
 }
 
 type Notifier interface {
-	Notify(chat *domainchat.Chat)
+	Notify(chat *domainchat.Chat) *errors.Error
 }
 
 type NotifierRepository interface {

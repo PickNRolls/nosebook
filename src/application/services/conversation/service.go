@@ -70,7 +70,10 @@ func (this *Service) SendMessage(command *SendMessageCommand, auth *auth.Auth) (
 		return true, nil
 	}
 
-	notifier.Notify(chat)
+	err = notifier.Notify(chat)
+	if err != nil {
+		return false, err
+	}
 
 	return true, nil
 }
