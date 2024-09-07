@@ -125,7 +125,8 @@ func (this *Client) Run(ctx *gin.Context) {
 	}
 
 	this.conn = conn
-	this.hub.Subscribe(auth.UserId, this)
+	this.userId = auth.UserId
+	this.hub.Subscribe(this)
 
 	go this.read()
 	go this.write()

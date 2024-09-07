@@ -20,9 +20,9 @@ func (this *Hub) UserClient(userId uuid.UUID) *Client {
 	return this.clients[userId]
 }
 
-func (this *Hub) Subscribe(userId uuid.UUID, client *Client) {
-	this.clients[userId] = client
-	log.Printf("New hub client for user(id:%v)\n", userId)
+func (this *Hub) Subscribe(client *Client) {
+	this.clients[client.userId] = client
+	log.Printf("Subscribe new client for user(id:%v)\n", client.userId)
 }
 
 func (this *Hub) Unsubscribe(userId uuid.UUID) {
