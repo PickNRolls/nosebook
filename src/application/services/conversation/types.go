@@ -21,5 +21,5 @@ type Notifier interface {
 }
 
 type NotifierRepository interface {
-	FindByRecipientId(id uuid.UUID) Notifier
+	FindByUserId(id uuid.UUID) Notifier
 }

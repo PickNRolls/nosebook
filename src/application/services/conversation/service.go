@@ -65,14 +65,21 @@ func (this *Service) SendMessage(command *SendMessageCommand, auth *auth.Auth) (
 		return false, err
 	}
 
-	notifier := this.notifierRepository.FindByRecipientId(command.RecipientId)
-	if notifier == nil {
-		return true, nil
+	senderNotifier := this.notifierRepository.FindByUserId(auth.UserId)
+	recipientNotifier := this.notifierRepository.FindByUserId(command.RecipientId)
+
+	if senderNotifier != nil {
+		err = senderNotifier.Notify(chat)
+		if err != nil {
+			return false, err
+		}
 	}
 
-	err = notifier.Notify(chat)
-	if err != nil {
-		return false, err
+	if recipientNotifier != nil {
+		err = recipientNotifier.Notify(chat)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	return true, nil

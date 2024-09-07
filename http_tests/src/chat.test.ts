@@ -56,7 +56,11 @@ describe('posts', () => {
       .expect(200);
 
     expect(response.body).toMatchSnapshot();
-    expect(await message).toMatchSnapshot();
+
+    const m = await message as any
+    m.payload.id = 'test id';
+    m.payload.chatId = 'test chat id';
+    expect(m).toMatchSnapshot();
 
     websocket.terminate();
   });
