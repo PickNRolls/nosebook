@@ -18,7 +18,7 @@ type Presenter struct {
 func New(db *sqlx.DB, userPresenter presenterlike.UserPresenter) *Presenter {
 	return &Presenter{
 		db:            db,
-		likePresenter: presenterlike.New(db, userPresenter, &postResource{}),
+		likePresenter: presenterlike.New(db, userPresenter),
 	}
 }
 
@@ -26,5 +26,5 @@ func (this *Presenter) FindByPostIds(
 	ids uuid.UUIDs,
 	auth *auth.Auth,
 ) (map[uuid.UUID]*presenterdto.Likes, *errors.Error) {
-	return this.likePresenter.FindByResourceIds(ids, auth)
+	return this.likePresenter.FindByResourceIds(&postResource{}, ids, auth)
 }

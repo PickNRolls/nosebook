@@ -3,8 +3,6 @@ package domainlike
 import (
 	"fmt"
 	"nosebook/src/errors"
-
-	"github.com/google/uuid"
 )
 
 type Like struct {
@@ -28,6 +26,10 @@ func (this *Like) WithOwner(owner Owner) *Like {
 	return this
 }
 
+func (this *Like) WithResource(resource Resource) (*Like, *errors.Error) {
+	return this.setResource(resource)
+}
+
 func (this *Like) setResource(resource Resource) (*Like, *errors.Error) {
 	if this.Resource != nil {
 		return this, errors.New(
@@ -41,14 +43,6 @@ func (this *Like) setResource(resource Resource) (*Like, *errors.Error) {
 
 	this.Resource = resource
 	return this, nil
-}
-
-func (this *Like) WithPostId(id uuid.UUID) (*Like, *errors.Error) {
-	return this.setResource(NewPostResource(id))
-}
-
-func (this *Like) WithCommentId(id uuid.UUID) (*Like, *errors.Error) {
-	return this.setResource(NewCommentResource(id))
 }
 
 func (this *Like) Toggle() *errors.Error {

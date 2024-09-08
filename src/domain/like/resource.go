@@ -12,4 +12,5 @@ const (
 type Resource interface {
 	Type() ResourceType
 	Id() uuid.UUID
+	Owner() Owner
 }

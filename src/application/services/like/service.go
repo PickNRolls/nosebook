@@ -6,12 +6,14 @@ import (
 )
 
 type Service struct {
-	repository Repository
+	repository         Repository
+	notifierRepository NotifierRepository
 }
 
-func New(repository Repository) *Service {
+func New(repository Repository, notifierRepository NotifierRepository) *Service {
 	return &Service{
-		repository: repository,
+		repository:         repository,
+		notifierRepository: notifierRepository,
 	}
 }
 
@@ -29,7 +31,20 @@ func (this *Service) LikePost(c *LikePostCommand, a *auth.Auth) (*resultData, *e
 		return nil, err
 	}
 
-	this.repository.Save(like)
+	err = this.repository.Save(like)
+	if err != nil {
+		return nil, err
+	}
+
+	if like.Value {
+		notifier := this.notifierRepository.FindByUserId(like.Resource.Owner().Id())
+		if notifier != nil {
+			err = notifier.NotifyAbout(like)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 
 	return &resultData{
 		PostId: &c.Id,
@@ -51,7 +66,20 @@ func (this *Service) LikeComment(c *LikeCommentCommand, a *auth.Auth) (*resultDa
 		return nil, err
 	}
 
-	this.repository.Save(like)
+	err = this.repository.Save(like)
+	if err != nil {
+		return nil, err
+	}
+
+	if like.Value {
+		notifier := this.notifierRepository.FindByUserId(like.Resource.Owner().Id())
+		if notifier != nil {
+			err = notifier.NotifyAbout(like)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 
 	return &resultData{
 		CommentId: &c.Id,

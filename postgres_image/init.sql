@@ -232,7 +232,7 @@ VALUES
   ),
   (
     '620c79b7-3927-48b7-a308-1ffd3db6036f',
-    '1ae02f69-ea1a-4308-b825-0e5896e652e4',
+    'ed1a3fd0-4d0b-4961-b4cd-cf2123577666',
     'comment message',
     TIMESTAMP '2024-02-16 15:36:38'
   ),
@@ -390,7 +390,7 @@ VALUES
   ),
   (
     'c7b7bf17-38f9-4ed5-b0a8-501a90f7c829',
-    '48683858-796c-45ad-a361-9e3d6d003354',
+    'ed1a3fd0-4d0b-4961-b4cd-cf2123577666',
     '1ae02f69-ea1a-4308-b825-0e5896e652e4',
     'post message 3',
     TIMESTAMP '2024-02-16 14:36:53'

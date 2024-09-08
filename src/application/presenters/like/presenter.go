@@ -15,7 +15,6 @@ type Presenter struct {
 	db            *sqlx.DB
 	qb            squirrel.StatementBuilderType
 	userPresenter UserPresenter
-	resource      Resource
 }
 
 type additionalDest struct {
@@ -24,16 +23,15 @@ type additionalDest struct {
 	Liked      bool      `db:"liked"`
 }
 
-func New(db *sqlx.DB, userPresenter UserPresenter, resource Resource) *Presenter {
+func New(db *sqlx.DB, userPresenter UserPresenter) *Presenter {
 	return &Presenter{
 		db:            db,
 		qb:            querybuilder.New(),
 		userPresenter: userPresenter,
-		resource:      resource,
 	}
 }
 
-func (this *Presenter) FindByResourceIds(ids uuid.UUIDs, auth *auth.Auth) (likesMap, *errors.Error) {
+func (this *Presenter) FindByResourceIds(resource Resource, ids uuid.UUIDs, auth *auth.Auth) (likesMap, *errors.Error) {
 	userIdsMap := map[uuid.UUID]struct{}{}
 	userIds := []uuid.UUID{}
 	userMap := map[uuid.UUID]*presenterdto.User{}
@@ -41,7 +39,7 @@ func (this *Presenter) FindByResourceIds(ids uuid.UUIDs, auth *auth.Auth) (likes
 	dests := []*dest{}
 
 	err := func() *errors.Error {
-		idColumn := this.resource.IDColumn()
+		idColumn := resource.IDColumn()
 		whereEq := squirrel.Eq{}
 		whereEq[idColumn] = ids
 
@@ -54,7 +52,7 @@ func (this *Presenter) FindByResourceIds(ids uuid.UUIDs, auth *auth.Auth) (likes
 						"user_id",
 						"row_number() over(partition by "+idColumn+") as row_number",
 					).
-					From(this.resource.Table()).
+					From(resource.Table()).
 					Where(whereEq),
 				"sub",
 			).
@@ -87,8 +85,8 @@ func (this *Presenter) FindByResourceIds(ids uuid.UUIDs, auth *auth.Auth) (likes
 	}
 
 	additional, error := func() ([]*additionalDest, *errors.Error) {
-		idColumn := this.resource.IDColumn()
-		table := this.resource.Table()
+		idColumn := resource.IDColumn()
+		table := resource.Table()
 		whereEq := squirrel.Eq{}
 		whereEq[idColumn] = ids
 

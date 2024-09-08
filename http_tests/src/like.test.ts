@@ -1,4 +1,5 @@
-import request from './request';
+import request, { ASSER_SESSION } from './request';
+import { WebSocket } from "./websocket";
 
 describe('like', () => {
   let like = request.extend({
@@ -6,6 +7,14 @@ describe('like', () => {
   });
 
   test('POST /post', async () => {
+    const websocket = new WebSocket(ASSER_SESSION).unwrap();
+
+    const message = new Promise(res => {
+      websocket.once('message', (data) => {
+        res(JSON.parse(data.toString()));
+      });
+    });
+
     async function doLike() {
       return await like
         .post('/post')
@@ -17,9 +26,21 @@ describe('like', () => {
 
     expect((await doLike()).body).toMatchSnapshot();
     expect((await doLike()).body).toMatchSnapshot();
+
+    expect(await message).toMatchSnapshot();
+
+    websocket.terminate();
   });
 
   test('POST /comment', async () => {
+    const websocket = new WebSocket(ASSER_SESSION).unwrap();
+
+    const message = new Promise(res => {
+      websocket.once('message', (data) => {
+        res(JSON.parse(data.toString()));
+      });
+    });
+
     async function doLike() {
       return await like
         .post('/comment')
@@ -31,6 +52,10 @@ describe('like', () => {
 
     expect((await doLike()).body).toMatchSnapshot();
     expect((await doLike()).body).toMatchSnapshot();
+
+    expect(await message).toMatchSnapshot();
+
+    websocket.terminate();
   });
 });
 

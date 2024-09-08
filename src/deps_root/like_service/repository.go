@@ -112,14 +112,15 @@ func (this *repository) WithUserId(id uuid.UUID) like.Repository {
 func findByCommentAndUser(db *sqlx.DB, commentId uuid.UUID, userId uuid.UUID) (*domainlike.Like, *errors.Error) {
 	qb := querybuilder.New()
 
-	sql, args, _ := qb.Select("id").
+	sql, args, _ := qb.Select("id", "author_id").
 		From("comments").
 		Where("id = ?", commentId).
 		Where("removed_at IS NULL").
 		ToSql()
 
 	commentDest := struct {
-		Id uuid.UUID `db:"id"`
+		Id       uuid.UUID `db:"id"`
+		AuthorId uuid.UUID `db:"author_id"`
 	}{}
 	err := db.Get(&commentDest, sql, args...)
 	if err != nil {
@@ -139,7 +140,7 @@ func findByCommentAndUser(db *sqlx.DB, commentId uuid.UUID, userId uuid.UUID) (*
 
 	like, _ := domainlike.New().
 		WithOwner(domainlike.NewUserOwner(userId)).
-		WithCommentId(commentId)
+		WithResource(domainlike.NewCommentResource(commentId, commentDest.AuthorId))
 
 	return like.WithValue(err == nil), nil
 }
@@ -147,14 +148,15 @@ func findByCommentAndUser(db *sqlx.DB, commentId uuid.UUID, userId uuid.UUID) (*
 func findByPostAndUser(db *sqlx.DB, postId uuid.UUID, userId uuid.UUID) (*domainlike.Like, *errors.Error) {
 	qb := querybuilder.New()
 
-	sql, args, _ := qb.Select("id").
+	sql, args, _ := qb.Select("id", "author_id").
 		From("posts").
 		Where("id = ?", postId).
 		Where("removed_at IS NULL").
 		ToSql()
 
 	postDest := struct {
-		Id uuid.UUID `db:"id"`
+		Id       uuid.UUID `db:"id"`
+		AuthorId uuid.UUID `db:"author_id"`
 	}{}
 	err := db.Get(&postDest, sql, args...)
 	if err != nil {
@@ -174,7 +176,7 @@ func findByPostAndUser(db *sqlx.DB, postId uuid.UUID, userId uuid.UUID) (*domain
 
 	like, _ := domainlike.New().
 		WithOwner(domainlike.NewUserOwner(userId)).
-		WithPostId(postId)
+		WithResource(domainlike.NewPostResource(postId, postDest.AuthorId))
 
 	return like.WithValue(err == nil), nil
 }
