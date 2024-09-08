@@ -26,10 +26,12 @@ func (this *RootHTTP) addChatHandlers() {
 		if !ok {
 			return
 		}
+		interlocutorId := ctx.Query("interlocutorId")
 
 		output := presenter.FindByFilter(&presenterchat.FindByFilterInput{
-			Next:  next,
-			Limit: limit.Value,
+			InterlocutorId: interlocutorId,
+			Next:           next,
+			Limit:          limit.Value,
 		}, reqctx.Auth())
 		_, ok = handle(output, output.Err)(reqctx)
 		if !ok {

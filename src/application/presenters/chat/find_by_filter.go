@@ -12,7 +12,9 @@ import (
 )
 
 type FindByFilterInput struct {
-	Id    string
+	Id             string
+	InterlocutorId string
+
 	Next  string
 	Limit uint64
 }
@@ -50,6 +52,14 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 		}
 	}
 
+	var interlocutorId uuid.UUID
+	if input.InterlocutorId != "" {
+		interlocutorId, err = errors.Using(uuid.Parse(input.InterlocutorId))
+		if err != nil {
+			return errOut(err)
+		}
+	}
+
 	qb := querybuilder.New()
 	query := qb.Select(
 		"id",
@@ -74,6 +84,10 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 			OrderBy("m.created_at desc"),
 			"c",
 		).Where("c.row_number <= 1")
+
+	if interlocutorId != uuid.Nil {
+		query = query.Where("interlocutor_id = ?", interlocutorId)
+	}
 
 	if id != uuid.Nil {
 		query = query.Where("id = ?", id)
