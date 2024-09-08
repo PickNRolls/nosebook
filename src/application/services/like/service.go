@@ -17,10 +17,10 @@ func New(repository Repository, notifierRepository NotifierRepository) *Service 
 	}
 }
 
-func (this *Service) LikePost(c *LikePostCommand, a *auth.Auth) (*resultData, *errors.Error) {
+func (this *Service) LikePost(c *LikePostCommand, auth *auth.Auth) (*resultData, *errors.Error) {
 	like, err := this.repository.
 		WithPostId(c.Id).
-		WithUserId(a.UserId).
+		WithUserId(auth.UserId).
 		FindOne()
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func (this *Service) LikePost(c *LikePostCommand, a *auth.Auth) (*resultData, *e
 		return nil, err
 	}
 
-	if like.Value {
+	if like.Value && like.Resource.Owner().Id() != auth.UserId {
 		notifier := this.notifierRepository.FindByUserId(like.Resource.Owner().Id())
 		if notifier != nil {
 			err = notifier.NotifyAbout(like)
@@ -52,10 +52,10 @@ func (this *Service) LikePost(c *LikePostCommand, a *auth.Auth) (*resultData, *e
 	}, nil
 }
 
-func (this *Service) LikeComment(c *LikeCommentCommand, a *auth.Auth) (*resultData, *errors.Error) {
+func (this *Service) LikeComment(c *LikeCommentCommand, auth *auth.Auth) (*resultData, *errors.Error) {
 	like, err := this.repository.
 		WithCommentId(c.Id).
-		WithUserId(a.UserId).
+		WithUserId(auth.UserId).
 		FindOne()
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func (this *Service) LikeComment(c *LikeCommentCommand, a *auth.Auth) (*resultDa
 		return nil, err
 	}
 
-	if like.Value {
+	if like.Value && like.Resource.Owner().Id() != auth.UserId {
 		notifier := this.notifierRepository.FindByUserId(like.Resource.Owner().Id())
 		if notifier != nil {
 			err = notifier.NotifyAbout(like)
