@@ -1,6 +1,7 @@
 services:
   frontend:
     image: nosebook-frontend
+    stop_grace_period: 0s
     container_name: frontend
     depends_on:
       - backend
@@ -9,6 +10,7 @@ services:
 
   backend:
     container_name: backend
+    stop_grace_period: 0s
     depends_on:
       db:
         condition: service_healthy
@@ -35,6 +37,7 @@ services:
 
   db:
     image: nosebook-postgres
+    stop_grace_period: 0s
     container_name: db
     restart: always
     user: postgres
