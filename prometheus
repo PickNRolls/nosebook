@@ -1,0 +1,7 @@
+docker run --rm -d \
+  -p 9090:9090 \
+  --name prometheus \
+  --network back_default \
+  -v ./prometheus.yml:/etc/prometheus/prometheus.yml \
+  -v prometheus-data:/prometheus \
+  prom/prometheus

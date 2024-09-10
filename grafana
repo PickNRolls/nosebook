@@ -1,0 +1,8 @@
+docker container stop grafana
+docker run -d --rm \
+  -p 3000:3000 \
+  --name=grafana \
+  --network back_default \
+  --volume grafana-data:/var/lib/grafana \
+  grafana/grafana-enterprise
+

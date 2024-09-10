@@ -11,6 +11,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type RootHTTP struct {
@@ -21,8 +23,16 @@ type RootHTTP struct {
 	hub          *socket.Hub
 }
 
+var PingCounter = prometheus.NewCounter(
+	prometheus.CounterOpts{
+		Name: "ping_request_count",
+		Help: "Number of request handled by ping handler",
+	},
+)
+
 func New(db *sqlx.DB, hub *socket.Hub) *RootHTTP {
 	router := gin.New()
+
 	router.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 		if param.ErrorMessage != "" {
 			return fmt.Sprintf("[%s] \"%s %s %d \"%s\" %s %s\"\n",
@@ -46,6 +56,11 @@ func New(db *sqlx.DB, hub *socket.Hub) *RootHTTP {
 	}))
 	router.Use(gin.Recovery())
 
+	router.GET("/metrics", func(ctx *gin.Context) {
+		handler := promhttp.Handler()
+		handler.ServeHTTP(ctx.Writer, ctx.Request)
+	})
+
 	output := &RootHTTP{
 		db:     db,
 		router: router,
@@ -54,7 +69,10 @@ func New(db *sqlx.DB, hub *socket.Hub) *RootHTTP {
 
 	userAuthService := userauth.New(repos.NewUserRepository(db), repos.NewSessionRepository(db))
 
+	router.Use(middleware.NewRequestMetrics())
+
 	router.GET("/ping", func(ctx *gin.Context) {
+		PingCounter.Inc()
 		ctx.Status(200)
 		ctx.Writer.Write([]byte("pong"))
 	})
@@ -88,6 +106,8 @@ func New(db *sqlx.DB, hub *socket.Hub) *RootHTTP {
 	output.addConversationHandlers()
 	output.addChatHandlers()
 	output.addMessageHandlers()
+
+	registerMetrics()
 
 	return output
 }
