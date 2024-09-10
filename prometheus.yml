@@ -8,4 +8,7 @@ scrape_configs:
   - job_name: nosebook
     static_configs:
       - targets: ["backend:8080"]
+  - job_name: rabbitmq
+    static_configs:
+      - targets: ["rabbitmq:15692"]
 

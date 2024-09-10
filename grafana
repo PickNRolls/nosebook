@@ -1,4 +1,4 @@
-docker container stop grafana
+docker container stop grafana || true
 docker run -d --rm \
   -p 3000:3000 \
   --name=grafana \
