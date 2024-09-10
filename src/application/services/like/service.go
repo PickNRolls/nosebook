@@ -6,14 +6,14 @@ import (
 )
 
 type Service struct {
-	repository         Repository
-	notifierRepository NotifierRepository
+	repository Repository
+	notifier   Notifier
 }
 
-func New(repository Repository, notifierRepository NotifierRepository) *Service {
+func New(repository Repository, notifier Notifier) *Service {
 	return &Service{
-		repository:         repository,
-		notifierRepository: notifierRepository,
+		repository: repository,
+		notifier:   notifier,
 	}
 }
 
@@ -37,12 +37,9 @@ func (this *Service) LikePost(c *LikePostCommand, auth *auth.Auth) (*resultData,
 	}
 
 	if like.Value && like.Resource.Owner().Id() != auth.UserId {
-		notifier := this.notifierRepository.FindByUserId(like.Resource.Owner().Id())
-		if notifier != nil {
-			err = notifier.NotifyAbout(like)
-			if err != nil {
-				return nil, err
-			}
+		err = this.notifier.NotifyAbout(like.Resource.Owner().Id(), like)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -72,12 +69,9 @@ func (this *Service) LikeComment(c *LikeCommentCommand, auth *auth.Auth) (*resul
 	}
 
 	if like.Value && like.Resource.Owner().Id() != auth.UserId {
-		notifier := this.notifierRepository.FindByUserId(like.Resource.Owner().Id())
-		if notifier != nil {
-			err = notifier.NotifyAbout(like)
-			if err != nil {
-				return nil, err
-			}
+		err = this.notifier.NotifyAbout(like.Resource.Owner().Id(), like)
+		if err != nil {
+			return nil, err
 		}
 	}
 

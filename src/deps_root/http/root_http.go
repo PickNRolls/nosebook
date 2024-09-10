@@ -2,11 +2,11 @@ package roothttp
 
 import (
 	"fmt"
-	"nosebook/src/application/services/socket"
 	userauth "nosebook/src/application/services/user_auth"
 	"nosebook/src/deps_root/http/middleware"
 	reqcontext "nosebook/src/deps_root/http/req_context"
 	"nosebook/src/infra/postgres/repositories"
+	"nosebook/src/infra/rabbitmq"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -17,10 +17,10 @@ import (
 
 type RootHTTP struct {
 	db           *sqlx.DB
+	rmqCh        *rabbitmq.Channel
 	router       *gin.Engine
 	authRouter   *gin.RouterGroup
 	unauthRouter *gin.RouterGroup
-	hub          *socket.Hub
 }
 
 var PingCounter = prometheus.NewCounter(
@@ -30,7 +30,7 @@ var PingCounter = prometheus.NewCounter(
 	},
 )
 
-func New(db *sqlx.DB, hub *socket.Hub) *RootHTTP {
+func New(db *sqlx.DB, rmqCh *rabbitmq.Channel) *RootHTTP {
 	router := gin.New()
 
 	router.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
@@ -64,7 +64,7 @@ func New(db *sqlx.DB, hub *socket.Hub) *RootHTTP {
 	output := &RootHTTP{
 		db:     db,
 		router: router,
-		hub:    hub,
+		rmqCh:  rmqCh,
 	}
 
 	userAuthService := userauth.New(repos.NewUserRepository(db), repos.NewSessionRepository(db))

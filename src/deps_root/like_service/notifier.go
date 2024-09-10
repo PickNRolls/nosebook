@@ -3,23 +3,30 @@ package rootlikeservice
 import (
 	presenterdto "nosebook/src/application/presenters/dto"
 	presenteruser "nosebook/src/application/presenters/user"
-	"nosebook/src/application/services/socket"
 	domainlike "nosebook/src/domain/like"
 	"nosebook/src/errors"
 	querybuilder "nosebook/src/infra/query_builder"
+	"nosebook/src/infra/rabbitmq"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
-type socketNotifier struct {
+type notifier struct {
 	db            *sqlx.DB
-	hub           *socket.Hub
-	userId        uuid.UUID
+	rmqCh         *rabbitmq.Channel
 	userPresenter *presenteruser.Presenter
 }
 
-func (this *socketNotifier) notify(table string, eventType string, like *domainlike.Like) *errors.Error {
+func newNotifier(rmqCh *rabbitmq.Channel, db *sqlx.DB, userPresenter *presenteruser.Presenter) *notifier {
+	return &notifier{
+		db:            db,
+		userPresenter: userPresenter,
+		rmqCh:         rmqCh,
+	}
+}
+
+func (this *notifier) notify(resourceName string, eventType string, userId uuid.UUID, like *domainlike.Like) *errors.Error {
 	qb := querybuilder.New()
 	resourceId := like.Resource.Id()
 	payload := struct {
@@ -29,7 +36,7 @@ func (this *socketNotifier) notify(table string, eventType string, like *domainl
 	}{}
 
 	sql, args, _ := qb.Select("id", "message").
-		From(table).
+		From(resourceName).
 		Where("id = ?", resourceId).
 		ToSql()
 	err := errors.From(this.db.Get(&payload, sql, args...))
@@ -52,24 +59,46 @@ func (this *socketNotifier) notify(table string, eventType string, like *domainl
 		return err
 	}
 
-	this.hub.Broadcast(json, &socket.BroadcastFilter{
-		UserId: this.userId,
-	})
+	err = errors.From(this.rmqCh.ExchangeDeclare(
+		"notifications",
+		"direct",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	))
+	if err != nil {
+		return err
+	}
+
+	err = errors.From(this.rmqCh.Publish(
+		"notifications",
+		userId.String(),
+		false,
+		false,
+		rabbitmq.Publishing{
+			ContentType: "text/json",
+			Body:        json,
+		}))
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func (this *socketNotifier) NotifyAbout(like *domainlike.Like) *errors.Error {
+func (this *notifier) NotifyAbout(userId uuid.UUID, like *domainlike.Like) *errors.Error {
 	if !like.Value {
 		return nil
 	}
 
 	switch like.Resource.Type() {
 	case domainlike.POST_RESOURCE:
-		return this.notify("posts", "post_liked", like)
+		return this.notify("posts", "post_liked", userId, like)
 
 	case domainlike.COMMENT_RESOURCE:
-		return this.notify("comments", "comment_liked", like)
+		return this.notify("comments", "comment_liked", userId, like)
 	}
 
 	return nil

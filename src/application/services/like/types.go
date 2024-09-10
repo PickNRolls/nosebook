@@ -17,9 +17,5 @@ type Repository interface {
 }
 
 type Notifier interface {
-	NotifyAbout(like *domainlike.Like) *errors.Error
-}
-
-type NotifierRepository interface {
-	FindByUserId(id uuid.UUID) Notifier
+	NotifyAbout(userId uuid.UUID, like *domainlike.Like) *errors.Error
 }

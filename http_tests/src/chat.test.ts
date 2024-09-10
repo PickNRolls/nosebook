@@ -42,8 +42,11 @@ describe('posts', () => {
     const websocket = new WebSocket(ASSER_SESSION).unwrap();
 
     const message = new Promise(res => {
-      websocket.once('message', (data) => {
-        res(JSON.parse(data.toString()));
+      websocket.on('message', (data) => {
+        const message = JSON.parse(data.toString());
+        if (message.type === 'new_message') {
+          res(message);
+        }
       });
     });
 

@@ -2,15 +2,15 @@ package rootconvservice
 
 import (
 	"nosebook/src/application/services/conversation"
-	"nosebook/src/application/services/socket"
+	"nosebook/src/infra/rabbitmq"
 
 	"github.com/jmoiron/sqlx"
 )
 
-func New(db *sqlx.DB, hub *socket.Hub) *conversation.Service {
+func New(db *sqlx.DB, rmqCh *rabbitmq.Channel) *conversation.Service {
 	service := conversation.New(
 		newChatRepository(db),
-		newNotifierRepository(hub, db),
+		newNotifier(db, rmqCh),
 		newUserRepository(db),
 	)
 

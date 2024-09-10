@@ -1,12 +1,50 @@
 services:
-  frontend:
-    image: nosebook-frontend
+  db:
+    image: nosebook-postgres
     stop_grace_period: 0s
-    container_name: frontend
-    depends_on:
-      - backend
+    container_name: db
+    restart: always
+    user: postgres
+    # command: ["postgres", "-c", "log_statement=all"]
+    secrets:
+      - db-password
+    environment:
+      - POSTGRES_DB=nosebook
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
     ports:
-      - 8000:8000
+      - 5432:5432
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 2s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    stop_grace_period: 0s
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - 5672:5672
+      - 15672:15672
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 5s
+      retries: 3
+
+  notification:
+    image: nosebook-notification
+    stop_grace_period: 0s
+    container_name: notification
+    restart: always
+    ports:
+      - 8081:8081
+    expose:
+      - 8081
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
 
   backend:
     container_name: backend
@@ -14,6 +52,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      notification:
+        condition: service_started
+
     secrets:
       - db-password
     build:
@@ -35,27 +78,14 @@ services:
       timeout: 2s
       retries: 3
 
-  db:
-    image: nosebook-postgres
+  frontend:
+    image: nosebook-frontend
     stop_grace_period: 0s
-    container_name: db
-    restart: always
-    user: postgres
-    # command: ["postgres", "-c", "log_statement=all"]
-    secrets:
-      - db-password
-    environment:
-      - POSTGRES_DB=nosebook
-      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+    container_name: frontend
+    depends_on:
+      - backend
     ports:
-      - 5432:5432
-    expose:
-      - 5432
-    healthcheck:
-      test: [ "CMD", "pg_isready" ]
-      interval: 2s
-      timeout: 5s
-      retries: 5
+      - 8000:8000
 
 secrets:
   db-password:

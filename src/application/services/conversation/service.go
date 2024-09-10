@@ -10,20 +10,20 @@ import (
 )
 
 type Service struct {
-	chatRepository     ChatRepository
-	userRepository     UserRepository
-	notifierRepository NotifierRepository
+	chatRepository ChatRepository
+	userRepository UserRepository
+	notifier       Notifier
 }
 
 func New(
 	chatRepository ChatRepository,
-	notifierRepository NotifierRepository,
+	notifier Notifier,
 	userRepository UserRepository,
 ) *Service {
 	return &Service{
-		chatRepository:     chatRepository,
-		notifierRepository: notifierRepository,
-		userRepository:     userRepository,
+		chatRepository: chatRepository,
+		notifier:       notifier,
+		userRepository: userRepository,
 	}
 }
 
@@ -65,21 +65,13 @@ func (this *Service) SendMessage(command *SendMessageCommand, auth *auth.Auth) (
 		return false, err
 	}
 
-	senderNotifier := this.notifierRepository.FindByUserId(auth.UserId)
-	recipientNotifier := this.notifierRepository.FindByUserId(command.RecipientId)
-
-	if senderNotifier != nil {
-		err = senderNotifier.Notify(chat)
-		if err != nil {
-			return false, err
-		}
+	err = this.notifier.NotifyAbout(auth.UserId, chat)
+	if err != nil {
+		return false, err
 	}
-
-	if recipientNotifier != nil {
-		err = recipientNotifier.Notify(chat)
-		if err != nil {
-			return false, err
-		}
+	err = this.notifier.NotifyAbout(command.RecipientId, chat)
+	if err != nil {
+		return false, err
 	}
 
 	return true, nil
