@@ -1,3 +1,5 @@
+#!/bin/bash
+
 cd ./http_tests
 npm run start
 cd -

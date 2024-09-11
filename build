@@ -1,4 +1,7 @@
 #!/bin/bash
 
-docker build -t "nosebook-image:$(git rev-parse HEAD)" -t nosebook-image:latest . --target final
+image=nosebook-image
+revision_image=nosebook-image:$(git rev-parse HEAD)
+
+docker build -t "$revision_image" -t $image:latest . --target final
 

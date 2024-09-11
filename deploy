@@ -1,0 +1,7 @@
+#!/bin/bash
+
+image=nosebook-image:$(git rev-parse HEAD)
+
+minikube image load $image
+kubectl set image deployments/backend backend=$image
+
