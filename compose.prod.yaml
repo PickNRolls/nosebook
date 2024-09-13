@@ -17,7 +17,8 @@ services:
       - grafana:/var/lib/grafana
 
   db:
-    image: nosebook-postgres
+    build:
+      context: ./postgres_image/
     container_name: db
     user: postgres
     secrets:
@@ -50,7 +51,9 @@ services:
       retries: 3
 
   notification:
-    image: nosebook-notification
+    build:
+      context: ../nosebook_notification
+      target: final
     container_name: notification
     expose:
       - 8081
@@ -59,7 +62,9 @@ services:
         condition: service_healthy
 
   backend:
-    image: nosebook-image
+    build:
+      context: .
+      target: final
     container_name: backend
     depends_on:
       db:
@@ -83,7 +88,9 @@ services:
       retries: 3
 
   frontend:
-    image: nosebook-frontend
+    build:
+      context: ../nosebook_frontend/
+      target: prod
     container_name: frontend
     depends_on:
       - backend
