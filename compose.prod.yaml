@@ -79,6 +79,8 @@ services:
       - POSTGRES_DB=nosebook
       - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
       - APP_ENV=$APP_ENV
+    ports:
+      - 8080:8080
     expose:
       - 8080
     healthcheck:
