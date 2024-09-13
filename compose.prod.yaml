@@ -1,0 +1,101 @@
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    expose:
+      - 9090
+    volumes:
+      - prometheus:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana-enterprise
+    container_name: grafana
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana:/var/lib/grafana
+
+  db:
+    image: nosebook-postgres
+    container_name: db
+    user: postgres
+    secrets:
+      - db-password
+    environment:
+      - POSTGRES_DB=nosebook
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+    volumes:
+      - db:/data/postgres
+    expose:
+      - 5432
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 2s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    expose:
+      - 5672
+      - 15672
+      - 15692
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 5s
+      retries: 3
+
+  notification:
+    image: nosebook-notification
+    container_name: notification
+    expose:
+      - 8081
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  backend:
+    image: nosebook-image
+    container_name: backend
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      notification:
+        condition: service_started
+    secrets:
+      - db-password
+    environment:
+      - POSTGRES_DB=nosebook
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+      - APP_ENV=$APP_ENV
+    expose:
+      - 8080
+    healthcheck:
+      test: curl http://backend:8080/ping --fail
+      interval: 10s
+      timeout: 2s
+      retries: 3
+
+  frontend:
+    image: nosebook-frontend
+    container_name: frontend
+    depends_on:
+      - backend
+    ports:
+      - 8000:8000
+
+secrets:
+  db-password:
+    file: db-password.txt
+
+volumes:
+  db:
+  prometheus:
+  grafana:
+
