@@ -1,6 +1,7 @@
 package presenterpost
 
 import (
+	"context"
 	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/application/services/auth"
 	"nosebook/src/errors"
@@ -34,7 +35,7 @@ type Post struct {
 }
 
 type UserPresenter interface {
-	FindByIds(ids uuid.UUIDs) (map[uuid.UUID]*user, *errors.Error)
+	FindByIds(ctx context.Context, ids uuid.UUIDs) (map[uuid.UUID]*user, *errors.Error)
 }
 
 type CommentPresenter interface {

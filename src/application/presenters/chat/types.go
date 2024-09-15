@@ -1,6 +1,7 @@
 package presenterchat
 
 import (
+	"context"
 	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/errors"
 
@@ -13,9 +14,9 @@ type chat = presenterdto.Chat
 type conversation = presenterdto.Conversation
 
 type MessagePresenter interface {
-	FindByIds(ids uuid.UUIDs) (map[uuid.UUID]*message, *errors.Error)
+	FindByIds(ctx context.Context, ids uuid.UUIDs) (map[uuid.UUID]*message, *errors.Error)
 }
 
 type UserPresenter interface {
-	FindByIds(ids uuid.UUIDs) (map[uuid.UUID]*user, *errors.Error)
+	FindByIds(ctx context.Context, ids uuid.UUIDs) (map[uuid.UUID]*user, *errors.Error)
 }

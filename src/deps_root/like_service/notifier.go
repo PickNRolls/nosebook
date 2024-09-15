@@ -1,6 +1,7 @@
 package rootlikeservice
 
 import (
+	"context"
 	presenterdto "nosebook/src/application/presenters/dto"
 	presenteruser "nosebook/src/application/presenters/user"
 	domainlike "nosebook/src/domain/like"
@@ -44,7 +45,7 @@ func (this *notifier) notify(resourceName string, eventType string, userId uuid.
 		return err
 	}
 
-	userMap, err := this.userPresenter.FindByIds([]uuid.UUID{like.Owner.Id()})
+	userMap, err := this.userPresenter.FindByIds(context.TODO(), []uuid.UUID{like.Owner.Id()})
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package presentermessage
 
 import (
+	"context"
 	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/errors"
 	"nosebook/src/lib/nullable"
@@ -22,5 +23,5 @@ type message = presenterdto.Message
 type user = presenterdto.User
 
 type UserPresenter interface {
-	FindByIds(ids uuid.UUIDs) (map[uuid.UUID]*user, *errors.Error)
+	FindByIds(ctx context.Context, ids uuid.UUIDs) (map[uuid.UUID]*user, *errors.Error)
 }

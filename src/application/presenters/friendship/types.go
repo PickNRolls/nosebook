@@ -1,6 +1,7 @@
 package presenterfriendship
 
 import (
+	"context"
 	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/errors"
 
@@ -23,5 +24,5 @@ type Request struct {
 }
 
 type UserPresenter interface {
-	FindByIds(ids uuid.UUIDs) (map[uuid.UUID]*user, *errors.Error)
+	FindByIds(ctx context.Context, ids uuid.UUIDs) (map[uuid.UUID]*user, *errors.Error)
 }

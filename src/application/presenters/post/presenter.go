@@ -1,6 +1,7 @@
 package presenterpost
 
 import (
+	"context"
 	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/application/services/auth"
 	"nosebook/src/errors"
@@ -160,7 +161,7 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *Fin
 			userIds = append(userIds, id)
 		}
 
-		return this.userPresenter.FindByIds(userIds)
+		return this.userPresenter.FindByIds(context.TODO(), userIds)
 	}()
 
 	commentsMap := map[uuid.UUID]*presenterdto.FindOut[*presenterdto.Comment]{}

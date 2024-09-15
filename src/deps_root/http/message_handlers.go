@@ -26,7 +26,7 @@ func (this *RootHTTP) addMessageHandlers() {
 			return
 		}
 
-		output := presenter.FindByFilter(&presentermessage.FindByFilterInput{
+		output := presenter.FindByFilter(ctx.Request.Context(), &presentermessage.FindByFilterInput{
 			ChatId: chatId,
 			Next:   next,
 			Prev:   prev,

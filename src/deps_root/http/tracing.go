@@ -24,7 +24,7 @@ func initTracer() (*trace.TracerProvider, error) {
 	r, err := resource.Merge(
 		resource.Default(),
 		resource.NewWithAttributes(
-      semconv.SchemaURL,
+			semconv.SchemaURL,
 			semconv.ServiceName("nosebook"),
 		),
 	)
@@ -32,7 +32,7 @@ func initTracer() (*trace.TracerProvider, error) {
 	tp := trace.NewTracerProvider(
 		trace.WithSampler(trace.AlwaysSample()),
 		trace.WithBatcher(exporter),
-    trace.WithResource(r),
+		trace.WithResource(r),
 	)
 	otel.SetTracerProvider(tp)
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
@@ -49,4 +49,14 @@ func (this *RootHTTP) enableTracing() {
 	this.tracer = tp.Tracer("application")
 
 	this.router.Use(otelgin.Middleware("middleware"))
+}
+
+func (this *RootHTTP) HandleCallback(presenterName string) func(name string, ctx context.Context) func() {
+	return func(name string, ctx context.Context) func() {
+		_, span := this.tracer.Start(ctx, presenterName+"."+name)
+
+		return func() {
+			span.End()
+		}
+	}
 }

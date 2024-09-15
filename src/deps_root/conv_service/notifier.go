@@ -1,6 +1,7 @@
 package rootconvservice
 
 import (
+	"context"
 	presenterdto "nosebook/src/application/presenters/dto"
 	presentermessage "nosebook/src/application/presenters/message"
 	presenteruser "nosebook/src/application/presenters/user"
@@ -31,7 +32,7 @@ func (this *notifier) NotifyAbout(userId uuid.UUID, chat *domainchat.Chat) *erro
 		if event.Type() == domainchat.MESSAGE_SENT {
 			messageSent := event.(*domainchat.MessageSentEvent)
 
-			messageMap, err := this.presenter.FindByIds([]uuid.UUID{messageSent.Message.Id})
+			messageMap, err := this.presenter.FindByIds(context.TODO(), []uuid.UUID{messageSent.Message.Id})
 			if err != nil {
 				return err
 			}

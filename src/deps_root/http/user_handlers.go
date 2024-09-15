@@ -21,7 +21,7 @@ func (this *RootHTTP) addUserHandlers() {
 			return
 		}
 
-		users, ok := handle(presenter.FindByIds([]uuid.UUID{id}))(reqctx)
+		users, ok := handle(presenter.FindByIds(ctx.Request.Context(), []uuid.UUID{id}))(reqctx)
 		if !ok {
 			return
 		}

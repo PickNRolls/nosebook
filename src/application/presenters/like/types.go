@@ -1,6 +1,7 @@
 package presenterlike
 
 import (
+	"context"
 	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/errors"
 
@@ -11,7 +12,7 @@ type likesMap = map[uuid.UUID]*presenterdto.Likes
 type usersMap = map[uuid.UUID]*presenterdto.User
 
 type UserPresenter interface {
-	FindByIds(ids uuid.UUIDs) (map[uuid.UUID]*presenterdto.User, *errors.Error)
+	FindByIds(ctx context.Context, ids uuid.UUIDs) (map[uuid.UUID]*presenterdto.User, *errors.Error)
 }
 
 type Resource interface {

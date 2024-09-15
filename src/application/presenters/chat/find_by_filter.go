@@ -1,11 +1,13 @@
 package presenterchat
 
 import (
+	"context"
 	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/application/services/auth"
 	"nosebook/src/errors"
 	querybuilder "nosebook/src/infra/query_builder"
 	cursorquery "nosebook/src/lib/cursor_query"
+	"nosebook/src/lib/nullable"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,7 +21,29 @@ type FindByFilterInput struct {
 	Limit uint64
 }
 
-type FindByFilterOutput presenterdto.FindOut[chat]
+func (this *FindByFilterInput) BuildFromMap(m map[string]any) FindByFilterInput {
+	out := FindByFilterInput{}
+
+	if id, ok := m["id"].(string); ok {
+		out.Id = id
+	}
+
+	if interlocutorId, ok := m["interlocutorId"].(string); ok {
+		out.InterlocutorId = interlocutorId
+	}
+
+	if next, ok := m["next"].(string); ok {
+		out.Next = next
+	}
+
+	if limit, ok := m["limit"].(nullable.Uint64); ok && limit.Valid {
+		out.Limit = limit.Value
+	}
+
+	return out
+}
+
+type FindByFilterOutput = presenterdto.FindOut[chat]
 
 func errOut(err error) *FindByFilterOutput {
 	return &FindByFilterOutput{
@@ -42,7 +66,10 @@ func (this *order) Asc() bool {
 	return false
 }
 
-func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *FindByFilterOutput {
+func (this *Presenter) FindByFilter(ctx context.Context, input *FindByFilterInput, auth *auth.Auth) *FindByFilterOutput {
+	nextCtx, span := this.tracer.Start(ctx, "chat_presenter.find_by_filter")
+	defer span.End()
+
 	var id uuid.UUID
 	var err *errors.Error
 	if input.Id != "" {
@@ -94,12 +121,15 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 	}
 
 	dests := []*conv_dest{}
+  
+	_, span = this.tracer.Start(nextCtx, "chat_presenter.sql_query")
 	cursorQueryOut, err := cursorquery.Do(this.db, &cursorquery.Input[*conv_dest]{
 		Query: query,
 		Order: &order{},
 		Next:  input.Next,
 		Limit: input.Limit,
 	}, &dests)
+  span.End()
 	if err != nil {
 		return errOut(err)
 	}
@@ -110,7 +140,7 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 			ids[i] = dest.InterlocutorId
 		}
 
-		return this.userPresenter.FindByIds(ids)
+		return this.userPresenter.FindByIds(nextCtx, ids)
 	}()
 	if err != nil {
 		return errOut(err)
@@ -122,7 +152,7 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 			ids[i] = dest.LastMessageId
 		}
 
-		return this.messagePresenter.FindByIds(ids)
+		return this.messagePresenter.FindByIds(nextCtx, ids)
 	}()
 	if err != nil {
 		return errOut(err)

@@ -1,6 +1,7 @@
 package presenterlike
 
 import (
+	"context"
 	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/application/services/auth"
 	"nosebook/src/errors"
@@ -76,7 +77,7 @@ func (this *Presenter) FindByResourceIds(resource Resource, ids uuid.UUIDs, auth
 			resourceLikerIdsMap[like.ResourceId] = append(resourceLikerIdsMap[like.ResourceId], like.UserId)
 		}
 
-		users, error := this.userPresenter.FindByIds(userIds)
+		users, error := this.userPresenter.FindByIds(context.TODO(), userIds)
 		userMap = users
 		return error
 	}()

@@ -11,42 +11,34 @@ import (
 )
 
 func (this *RootHTTP) addChatHandlers() {
-	userPresenter := presenteruser.New(this.db)
-	messagePresenter := presentermessage.New(this.db, userPresenter)
-	presenter := presenterchat.New(this.db, userPresenter, messagePresenter)
+	userPresenter := presenteruser.New(this.db).
+		WithTracer(this.tracer)
+
+	messagePresenter := presentermessage.New(this.db, userPresenter).
+    WithTracer(this.tracer)
+  
+	presenter := presenterchat.New(this.db, userPresenter, messagePresenter).
+    WithTracer(this.tracer) 
 
 	group := this.authRouter.Group("/chats")
 
-	group.GET("", func(ctx *gin.Context) {
-		// TODO: create generic presenter handler
-		reqctx := reqcontext.From(ctx)
-
-		next := ctx.Query("next")
-		limit, ok := reqctx.QueryNullableUint64("limit")
-		if !ok {
-			return
-		}
-		interlocutorId := ctx.Query("interlocutorId")
-
-		output := presenter.FindByFilter(&presenterchat.FindByFilterInput{
-			InterlocutorId: interlocutorId,
-			Next:           next,
-			Limit:          limit.Value,
-		}, reqctx.Auth())
-		_, ok = handle(output, output.Err)(reqctx)
-		if !ok {
-			return
-		}
-
-		reqctx.SetResponseData(output)
-		reqctx.SetResponseOk(true)
-	})
+	group.GET("", execDefaultPresenter(presenter.FindByFilter, map[string]presenterOption{
+		"interlocutorId": {
+			Type: STRING,
+		},
+		"next": {
+			Type: STRING,
+		},
+		"limit": {
+			Type: UINT64,
+		},
+	}, &presenterchat.FindByFilterInput{}, this.tracer))
 
 	group.GET("/:id", func(ctx *gin.Context) {
-		// TODO: create generic presenter handler
+		// TODO: apply generic presenter handler
 		reqctx := reqcontext.From(ctx)
 
-		output := presenter.FindByFilter(&presenterchat.FindByFilterInput{
+		output := presenter.FindByFilter(ctx.Request.Context(), &presenterchat.FindByFilterInput{
 			Id:    ctx.Param("id"),
 			Limit: 1,
 		}, reqctx.Auth())

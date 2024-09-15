@@ -1,6 +1,7 @@
 package presenterfriendship
 
 import (
+	"context"
 	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/application/services/auth"
 	domainuser "nosebook/src/domain/user"
@@ -113,7 +114,7 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 			ids[i] = dest.Id
 		}
 
-		return this.userPresenter.FindByIds(ids)
+		return this.userPresenter.FindByIds(context.TODO(), ids)
 	}()
 
 	output := &FindByFilterOutput{}

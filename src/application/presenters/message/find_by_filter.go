@@ -1,6 +1,7 @@
 package presentermessage
 
 import (
+	"context"
 	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/application/services/auth"
 	"nosebook/src/errors"
@@ -45,7 +46,10 @@ func errOut(err error) *FindByFilterOut {
 	return errMsgOut(err.Error())
 }
 
-func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *FindByFilterOut {
+func (this *Presenter) FindByFilter(ctx context.Context, input *FindByFilterInput, auth *auth.Auth) *FindByFilterOut {
+  nextCtx, span := this.tracer.Start(ctx, "message_presenter.find_by_filter")
+  defer span.End()
+  
 	if input.ChatId == "" {
 		return errMsgOut("ChatId - обязательный параметр")
 	}
@@ -61,6 +65,7 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 		From("messages").
 		Where("chat_id = ?", chatId)
 
+  _, span = this.tracer.Start(nextCtx, "message_presenter.sql_query")
 	dests := []*dest{}
 	cursorQueryOut, err := cursorquery.Do(this.db, &cursorquery.Input[*dest]{
 		Query: query,
@@ -69,11 +74,12 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 		Prev:  input.Prev,
 		Limit: input.Limit,
 	}, &dests)
+  span.End()
 	if err != nil {
 		return errOut(err)
 	}
 
-	messageMap, err := this.mapDests(dests)
+	messageMap, err := this.mapDests(nextCtx, dests)
 	if err != nil {
 		return errOut(err)
 	}

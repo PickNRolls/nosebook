@@ -1,12 +1,13 @@
 package presentermessage
 
 import (
+	"context"
 	"nosebook/src/errors"
 
 	"github.com/google/uuid"
 )
 
-func (this *Presenter) mapDests(dests []*dest) (map[uuid.UUID]*message, *errors.Error) {
+func (this *Presenter) mapDests(ctx context.Context, dests []*dest) (map[uuid.UUID]*message, *errors.Error) {
 	userMap, err := func() (map[uuid.UUID]*user, *errors.Error) {
 		ids := []uuid.UUID{}
 		idMap := make(map[uuid.UUID]struct{})
@@ -18,7 +19,7 @@ func (this *Presenter) mapDests(dests []*dest) (map[uuid.UUID]*message, *errors.
 			}
 		}
 
-		return this.userPresenter.FindByIds(ids)
+		return this.userPresenter.FindByIds(ctx, ids)
 	}()
 	if err != nil {
 		return nil, err

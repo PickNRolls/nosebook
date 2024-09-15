@@ -1,6 +1,7 @@
 package presenteruser
 
 import (
+	"context"
 	domainuser "nosebook/src/domain/user"
 	"nosebook/src/errors"
 	querybuilder "nosebook/src/infra/query_builder"
@@ -9,19 +10,34 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
+type startCallback = func(name string, ctx context.Context) func ()
+
 type Presenter struct {
-	db *sqlx.DB
+	db      *sqlx.DB
+  tracer trace.Tracer
 }
 
 func New(db *sqlx.DB) *Presenter {
 	return &Presenter{
 		db: db,
+    tracer: noop.Tracer{},
 	}
 }
 
-func (this *Presenter) FindByIds(ids uuid.UUIDs) (map[uuid.UUID]*User, *errors.Error) {
+func (this *Presenter) WithTracer(tracer trace.Tracer) *Presenter {
+  this.tracer = tracer
+
+  return this
+}
+
+func (this *Presenter) FindByIds(ctx context.Context, ids uuid.UUIDs) (map[uuid.UUID]*User, *errors.Error) {
+  nextCtx, span := this.tracer.Start(ctx, "user_presenter.find_by_filter")
+  defer span.End()
+
 	qb := querybuilder.New()
 	sql, args, _ := qb.Select(
 		"id", "first_name", "last_name", "nick", "last_activity_at",
@@ -32,7 +48,9 @@ func (this *Presenter) FindByIds(ids uuid.UUIDs) (map[uuid.UUID]*User, *errors.E
 	).ToSql()
 
 	dests := []*dest{}
+  nextCtx, span = this.tracer.Start(nextCtx, "user_presenter.sql_query")
 	err := errors.From(this.db.Select(&dests, sql, args...))
+  span.End()
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package presentercomment
 
 import (
+	"context"
 	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/application/services/auth"
 	"nosebook/src/errors"
@@ -118,7 +119,7 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 			ids = append(ids, destComment.AuthorId)
 		}
 
-		return this.userPresenter.FindByIds(ids)
+		return this.userPresenter.FindByIds(context.TODO(), ids)
 	}()
 	if err != nil {
 		errOut(err)
