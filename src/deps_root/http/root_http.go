@@ -5,7 +5,7 @@ import (
 	userauth "nosebook/src/application/services/user_auth"
 	"nosebook/src/deps_root/http/middleware"
 	reqcontext "nosebook/src/deps_root/http/req_context"
-	"nosebook/src/infra/postgres/repositories"
+	repos "nosebook/src/infra/postgres/repositories"
 	"nosebook/src/infra/rabbitmq"
 	"time"
 
@@ -13,6 +13,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/otel/sdk/trace"
+	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
 type RootHTTP struct {
@@ -21,6 +23,8 @@ type RootHTTP struct {
 	router       *gin.Engine
 	authRouter   *gin.RouterGroup
 	unauthRouter *gin.RouterGroup
+  traceProvider *trace.TracerProvider
+  tracer oteltrace.Tracer
 }
 
 var PingCounter = prometheus.NewCounter(
@@ -68,7 +72,7 @@ func New(db *sqlx.DB, rmqCh *rabbitmq.Channel) *RootHTTP {
 	}
 
 	userAuthService := userauth.New(repos.NewUserRepository(db), repos.NewSessionRepository(db))
-
+  
 	router.Use(middleware.NewRequestMetrics())
 
 	router.GET("/ping", func(ctx *gin.Context) {
@@ -76,10 +80,12 @@ func New(db *sqlx.DB, rmqCh *rabbitmq.Channel) *RootHTTP {
 		ctx.Status(200)
 		ctx.Writer.Write([]byte("pong"))
 	})
+  
+  output.enableTracing()
 
 	router.Use(middleware.NewPresenter())
 	router.NoRoute(middleware.NewNoRouteHandler())
-	router.Use(middleware.NewSession(userAuthService))
+	router.Use(middleware.NewSession(userAuthService, output.tracer))
 
 	output.unauthRouter = router.Group("/", middleware.NewNotAuth())
 	unauthRouter := output.unauthRouter
@@ -113,5 +119,7 @@ func New(db *sqlx.DB, rmqCh *rabbitmq.Channel) *RootHTTP {
 }
 
 func (this *RootHTTP) Run(port string) error {
-	return this.router.Run(port)
+  err := this.router.Run(port)
+  defer this.shutdown()
+  return err
 }

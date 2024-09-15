@@ -6,12 +6,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/trace"
 )
 
-func NewSession(service *userauth.Service) func(ctx *gin.Context) {
+func NewSession(service *userauth.Service, tracer trace.Tracer) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		defer ctx.Next()
 
+    _, span := tracer.Start(ctx.Request.Context(), "session_middleware")
+    defer span.End()
+    
 		sessionHeader := ctx.GetHeader("X-Auth-Session-Id")
 		if sessionHeader == "" {
 			return
