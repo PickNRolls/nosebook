@@ -22,7 +22,7 @@ func (this *RootHTTP) addCommentHandlers() {
 	group.GET("", func(ctx *gin.Context) {
 		reqctx := reqcontext.From(ctx)
 
-		output := presenter.FindByFilter(&presentercomment.FindByFilterInput{
+		output := presenter.FindByFilter(ctx.Request.Context(), &presentercomment.FindByFilterInput{
 			PostId: ctx.Query("postId"),
 			Next:   ctx.Query("next"),
 			Prev:   ctx.Query("prev"),
@@ -42,7 +42,7 @@ func (this *RootHTTP) addCommentHandlers() {
 		reqctx := reqcontext.From(ctx)
 		id := ctx.Param("id")
 
-		reqctx.SetResponseData(presenter.FindById(id, reqctx.Auth()))
+		reqctx.SetResponseData(presenter.FindById(ctx.Request.Context(), id, reqctx.Auth()))
 		reqctx.SetResponseOk(true)
 	})
 }

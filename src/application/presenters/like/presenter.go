@@ -10,12 +10,15 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 type Presenter struct {
 	db            *sqlx.DB
 	qb            squirrel.StatementBuilderType
 	userPresenter UserPresenter
+	tracer        trace.Tracer
 }
 
 type additionalDest struct {
@@ -29,10 +32,20 @@ func New(db *sqlx.DB, userPresenter UserPresenter) *Presenter {
 		db:            db,
 		qb:            querybuilder.New(),
 		userPresenter: userPresenter,
+		tracer:        noop.Tracer{},
 	}
 }
 
-func (this *Presenter) FindByResourceIds(resource Resource, ids uuid.UUIDs, auth *auth.Auth) (likesMap, *errors.Error) {
+func (this *Presenter) WithTracer(tracer trace.Tracer) *Presenter {
+	this.tracer = tracer
+
+	return this
+}
+
+func (this *Presenter) FindByResourceIds(parent context.Context, resource Resource, ids uuid.UUIDs, auth *auth.Auth) (likesMap, *errors.Error) {
+  ctx, span := this.tracer.Start(parent, "like_presenter.find_by_resource_ids")
+  defer span.End()
+
 	userIdsMap := map[uuid.UUID]struct{}{}
 	userIds := []uuid.UUID{}
 	userMap := map[uuid.UUID]*presenterdto.User{}
@@ -77,7 +90,7 @@ func (this *Presenter) FindByResourceIds(resource Resource, ids uuid.UUIDs, auth
 			resourceLikerIdsMap[like.ResourceId] = append(resourceLikerIdsMap[like.ResourceId], like.UserId)
 		}
 
-		users, error := this.userPresenter.FindByIds(context.TODO(), userIds)
+		users, error := this.userPresenter.FindByIds(ctx, userIds)
 		userMap = users
 		return error
 	}()

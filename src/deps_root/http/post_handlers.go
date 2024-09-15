@@ -12,7 +12,7 @@ import (
 
 func (this *RootHTTP) addPostHandlers() {
 	service := rootpostservice.New(this.db)
-	presenter := rootpostpresenter.New(this.db)
+	presenter := rootpostpresenter.New(this.db, this.tracer)
 
 	group := this.authRouter.Group("/posts")
 	group.POST("/publish", execResultHandler(&posting.PublishPostCommand{}, service.Publish))
@@ -24,7 +24,7 @@ func (this *RootHTTP) addPostHandlers() {
 		cursor := ctx.Query("cursor")
 		reqctx := reqcontext.From(ctx)
 
-		output := presenter.FindByFilter(&presenterpost.FindByFilterInput{
+		output := presenter.FindByFilter(ctx.Request.Context(), &presenterpost.FindByFilterInput{
 			AuthorId: authorId,
 			OwnerId:  ownerId,
 			Cursor:   cursor,
@@ -42,7 +42,7 @@ func (this *RootHTTP) addPostHandlers() {
 		reqctx := reqcontext.From(ctx)
 		id := ctx.Param("id")
 
-		reqctx.SetResponseData(presenter.FindById(id, reqctx.Auth()))
+		reqctx.SetResponseData(presenter.FindById(ctx.Request.Context(), id, reqctx.Auth()))
 		reqctx.SetResponseOk(true)
 	})
 }

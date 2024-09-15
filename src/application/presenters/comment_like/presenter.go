@@ -1,6 +1,7 @@
 package presentercommentlike
 
 import (
+	"context"
 	presenterdto "nosebook/src/application/presenters/dto"
 	presenterlike "nosebook/src/application/presenters/like"
 	"nosebook/src/application/services/auth"
@@ -23,8 +24,9 @@ func New(db *sqlx.DB, userPresenter presenterlike.UserPresenter) *Presenter {
 }
 
 func (this *Presenter) FindByCommentIds(
+  parent context.Context,
 	ids uuid.UUIDs,
 	auth *auth.Auth,
 ) (map[uuid.UUID]*presenterdto.Likes, *errors.Error) {
-	return this.likePresenter.FindByResourceIds(&commentResource{}, ids, auth)
+	return this.likePresenter.FindByResourceIds(parent, &commentResource{}, ids, auth)
 }

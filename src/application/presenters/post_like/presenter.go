@@ -8,6 +8,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/net/context"
 )
 
 type Presenter struct {
@@ -22,9 +24,16 @@ func New(db *sqlx.DB, userPresenter presenterlike.UserPresenter) *Presenter {
 	}
 }
 
+func (this *Presenter) WithTracer(tracer trace.Tracer) *Presenter {
+  this.likePresenter.WithTracer(tracer)
+
+  return this
+}
+
 func (this *Presenter) FindByPostIds(
+  parent context.Context,
 	ids uuid.UUIDs,
 	auth *auth.Auth,
 ) (map[uuid.UUID]*presenterdto.Likes, *errors.Error) {
-	return this.likePresenter.FindByResourceIds(&postResource{}, ids, auth)
+	return this.likePresenter.FindByResourceIds(parent, &postResource{}, ids, auth)
 }

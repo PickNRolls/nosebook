@@ -39,11 +39,11 @@ type UserPresenter interface {
 }
 
 type CommentPresenter interface {
-	FindByPostId(id uuid.UUID, auth *auth.Auth) *comments
+	FindByPostId(ctx context.Context, id uuid.UUID, auth *auth.Auth) *comments
 }
 
 type LikePresenter interface {
-	FindByPostIds(ids uuid.UUIDs, auth *auth.Auth) (map[uuid.UUID]*likes, *errors.Error)
+	FindByPostIds(ctx context.Context, ids uuid.UUIDs, auth *auth.Auth) (map[uuid.UUID]*likes, *errors.Error)
 }
 
 type Permissions interface {

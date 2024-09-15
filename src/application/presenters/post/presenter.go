@@ -11,6 +11,8 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 type Presenter struct {
@@ -19,6 +21,7 @@ type Presenter struct {
 	commentPresenter CommentPresenter
 	likePresenter    LikePresenter
 	permissions      Permissions
+	tracer           trace.Tracer
 }
 
 func New(
@@ -34,7 +37,14 @@ func New(
 		commentPresenter: commentPresenter,
 		likePresenter:    likePresenter,
 		permissions:      permissions,
+		tracer:           noop.Tracer{},
 	}
+}
+
+func (this *Presenter) WithTracer(tracer trace.Tracer) *Presenter {
+	this.tracer = tracer
+
+	return this
 }
 
 func outErr(err error) *FindByFilterOutput {
@@ -53,7 +63,10 @@ func outZero() *FindByFilterOutput {
 	}
 }
 
-func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *FindByFilterOutput {
+func (this *Presenter) FindByFilter(parent context.Context, input *FindByFilterInput, a *auth.Auth) *FindByFilterOutput {
+	ctx, span := this.tracer.Start(parent, "post_presenter.find_by_filter")
+	defer span.End()
+
 	dests, cursorQueryOut, err := func() ([]*Dest, *cursorquery.Output, *errors.Error) {
 		out := []*Dest{}
 
@@ -118,12 +131,14 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *Fin
 			)
 		}
 
+		_, span := this.tracer.Start(ctx, "post_presenter.sql_query")
 		cursorQueryOut, err := cursorquery.Do(this.db, &cursorquery.Input[*Dest]{
 			Query: query,
 			Next:  input.Cursor,
 			Limit: 10,
 			Order: &order{},
 		}, &out)
+		span.End()
 		if err != nil {
 			return nil, nil, errorFrom(err)
 		}
@@ -161,15 +176,15 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *Fin
 			userIds = append(userIds, id)
 		}
 
-		return this.userPresenter.FindByIds(context.TODO(), userIds)
+		return this.userPresenter.FindByIds(ctx, userIds)
 	}()
 
 	commentsMap := map[uuid.UUID]*presenterdto.FindOut[*presenterdto.Comment]{}
 	for _, id := range postIds {
-		commentsMap[id] = this.commentPresenter.FindByPostId(id, a)
+		commentsMap[id] = this.commentPresenter.FindByPostId(ctx, id, a)
 	}
 
-	postLikesMap, err := this.likePresenter.FindByPostIds(postIds, a)
+	postLikesMap, err := this.likePresenter.FindByPostIds(ctx, postIds, a)
 
 	posts := func() []*Post {
 		out := make([]*Post, 0, len(dests))
@@ -204,8 +219,8 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, a *auth.Auth) *Fin
 	}
 }
 
-func (this *Presenter) FindById(id string, a *auth.Auth) *Post {
-	out := this.FindByFilter(&FindByFilterInput{
+func (this *Presenter) FindById(parent context.Context, id string, a *auth.Auth) *Post {
+	out := this.FindByFilter(parent, &FindByFilterInput{
 		Ids: []string{id},
 	}, a)
 

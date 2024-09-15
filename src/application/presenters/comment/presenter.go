@@ -11,6 +11,8 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 type Presenter struct {
@@ -18,6 +20,7 @@ type Presenter struct {
 	likePresenter LikePresenter
 	userPresenter UserPresenter
 	permissions   Permissions
+	tracer        trace.Tracer
 }
 
 func New(db *sqlx.DB, likePresenter LikePresenter, userPresenter UserPresenter, permissions Permissions) *Presenter {
@@ -26,7 +29,14 @@ func New(db *sqlx.DB, likePresenter LikePresenter, userPresenter UserPresenter, 
 		likePresenter: likePresenter,
 		userPresenter: userPresenter,
 		permissions:   permissions,
+		tracer:        noop.Tracer{},
 	}
+}
+
+func (this *Presenter) WithTracer(tracer trace.Tracer) *Presenter {
+	this.tracer = tracer
+
+	return this
 }
 
 func errOut(err error) *FindByFilterOutput {
@@ -39,8 +49,8 @@ func errMsgOut(message string) *FindByFilterOutput {
 	}
 }
 
-func (this *Presenter) FindById(id string, auth *auth.Auth) *comment {
-	out := this.FindByFilter(&FindByFilterInput{
+func (this *Presenter) FindById(parent context.Context, id string, auth *auth.Auth) *comment {
+	out := this.FindByFilter(parent, &FindByFilterInput{
 		Ids: []string{id},
 	}, auth)
 
@@ -51,7 +61,10 @@ func (this *Presenter) FindById(id string, auth *auth.Auth) *comment {
 	return nil
 }
 
-func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *FindByFilterOutput {
+func (this *Presenter) FindByFilter(parent context.Context, input *FindByFilterInput, auth *auth.Auth) *FindByFilterOutput {
+	ctx, span := this.tracer.Start(parent, "comment_presenter.find_by_filter")
+	defer span.End()
+
 	var postId uuid.UUID
 	if input.PostId != "" {
 		var err error
@@ -90,6 +103,7 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 	}
 
 	dest := []*Dest{}
+	_, span = this.tracer.Start(ctx, "comment_presenter.sql_query")
 	cursorQueryOut, error := cursorquery.Do(this.db, &cursorquery.Input[*Dest]{
 		Query: query,
 		Next:  input.Next,
@@ -98,11 +112,12 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 		Order: &order{},
 		Limit: input.Limit,
 	}, &dest)
+	span.End()
 	if error != nil {
 		return errOut(error)
 	}
 
-	likesMap, err := this.likePresenter.FindByCommentIds(func() uuid.UUIDs {
+	likesMap, err := this.likePresenter.FindByCommentIds(ctx, func() uuid.UUIDs {
 		ids := make(uuid.UUIDs, len(dest))
 		for i, destComment := range dest {
 			ids[i] = destComment.Id
@@ -119,7 +134,7 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 			ids = append(ids, destComment.AuthorId)
 		}
 
-		return this.userPresenter.FindByIds(context.TODO(), ids)
+		return this.userPresenter.FindByIds(ctx, ids)
 	}()
 	if err != nil {
 		errOut(err)
@@ -149,8 +164,8 @@ func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *
 	return output
 }
 
-func (this *Presenter) FindByPostId(id uuid.UUID, auth *auth.Auth) *FindByFilterOutput {
-	return this.FindByFilter(&FindByFilterInput{
+func (this *Presenter) FindByPostId(parent context.Context, id uuid.UUID, auth *auth.Auth) *FindByFilterOutput {
+	return this.FindByFilter(parent, &FindByFilterInput{
 		PostId: id.String(),
 		Limit:  5,
 	}, auth)

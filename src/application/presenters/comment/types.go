@@ -10,11 +10,11 @@ import (
 )
 
 type LikePresenter interface {
-	FindByCommentIds(ids uuid.UUIDs, auth *auth.Auth) (map[uuid.UUID]*likes, *errors.Error)
+	FindByCommentIds(parent context.Context, ids uuid.UUIDs, auth *auth.Auth) (map[uuid.UUID]*likes, *errors.Error)
 }
 
 type UserPresenter interface {
-	FindByIds(ctx context.Context, ids uuid.UUIDs) (map[uuid.UUID]*presenterdto.User, *errors.Error)
+	FindByIds(parent context.Context, ids uuid.UUIDs) (map[uuid.UUID]*presenterdto.User, *errors.Error)
 }
 
 type Permissions interface {
