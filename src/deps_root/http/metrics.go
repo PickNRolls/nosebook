@@ -7,7 +7,6 @@ import (
 )
 
 func registerMetrics() {
-	prometheus.MustRegister(PingCounter)
 	prometheus.MustRegister(middleware.TotalRequestsCounter)
 	prometheus.MustRegister(middleware.InProgressRequestsGauge)
 	prometheus.MustRegister(middleware.ResponseElapsedHist)

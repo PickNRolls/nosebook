@@ -11,7 +11,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel/sdk/trace"
 	oteltrace "go.opentelemetry.io/otel/trace"
@@ -26,13 +25,6 @@ type RootHTTP struct {
   traceProvider *trace.TracerProvider
   tracer oteltrace.Tracer
 }
-
-var PingCounter = prometheus.NewCounter(
-	prometheus.CounterOpts{
-		Name: "ping_request_count",
-		Help: "Number of request handled by ping handler",
-	},
-)
 
 func New(db *sqlx.DB, rmqCh *rabbitmq.Channel) *RootHTTP {
 	router := gin.New()
@@ -76,7 +68,6 @@ func New(db *sqlx.DB, rmqCh *rabbitmq.Channel) *RootHTTP {
 	router.Use(middleware.NewRequestMetrics())
 
 	router.GET("/ping", func(ctx *gin.Context) {
-		PingCounter.Inc()
 		ctx.Status(200)
 		ctx.Writer.Write([]byte("pong"))
 	})
