@@ -1,15 +1,14 @@
 package clock
 
 import (
-	"os"
+	"nosebook/src/lib/config"
 	"time"
 )
 
 var testingMockedTime = time.Date(2024, 8, 10, 10, 10, 10, 10, time.UTC)
 
 func Now() time.Time {
-	appEnv := os.Getenv("APP_ENV")
-	if appEnv == "testing" {
+	if config.Config.Env.IsTesting() {
 		return testingMockedTime
 	}
 

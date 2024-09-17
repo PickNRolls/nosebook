@@ -4,10 +4,12 @@ import (
 	"context"
 	"log"
 	"nosebook/src/errors"
+	"nosebook/src/lib/config"
 
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	stdout "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -16,9 +18,20 @@ import (
 
 func initTracer() (*trace.TracerProvider, error) {
 	ctx := context.TODO()
-	exporter, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL("http://jaeger:4318"))
+	var exporter trace.SpanExporter
+	exporter, err := stdout.New(stdout.WithPrettyPrint())
 	if err != nil {
 		return nil, err
+	}
+
+  log.Println("CONFIG APP ENV")
+  log.Println(config.Config.Env.IsDevelopment())
+
+	if config.Config.Env.IsDevelopment() {
+		exporter, err = otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL("http://jaeger:4318"))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	r, err := resource.Merge(

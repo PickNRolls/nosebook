@@ -78,7 +78,7 @@ services:
     environment:
       - POSTGRES_DB=nosebook
       - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
-      - APP_ENV=$APP_ENV
+      - APP_ENV=prod
     ports:
       - 8080:8080
     expose:
