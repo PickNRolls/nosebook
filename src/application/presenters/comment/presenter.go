@@ -50,7 +50,7 @@ func errMsgOut(message string) *FindByFilterOutput {
 }
 
 func (this *Presenter) FindById(parent context.Context, id string, auth *auth.Auth) *comment {
-	out := this.FindByFilter(parent, &FindByFilterInput{
+	out := this.FindByFilter(parent, FindByFilterInput{
 		Ids: []string{id},
 	}, auth)
 
@@ -61,7 +61,7 @@ func (this *Presenter) FindById(parent context.Context, id string, auth *auth.Au
 	return nil
 }
 
-func (this *Presenter) FindByFilter(parent context.Context, input *FindByFilterInput, auth *auth.Auth) *FindByFilterOutput {
+func (this *Presenter) FindByFilter(parent context.Context, input FindByFilterInput, auth *auth.Auth) *FindByFilterOutput {
 	ctx, span := this.tracer.Start(parent, "comment_presenter.find_by_filter")
 	defer span.End()
 
@@ -165,7 +165,7 @@ func (this *Presenter) FindByFilter(parent context.Context, input *FindByFilterI
 }
 
 func (this *Presenter) FindByPostId(parent context.Context, id uuid.UUID, auth *auth.Auth) *FindByFilterOutput {
-	return this.FindByFilter(parent, &FindByFilterInput{
+	return this.FindByFilter(parent, FindByFilterInput{
 		PostId: id.String(),
 		Limit:  5,
 	}, auth)

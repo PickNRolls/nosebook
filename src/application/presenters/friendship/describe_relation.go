@@ -20,7 +20,7 @@ type DescribeRelationOutput struct {
 	PendingRequesterIds []uuid.UUID `json:"pendingRequesterIds,omitempty"`
 }
 
-func (this *Presenter) DescribeRelation(input *DescribeRelationInput, auth *auth.Auth) (*DescribeRelationOutput, *errors.Error) {
+func (this *Presenter) DescribeRelation(input DescribeRelationInput, auth *auth.Auth) (*DescribeRelationOutput, *errors.Error) {
 	if len(input.TargetUserIds) > 20 {
 		return nil, newError("TargetUserIds не может быть больше 20")
 	}

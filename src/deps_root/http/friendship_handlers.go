@@ -2,7 +2,6 @@ package roothttp
 
 import (
 	presenterfriendship "nosebook/src/application/presenters/friendship"
-	"nosebook/src/application/services/friendship"
 	rootfriendshippresenter "nosebook/src/deps_root/friendship_presenter"
 	rootfriendshipservice "nosebook/src/deps_root/friendship_service"
 	reqcontext "nosebook/src/deps_root/http/req_context"
@@ -15,10 +14,10 @@ func (this *RootHTTP) addFriendshipHandlers() {
 	presenter := rootfriendshippresenter.New(this.db)
 
 	group := this.authRouter.Group("/friendship")
-	group.POST("/send-request", execDefaultHandler(&friendship.SendRequestCommand{}, service.SendRequest))
-	group.POST("/accept-request", execDefaultHandler(&friendship.AcceptRequestCommand{}, service.AcceptRequest))
-	group.POST("/deny-request", execDefaultHandler(&friendship.DenyRequestCommand{}, service.DenyRequest))
-	group.POST("/remove-friend", execDefaultHandler(&friendship.RemoveFriendCommand{}, service.RemoveFriend))
+	group.POST("/send-request", execDefaultHandler(service.SendRequest))
+	group.POST("/accept-request", execDefaultHandler(service.AcceptRequest))
+	group.POST("/deny-request", execDefaultHandler(service.DenyRequest))
+	group.POST("/remove-friend", execDefaultHandler(service.RemoveFriend))
 
 	group.GET("", func(ctx *gin.Context) {
 		reqctx := reqcontext.From(ctx)
@@ -34,7 +33,7 @@ func (this *RootHTTP) addFriendshipHandlers() {
 		_, onlyOutcoming := ctx.GetQuery("onlyOutcoming")
 		_, onlyOnline := ctx.GetQuery("onlyOnline")
 
-		output := presenter.FindByFilter(&presenterfriendship.FindByFilterInput{
+		output := presenter.FindByFilter(presenterfriendship.FindByFilterInput{
 			UserId:   userId,
 			Accepted: accepted,
 			Viewed:   viewed,
@@ -61,7 +60,7 @@ func (this *RootHTTP) addFriendshipHandlers() {
 		sourceUserId := ctx.Query("sourceUserId")
 		targetUserIds := ctx.QueryArray("targetUserIds")
 
-		out, ok := handle(presenter.DescribeRelation(&presenterfriendship.DescribeRelationInput{
+		out, ok := handle(presenter.DescribeRelation(presenterfriendship.DescribeRelationInput{
 			SourceUserId:  sourceUserId,
 			TargetUserIds: targetUserIds,
 		}, reqctx.Auth()))(reqctx)

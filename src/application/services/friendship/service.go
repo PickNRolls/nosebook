@@ -17,7 +17,7 @@ func New(repository Repository) *Service {
 	}
 }
 
-func (this *Service) SendRequest(c *SendRequestCommand, a *auth.Auth) (*domainfriendship.FriendRequest, *errors.Error) {
+func (this *Service) SendRequest(c SendRequestCommand, a *auth.Auth) (*domainfriendship.FriendRequest, *errors.Error) {
 	friendRequest := this.repository.
 		RequesterId(a.UserId).
 		ResponderId(c.ResponderId).
@@ -51,7 +51,7 @@ func (this *Service) SendRequest(c *SendRequestCommand, a *auth.Auth) (*domainfr
 }
 
 func (this *Service) AcceptRequest(
-	c *AcceptRequestCommand, a *auth.Auth,
+	c AcceptRequestCommand, a *auth.Auth,
 ) (*domainfriendship.FriendRequest, *errors.Error) {
 	friendRequest := this.repository.
 		RequesterId(c.RequesterId).
@@ -76,7 +76,7 @@ func (this *Service) AcceptRequest(
 	return friendRequest, nil
 }
 
-func (this *Service) DenyRequest(c *DenyRequestCommand, a *auth.Auth) (*domainfriendship.FriendRequest, *errors.Error) {
+func (this *Service) DenyRequest(c DenyRequestCommand, a *auth.Auth) (*domainfriendship.FriendRequest, *errors.Error) {
 	friendRequest := this.repository.
 		RequesterId(c.RequesterId).
 		ResponderId(a.UserId).
@@ -100,7 +100,7 @@ func (this *Service) DenyRequest(c *DenyRequestCommand, a *auth.Auth) (*domainfr
 	return friendRequest, nil
 }
 
-func (this *Service) RemoveFriend(c *RemoveFriendCommand, a *auth.Auth) (*domainfriendship.FriendRequest, *errors.Error) {
+func (this *Service) RemoveFriend(c RemoveFriendCommand, a *auth.Auth) (*domainfriendship.FriendRequest, *errors.Error) {
 	request := this.repository.
 		RequesterId(c.FriendId).
 		ResponderId(a.UserId).

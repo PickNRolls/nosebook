@@ -24,9 +24,6 @@ func initTracer() (*trace.TracerProvider, error) {
 		return nil, err
 	}
 
-  log.Println("CONFIG APP ENV")
-  log.Println(config.Config.Env.IsDevelopment())
-
 	if config.Config.Env.IsDevelopment() {
 		exporter, err = otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL("http://jaeger:4318"))
 		if err != nil {

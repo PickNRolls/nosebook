@@ -21,7 +21,7 @@ func New(repository Repository, postRepository PostRepository) *Service {
 	}
 }
 
-func (this *Service) PublishOnPost(c *PublishPostCommentCommand, a *auth.Auth) *commandresult.Result {
+func (this *Service) PublishOnPost(c PublishPostCommentCommand, a *auth.Auth) *commandresult.Result {
 	if post := this.postRepository.FindById(c.Id); post == nil {
 		return commandresult.Fail(NewPostNotFoundError())
 	}
@@ -43,7 +43,7 @@ func (this *Service) PublishOnPost(c *PublishPostCommentCommand, a *auth.Auth) *
 	return commandresult.Ok().WithId(comment.Id)
 }
 
-func (this *Service) Remove(c *RemoveCommentCommand, a *auth.Auth) *commandresult.Result {
+func (this *Service) Remove(c RemoveCommentCommand, a *auth.Auth) *commandresult.Result {
 	comment := this.repository.FindById(c.Id, true)
 	if comment == nil {
 		return commandresult.Fail(NewError("Такого комментария не существует"))

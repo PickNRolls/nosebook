@@ -4,7 +4,6 @@ import (
 	"fmt"
 	userauth "nosebook/src/application/services/user_auth"
 	"nosebook/src/deps_root/http/middleware"
-	reqcontext "nosebook/src/deps_root/http/req_context"
 	repos "nosebook/src/infra/postgres/repositories"
 	"nosebook/src/infra/rabbitmq"
 	"time"
@@ -79,21 +78,9 @@ func New(db *sqlx.DB, rmqCh *rabbitmq.Channel) *RootHTTP {
 	router.Use(middleware.NewSession(userAuthService, output.tracer))
 
 	output.unauthRouter = router.Group("/", middleware.NewNotAuth())
-	unauthRouter := output.unauthRouter
 	output.authRouter = router.Group("/", middleware.NewAuth())
-	authRouter := output.authRouter
 
-	unauthRouter.POST("/register", execResultHandler(&userauth.RegisterUserCommand{}, userAuthService.RegisterUser))
-	unauthRouter.POST("/login", execResultHandler(&userauth.LoginCommand{}, userAuthService.Login))
-
-	authRouter.POST("/logout", execResultHandler(nil, userAuthService.Logout))
-	authRouter.GET("/whoami", func(ctx *gin.Context) {
-		reqCtx := reqcontext.From(ctx)
-		user := reqCtx.UserOrForbidden()
-		reqCtx.SetResponseOk(true)
-		reqCtx.SetResponseData(user)
-	})
-
+  output.addAuthHandlers(userAuthService)
 	output.addLikeHandlers()
 	output.addPostHandlers()
 	output.addCommentHandlers()

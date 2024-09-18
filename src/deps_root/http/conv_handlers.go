@@ -1,7 +1,6 @@
 package roothttp
 
 import (
-	"nosebook/src/application/services/conversation"
 	rootconvservice "nosebook/src/deps_root/conv_service"
 )
 
@@ -10,5 +9,5 @@ func (this *RootHTTP) addConversationHandlers() {
 
 	group := this.authRouter.Group("/conversations")
 
-	group.POST("/send-message", execDefaultHandler(&conversation.SendMessageCommand{}, service.SendMessage))
+	group.POST("/send-message", execDefaultHandler(service.SendMessage))
 }

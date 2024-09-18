@@ -19,7 +19,7 @@ func New(repository Repository) *Service {
 	}
 }
 
-func (this *Service) Publish(c *PublishPostCommand, a *auth.Auth) *commandresult.Result {
+func (this *Service) Publish(c PublishPostCommand, a *auth.Auth) *commandresult.Result {
 	post := domainpost.NewBuilder().
 		Id(uuid.New()).
 		AuthorId(a.UserId).
@@ -37,7 +37,7 @@ func (this *Service) Publish(c *PublishPostCommand, a *auth.Auth) *commandresult
 	return commandresult.Ok().WithId(post.Id)
 }
 
-func (this *Service) Remove(c *RemovePostCommand, a *auth.Auth) *commandresult.Result {
+func (this *Service) Remove(c RemovePostCommand, a *auth.Auth) *commandresult.Result {
 	post := this.repository.FindById(c.Id)
 	if post == nil {
 		return commandresult.Fail(NewNotFoundError())
@@ -56,7 +56,7 @@ func (this *Service) Remove(c *RemovePostCommand, a *auth.Auth) *commandresult.R
 	return commandresult.Ok().WithId(post.Id)
 }
 
-func (this *Service) Edit(c *EditPostCommand, a *auth.Auth) *commandresult.Result {
+func (this *Service) Edit(c EditPostCommand, a *auth.Auth) *commandresult.Result {
 	post := this.repository.FindById(c.Id)
 	if post == nil {
 		return commandresult.Fail(NewNotFoundError())

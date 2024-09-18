@@ -27,7 +27,7 @@ func New(
 	}
 }
 
-func (this *Service) SendMessage(command *SendMessageCommand, auth *auth.Auth) (bool, *errors.Error) {
+func (this *Service) SendMessage(command SendMessageCommand, auth *auth.Auth) (bool, *errors.Error) {
 	var err *errors.Error
 
 	if exists := this.userRepository.Exists(command.RecipientId); !exists {

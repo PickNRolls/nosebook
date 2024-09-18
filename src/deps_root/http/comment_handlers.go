@@ -2,7 +2,6 @@ package roothttp
 
 import (
 	presentercomment "nosebook/src/application/presenters/comment"
-	"nosebook/src/application/services/commenting"
 	rootcommentpresenter "nosebook/src/deps_root/comment_presenter"
 	rootcommentservice "nosebook/src/deps_root/comment_service"
 	reqcontext "nosebook/src/deps_root/http/req_context"
@@ -16,13 +15,13 @@ func (this *RootHTTP) addCommentHandlers() {
 
 	group := this.authRouter.Group("/comments")
 
-	group.POST("/publish-on-post", execResultHandler(&commenting.PublishPostCommentCommand{}, service.PublishOnPost))
-	group.POST("/remove", execResultHandler(&commenting.RemoveCommentCommand{}, service.Remove))
+	group.POST("/publish-on-post", execResultHandler(service.PublishOnPost))
+	group.POST("/remove", execResultHandler(service.Remove))
 
 	group.GET("", func(ctx *gin.Context) {
 		reqctx := reqcontext.From(ctx)
 
-		output := presenter.FindByFilter(ctx.Request.Context(), &presentercomment.FindByFilterInput{
+		output := presenter.FindByFilter(ctx.Request.Context(), presentercomment.FindByFilterInput{
 			PostId: ctx.Query("postId"),
 			Next:   ctx.Query("next"),
 			Prev:   ctx.Query("prev"),

@@ -26,7 +26,7 @@ func NewSession(service *userauth.Service, tracer trace.Tracer) func(ctx *gin.Co
 			return
 		}
 
-		user, err := service.TryGetUserBySessionId(&userauth.TryGetUserBySessionIdCommand{
+		user, err := service.TryGetUserBySessionId(userauth.TryGetUserBySessionIdCommand{
 			SessionId: sessionId,
 		})
 		if err != nil {

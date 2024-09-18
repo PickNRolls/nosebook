@@ -552,3 +552,56 @@ VALUES
   'ad9ae3dd-9a07-4d68-a66e-db721928e8da', 
   TIMESTAMP '2024-08-10 10:06:19'
   );
+
+INSERT INTO
+  users (id, first_name, last_name, nick, passhash, last_activity_at)
+VALUES
+  (
+    'ed1a3fd0-4d0b-4961-b4cd-000000000000',
+    'Virtual',
+    'User 0',
+    'virtual_user_0',
+    '$2a$04$PFIkrnjZ62TLHhcU3a6Breh1sLUVMXzwlrLNo2dqQSTM9d02py.oa', -- 123123123 unhashed
+    TIMESTAMP '2024-08-10 10:10:02'
+  ),
+  (
+    'ed1a3fd0-4d0b-4961-b4cd-000000000001',
+    'Virtual',
+    'User 1',
+    'virtual_user_1',
+    '$2a$04$PFIkrnjZ62TLHhcU3a6Breh1sLUVMXzwlrLNo2dqQSTM9d02py.oa',
+    TIMESTAMP '2024-08-10 10:10:02'
+  ),
+  (
+    'ed1a3fd0-4d0b-4961-b4cd-000000000002',
+    'Virtual',
+    'User 2',
+    'virtual_user_2',
+    '$2a$04$PFIkrnjZ62TLHhcU3a6Breh1sLUVMXzwlrLNo2dqQSTM9d02py.oa',
+    TIMESTAMP '2024-08-10 10:10:02'
+  ),
+  (
+    'ed1a3fd0-4d0b-4961-b4cd-000000000003',
+    'Virtual',
+    'User 3',
+    'virtual_user_3',
+    '$2a$04$PFIkrnjZ62TLHhcU3a6Breh1sLUVMXzwlrLNo2dqQSTM9d02py.oa',
+    TIMESTAMP '2024-08-10 10:10:02'
+  ),
+  (
+    'ed1a3fd0-4d0b-4961-b4cd-000000000004',
+    'Virtual',
+    'User 4',
+    'virtual_user_4',
+    '$2a$04$PFIkrnjZ62TLHhcU3a6Breh1sLUVMXzwlrLNo2dqQSTM9d02py.oa',
+    TIMESTAMP '2024-08-10 10:10:02'
+  ),
+  (
+    'ed1a3fd0-4d0b-4961-b4cd-000000000005',
+    'Virtual',
+    'User 5',
+    'virtual_user_5',
+    '$2a$04$PFIkrnjZ62TLHhcU3a6Breh1sLUVMXzwlrLNo2dqQSTM9d02py.oa',
+    TIMESTAMP '2024-08-10 10:10:02'
+  );
+  

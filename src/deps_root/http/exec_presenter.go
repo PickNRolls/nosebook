@@ -27,7 +27,7 @@ type presenterOption struct {
 }
 
 func execDefaultPresenter[In any, Out any](
-	fn func(context.Context, *In, *auth.Auth) *presenterdto.FindOut[Out],
+	fn func(context.Context, In, *auth.Auth) *presenterdto.FindOut[Out],
 	declarations map[string]presenterOption,
 	builder MapBuilder[In],
 	tracer trace.Tracer,
@@ -62,7 +62,7 @@ func execDefaultPresenter[In any, Out any](
 		}
 
 		input := builder.BuildFromMap(m)
-		output := fn(c, &input, reqctx.Auth())
+		output := fn(c, input, reqctx.Auth())
 
 		_, ok := handle(output, output.Err)(reqctx)
 		if !ok {

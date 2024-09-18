@@ -42,7 +42,7 @@ func errOut(err error) *FindByFilterOutput {
 	return errMsgOut(err.Error())
 }
 
-func (this *Presenter) FindByFilter(input *FindByFilterInput, auth *auth.Auth) *FindByFilterOutput {
+func (this *Presenter) FindByFilter(input FindByFilterInput, auth *auth.Auth) *FindByFilterOutput {
 	if input.UserId == "" {
 		return errMsgOut("UserId - обязательный параметр")
 	}

@@ -24,7 +24,7 @@ func New(userRepo UserRepository, sessionRepo SessionRepository) *Service {
 	}
 }
 
-func (this *Service) RegisterUser(c *RegisterUserCommand, a *auth.Auth) *commandresult.Result {
+func (this *Service) RegisterUser(c RegisterUserCommand, a *auth.Auth) *commandresult.Result {
 	existingUser := this.userRepo.FindByNick(c.Nick)
 	if existingUser != nil {
 		return commandresult.Fail(errors.New("NickError", "Логин занят"))
@@ -54,7 +54,7 @@ func (this *Service) RegisterUser(c *RegisterUserCommand, a *auth.Auth) *command
 	})
 }
 
-func (this *Service) Login(c *LoginCommand, a *auth.Auth) *commandresult.Result {
+func (this *Service) Login(c LoginCommand, a *auth.Auth) *commandresult.Result {
 	existingUser := this.userRepo.FindByNick(c.Nick)
 	if existingUser == nil {
 		return commandresult.Fail(errors.New("NickError", "Пользователь с таким логином отсутствует"))
@@ -78,7 +78,7 @@ func (this *Service) Login(c *LoginCommand, a *auth.Auth) *commandresult.Result 
 	})
 }
 
-func (this *Service) Logout(c *LogoutCommand, a *auth.Auth) *commandresult.Result {
+func (this *Service) Logout(c LogoutCommand, a *auth.Auth) *commandresult.Result {
 	session := this.sessionRepo.FindById(a.SessionId)
 	if session == nil {
 		return commandresult.Fail(errors.New("LogoutError", "Сессии не существует"))
@@ -102,7 +102,7 @@ func (this *Service) createSession(c *CreateSessionCommand) (*sessions.Session, 
 	return session, nil
 }
 
-func (this *Service) TryGetUserBySessionId(c *TryGetUserBySessionIdCommand) (*domainuser.User, error) {
+func (this *Service) TryGetUserBySessionId(c TryGetUserBySessionIdCommand) (*domainuser.User, error) {
 	session := this.sessionRepo.FindById(c.SessionId)
 	if session == nil {
 		return nil, errors.New("SessionError", "Сессия не существует")

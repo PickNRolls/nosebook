@@ -38,7 +38,7 @@ func (this *RootHTTP) addChatHandlers() {
 		// TODO: apply generic presenter handler
 		reqctx := reqcontext.From(ctx)
 
-		output := presenter.FindByFilter(ctx.Request.Context(), &presenterchat.FindByFilterInput{
+		output := presenter.FindByFilter(ctx.Request.Context(), presenterchat.FindByFilterInput{
 			Id:    ctx.Param("id"),
 			Limit: 1,
 		}, reqctx.Auth())

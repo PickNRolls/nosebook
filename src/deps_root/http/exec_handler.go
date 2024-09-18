@@ -9,23 +9,40 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type execHandlerOption interface {
+	ShouldAvoidBinding() bool
+}
+
+type execHandlerAvoidBinding struct{}
+
+func (this *execHandlerAvoidBinding) ShouldAvoidBinding() bool { return true }
+
 func execDefaultHandler[C any, T any](
-	command *C,
-	serviceMethod func(*C, *auth.Auth) (T, *errors.Error),
+	serviceMethod func(C, *auth.Auth) (T, *errors.Error),
+	opts ...execHandlerOption,
 ) func(*gin.Context) {
-	return execResultHandler(command, func(c *C, a *auth.Auth) *commandresult.Result {
+	return execResultHandler(func(c C, a *auth.Auth) *commandresult.Result {
 		return commandresult.FromCommandReturn(serviceMethod(c, a))
-	})
+	}, opts...)
 }
 
 func execResultHandler[C any](
-	command *C,
-	serviceMethod func(*C, *auth.Auth) *commandresult.Result,
+	serviceMethod func(C, *auth.Auth) *commandresult.Result,
+	opts ...execHandlerOption,
 ) func(*gin.Context) {
 	return func(ctx *gin.Context) {
 		reqCtx := reqcontext.From(ctx)
-		if command != nil {
-			if err := ctx.ShouldBindJSON(command); err != nil {
+		var command C
+
+		shouldAvoidBinding := false
+		for _, opt := range opts {
+			if opt.ShouldAvoidBinding() {
+				shouldAvoidBinding = true
+			}
+		}
+
+		if !shouldAvoidBinding {
+			if err := ctx.ShouldBindJSON(&command); err != nil {
 				ctx.Error(err)
 				ctx.Abort()
 				return

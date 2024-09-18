@@ -63,7 +63,7 @@ func outZero() *FindByFilterOutput {
 	}
 }
 
-func (this *Presenter) FindByFilter(parent context.Context, input *FindByFilterInput, a *auth.Auth) *FindByFilterOutput {
+func (this *Presenter) FindByFilter(parent context.Context, input FindByFilterInput, a *auth.Auth) *FindByFilterOutput {
 	ctx, span := this.tracer.Start(parent, "post_presenter.find_by_filter")
 	defer span.End()
 
@@ -220,7 +220,7 @@ func (this *Presenter) FindByFilter(parent context.Context, input *FindByFilterI
 }
 
 func (this *Presenter) FindById(parent context.Context, id string, a *auth.Auth) *Post {
-	out := this.FindByFilter(parent, &FindByFilterInput{
+	out := this.FindByFilter(parent, FindByFilterInput{
 		Ids: []string{id},
 	}, a)
 

@@ -66,7 +66,7 @@ func (this *order) Asc() bool {
 	return false
 }
 
-func (this *Presenter) FindByFilter(ctx context.Context, input *FindByFilterInput, auth *auth.Auth) *FindByFilterOutput {
+func (this *Presenter) FindByFilter(ctx context.Context, input FindByFilterInput, auth *auth.Auth) *FindByFilterOutput {
 	nextCtx, span := this.tracer.Start(ctx, "chat_presenter.find_by_filter")
 	defer span.End()
 

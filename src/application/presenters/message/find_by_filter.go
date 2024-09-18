@@ -46,7 +46,7 @@ func errOut(err error) *FindByFilterOut {
 	return errMsgOut(err.Error())
 }
 
-func (this *Presenter) FindByFilter(ctx context.Context, input *FindByFilterInput, auth *auth.Auth) *FindByFilterOut {
+func (this *Presenter) FindByFilter(ctx context.Context, input FindByFilterInput, auth *auth.Auth) *FindByFilterOut {
   nextCtx, span := this.tracer.Start(ctx, "message_presenter.find_by_filter")
   defer span.End()
   

@@ -17,7 +17,7 @@ func New(repository Repository, notifier Notifier) *Service {
 	}
 }
 
-func (this *Service) LikePost(c *LikePostCommand, auth *auth.Auth) (*resultData, *errors.Error) {
+func (this *Service) LikePost(c LikePostCommand, auth *auth.Auth) (*resultData, *errors.Error) {
 	like, err := this.repository.
 		WithPostId(c.Id).
 		WithUserId(auth.UserId).
@@ -49,7 +49,7 @@ func (this *Service) LikePost(c *LikePostCommand, auth *auth.Auth) (*resultData,
 	}, nil
 }
 
-func (this *Service) LikeComment(c *LikeCommentCommand, auth *auth.Auth) (*resultData, *errors.Error) {
+func (this *Service) LikeComment(c LikeCommentCommand, auth *auth.Auth) (*resultData, *errors.Error) {
 	like, err := this.repository.
 		WithCommentId(c.Id).
 		WithUserId(auth.UserId).

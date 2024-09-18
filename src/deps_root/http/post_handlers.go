@@ -2,7 +2,6 @@ package roothttp
 
 import (
 	presenterpost "nosebook/src/application/presenters/post"
-	"nosebook/src/application/services/posting"
 	reqcontext "nosebook/src/deps_root/http/req_context"
 	rootpostpresenter "nosebook/src/deps_root/post_presenter"
 	rootpostservice "nosebook/src/deps_root/post_service"
@@ -15,8 +14,8 @@ func (this *RootHTTP) addPostHandlers() {
 	presenter := rootpostpresenter.New(this.db, this.tracer)
 
 	group := this.authRouter.Group("/posts")
-	group.POST("/publish", execResultHandler(&posting.PublishPostCommand{}, service.Publish))
-	group.POST("/remove", execResultHandler(&posting.RemovePostCommand{}, service.Remove))
+	group.POST("/publish", execResultHandler(service.Publish))
+	group.POST("/remove", execResultHandler(service.Remove))
 
 	group.GET("", func(ctx *gin.Context) {
 		authorId := ctx.Query("authorId")
@@ -24,7 +23,7 @@ func (this *RootHTTP) addPostHandlers() {
 		cursor := ctx.Query("cursor")
 		reqctx := reqcontext.From(ctx)
 
-		output := presenter.FindByFilter(ctx.Request.Context(), &presenterpost.FindByFilterInput{
+		output := presenter.FindByFilter(ctx.Request.Context(), presenterpost.FindByFilterInput{
 			AuthorId: authorId,
 			OwnerId:  ownerId,
 			Cursor:   cursor,
