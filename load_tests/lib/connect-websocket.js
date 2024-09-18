@@ -1,11 +1,13 @@
-import { AUTH_SESSION_HEADER, HOST } from "../const";
-import ws from "k6/ws";
+import { WebSocket } from "k6/experimental/websockets";
+import { AUTH_SESSION_HEADER, NOSEBOOK_HOST } from "../const";
 
-export const connectWebSocket = (auth, callback) => {
-  return ws.connect(`ws://localhost:8080/ws`, {
+export const connectWebSocket = (auth) => {
+  const ws = new WebSocket(`ws://${NOSEBOOK_HOST}/ws`, null, {
     headers: {
       [AUTH_SESSION_HEADER]: auth.sessionId,
     }
-  }, callback);
+  });
+
+  return ws;
 };
 

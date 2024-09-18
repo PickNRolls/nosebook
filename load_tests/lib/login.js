@@ -1,8 +1,8 @@
 import http from "k6/http";
-import { HOST } from "../const";
+import { NOSEBOOK_URL } from "../const";
 
 export const login = (nickname, password) => {
-  return http.post(`${HOST}/login`, JSON.stringify({
+  return http.post(`${NOSEBOOK_URL}/login`, JSON.stringify({
     nick: nickname,
     password: password,
   }));

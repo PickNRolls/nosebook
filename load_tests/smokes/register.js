@@ -1,7 +1,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { faker } from '@faker-js/faker';
-import { HOST } from '../const';
+import { NOSEBOOK_URL } from '../const';
 
 export const options = {
   vus: 3, // Key for Smoke test. Keep it at 2, 3, max 5 VUs
@@ -9,7 +9,7 @@ export const options = {
 };
 
 export default () => {
-  const res = http.post(`${HOST}/register`, JSON.stringify({
+  const res = http.post(`${NOSEBOOK_URL}/register`, JSON.stringify({
     firstName: faker.person.firstName(),
     lastName: faker.person.lastName(),
     nick: faker.internet.userName() + __VU + __ITER,
