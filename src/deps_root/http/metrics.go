@@ -10,4 +10,5 @@ func registerMetrics() {
 	prometheus.MustRegister(middleware.TotalRequestsCounter)
 	prometheus.MustRegister(middleware.InProgressRequestsGauge)
 	prometheus.MustRegister(middleware.ResponseElapsedHist)
+  prometheus.MustRegister(InProgressWsConnectionsGauge)
 }

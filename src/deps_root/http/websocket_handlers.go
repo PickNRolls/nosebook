@@ -7,6 +7,14 @@ import (
 	reqcontext "nosebook/src/deps_root/http/req_context"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
+)
+
+var InProgressWsConnectionsGauge = prometheus.NewGauge(
+	prometheus.GaugeOpts{
+		Name: "ws_connections_in_progress",
+		Help: "Number of current websocket connections proxying into Notification service",
+	},
 )
 
 func (this *RootHTTP) addWebsocketHandlers() {
@@ -23,6 +31,8 @@ func (this *RootHTTP) addWebsocketHandlers() {
 			req.Header["X-Auth-User-Id"] = []string{auth.UserId.String()}
 		}}
 
+    InProgressWsConnectionsGauge.Inc();
 		proxy.ServeHTTP(ctx.Writer, ctx.Request)
+    InProgressWsConnectionsGauge.Dec();
 	})
 }
