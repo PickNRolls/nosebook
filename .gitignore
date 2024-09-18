@@ -1,4 +1,5 @@
 build/
 db-password.txt
 **/node_modules/
+**/dist/
 

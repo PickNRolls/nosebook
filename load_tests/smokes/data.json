@@ -1,0 +1,18 @@
+[
+  {
+    "interlocutorId": "ed1a3fd0-4d0b-4961-b4cd-000000000001",
+    "first": true
+  },
+  {
+    "interlocutorId": "ed1a3fd0-4d0b-4961-b4cd-000000000000",
+    "first": false
+  },
+  {
+    "interlocutorId": "ed1a3fd0-4d0b-4961-b4cd-000000000003",
+    "first": true
+  },
+  {
+    "interlocutorId": "ed1a3fd0-4d0b-4961-b4cd-000000000002",
+    "first": false
+  }
+]
