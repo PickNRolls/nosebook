@@ -1,26 +1,29 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
-import { faker } from '@faker-js/faker';
 import { NOSEBOOK_URL } from '../const';
 
+const vus = 6;
+const iterationsPerVu = 200;
+const alreadyExistingInDbSqlInitCount = 5;
 export const options = {
-  vus: 3, // Key for Smoke test. Keep it at 2, 3, max 5 VUs
-  duration: '1m'
+  vus,
+  iterations: vus * iterationsPerVu,
+};
+
+export const setup = () => {
+  sleep(__VU);  
 };
 
 export default () => {
+  const index = (alreadyExistingInDbSqlInitCount * 2 + ((__VU - 1) * iterationsPerVu) + __ITER);
   const res = http.post(`${NOSEBOOK_URL}/register`, JSON.stringify({
-    firstName: faker.person.firstName(),
-    lastName: faker.person.lastName(),
-    nick: faker.internet.userName() + __VU + __ITER,
-    password: faker.internet.password({
-      length: 12,
-    }),
-  }), {
-    headers: 'application/json',
-  });
+    firstName: 'Virtual',
+    lastName: 'User ' + index,
+    nick: 'virtual_user_' + index,
+    password: '123123123',
+  }));
   
-  sleep(1);
+  sleep(0.5);
   
   check(res, {
     'Status': () => res.status === 200,

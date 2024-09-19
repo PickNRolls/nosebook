@@ -5,6 +5,7 @@ module.exports = {
   entry: {
     register: './smokes/register.js',
     messaging: './smokes/messaging.js',
+    averageMessaging: './average/messaging.js',
   },
   output: {
     path: path.resolve(__dirname, 'dist'), // eslint-disable-line
