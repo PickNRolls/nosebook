@@ -62,7 +62,6 @@ func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *RootHTTP {
 		rmqConn: rmqConn,
 	}
 
-	userAuthService := userauth.New(repos.NewUserRepository(db), repos.NewSessionRepository(db))
 
 	router.Use(middleware.NewRequestMetrics())
 
@@ -72,6 +71,8 @@ func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *RootHTTP {
 	})
 
 	output.enableTracing()
+
+	userAuthService := userauth.New(repos.NewUserRepository(db), repos.NewSessionRepository(db), output.tracer)
 
 	router.Use(middleware.NewPresenter())
 	router.NoRoute(middleware.NewNoRouteHandler())

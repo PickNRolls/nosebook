@@ -1,6 +1,7 @@
 package userauth
 
 import (
+	"context"
 	"nosebook/src/application/services/auth"
 	"nosebook/src/domain/sessions"
 	"nosebook/src/domain/user"
@@ -9,18 +10,21 @@ import (
 	commandresult "nosebook/src/lib/command_result"
 
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
 	userRepo    UserRepository
 	sessionRepo SessionRepository
+  tracer trace.Tracer
 }
 
-func New(userRepo UserRepository, sessionRepo SessionRepository) *Service {
+func New(userRepo UserRepository, sessionRepo SessionRepository, tracer trace.Tracer) *Service {
 	return &Service{
 		userRepo:    userRepo,
 		sessionRepo: sessionRepo,
+    tracer: tracer,
 	}
 }
 
@@ -111,8 +115,14 @@ func (this *Service) TryGetUserBySessionId(c TryGetUserBySessionIdCommand) (*dom
 	return this.userRepo.FindById(session.UserId), nil
 }
 
-func (this *Service) MarkSessionActive(sessionId uuid.UUID) error {
+func (this *Service) MarkSessionActive(parent context.Context, sessionId uuid.UUID) error {
+  ctx, span := this.tracer.Start(parent, "user_auth_service.mark_session_active")
+  defer span.End()
+  
+  _, span = this.tracer.Start(ctx, "session_repo.find_by_id")
 	session := this.sessionRepo.FindById(sessionId)
+  span.End()
+
 	if session == nil {
 		return errors.New("SessionError", "Сессия не существует")
 	}
@@ -122,11 +132,15 @@ func (this *Service) MarkSessionActive(sessionId uuid.UUID) error {
 		return err
 	}
 
+  _, span = this.tracer.Start(ctx, "session_repo.update")
 	_, err = this.sessionRepo.Update(session)
+  span.End()
 	if err != nil {
 		return nil
 	}
 
+  _, span = this.tracer.Start(ctx, "user_repo.update_activity")
 	err = this.userRepo.UpdateActivity(session.UserId, clock.Now())
+  span.End()
 	return err
 }
