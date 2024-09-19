@@ -6,6 +6,7 @@ import (
 	"nosebook/src/errors"
 	"nosebook/src/lib/config"
 
+	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
@@ -13,6 +14,7 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
+  oteltrace "go.opentelemetry.io/otel/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
 )
 
@@ -59,14 +61,12 @@ func (this *RootHTTP) enableTracing() {
 	this.tracer = tp.Tracer("application")
 
 	this.router.Use(otelgin.Middleware("middleware"))
+  this.router.Use(func(ctx *gin.Context) {
+    spanCtx := oteltrace.SpanContextFromContext(ctx.Request.Context())
+    if spanCtx.HasTraceID() {
+      traceId := spanCtx.TraceID()
+      ctx.Header("X-Trace-Id", traceId.String())
+    }
+  })
 }
 
-func (this *RootHTTP) HandleCallback(presenterName string) func(name string, ctx context.Context) func() {
-	return func(name string, ctx context.Context) func() {
-		_, span := this.tracer.Start(ctx, presenterName+"."+name)
-
-		return func() {
-			span.End()
-		}
-	}
-}
