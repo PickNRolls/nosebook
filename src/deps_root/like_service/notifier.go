@@ -73,7 +73,7 @@ func (this *notifier) notify(resourceName string, eventType string, userId uuid.
 		false,
 		false,
 		false,
-		nil,
+    nil,
 	))
 	if err != nil {
 		return err
@@ -87,7 +87,6 @@ func (this *notifier) notify(resourceName string, eventType string, userId uuid.
 		rabbitmq.Publishing{
 			ContentType: "text/json",
 			Body:        json,
-      Expiration: "0",
 		}))
 	if err != nil {
 		return err

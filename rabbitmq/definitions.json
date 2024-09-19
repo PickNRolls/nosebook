@@ -1,0 +1,70 @@
+{
+  "users": [
+    {
+      "name": "guest",
+      "password_hash": "BMfxN8drrYcIqXZMr+pWTpDT0nMcOagMduLX0bjr4jwud/pN",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": [
+        "administrator"
+      ],
+      "limits": {}
+    }
+  ],
+  "permissions": [
+    {
+      "user": "guest",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "queues": [
+    {
+      "name": "trashbox",
+      "vhost": "/",
+      "durable": false,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 0
+      }
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "trashbox_exchange",
+      "vhost": "/",
+      "type": "fanout",
+      "durable": false,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "trashbox_exchange",
+      "vhost": "/",
+      "destination": "trashbox",
+      "destination_type": "queue",
+      "arguments": {}
+    }
+  ],
+  "policies": [
+    {
+      "vhost": "/",
+      "name": "AE",
+      "pattern": "^notifications$",
+      "apply-to": "exchanges",
+      "priority": 0,
+      "definition": {
+        "alternate-exchange": "trashbox_exchange"
+      }
+    }
+  ]
+}

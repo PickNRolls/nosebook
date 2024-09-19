@@ -24,6 +24,9 @@ services:
     stop_grace_period: 0s
     container_name: rabbitmq
     restart: always
+    volumes:
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
     ports:
       - 5672:5672
       - 15672:15672

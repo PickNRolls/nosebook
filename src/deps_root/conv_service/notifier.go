@@ -29,8 +29,8 @@ func (this *notifier) NotifyAbout(userId uuid.UUID, chat *domainchat.Chat) *erro
 	events := chat.Events()
 
 	rmqCh, err := errors.Using(this.rmqConn.Channel())
-  defer rmqCh.Close()
-  
+	defer rmqCh.Close()
+
 	err = errors.From(rmqCh.ExchangeDeclare(
 		"notifications",
 		"direct",
@@ -38,7 +38,7 @@ func (this *notifier) NotifyAbout(userId uuid.UUID, chat *domainchat.Chat) *erro
 		false,
 		false,
 		false,
-		nil,
+    nil,
 	))
 	if err != nil {
 		return err
