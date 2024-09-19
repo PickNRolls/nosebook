@@ -19,6 +19,22 @@ services:
       timeout: 5s
       retries: 5
 
+  db-prometheus-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter
+    stop_grace_period: 0s
+    container_name: db-prometheus-exporter
+    depends_on:
+      db:
+        condition: service_healthy
+    secrets:
+      - db-password
+    environment:
+      - DATA_SOURCE_URI=db:5432?sslmode=disable
+      - DATA_SOURCE_USER=postgres
+      - DATA_SOURCE_PASS_FILE=/run/secrets/db-password
+    expose:
+      - 9187
+
   rabbitmq:
     image: rabbitmq:3.13-management
     stop_grace_period: 0s
