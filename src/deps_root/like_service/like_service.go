@@ -8,8 +8,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func New(db *sqlx.DB, rmqCh *rabbitmq.Channel) *like.Service {
-	likeService := like.New(newRepository(db), newNotifier(rmqCh, db, presenteruser.New(db)))
+func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *like.Service {
+	likeService := like.New(newRepository(db), newNotifier(rmqConn, db, presenteruser.New(db)))
 
 	return likeService
 }

@@ -14,19 +14,35 @@ import (
 )
 
 type notifier struct {
-	rmqCh     *rabbitmq.Channel
+	rmqConn   *rabbitmq.Connection
 	presenter *presentermessage.Presenter
 }
 
-func newNotifier(db *sqlx.DB, rmqCh *rabbitmq.Channel) *notifier {
+func newNotifier(db *sqlx.DB, rmqConn *rabbitmq.Connection) *notifier {
 	return &notifier{
-		rmqCh:     rmqCh,
+		rmqConn:   rmqConn,
 		presenter: presentermessage.New(db, presenteruser.New(db)),
 	}
 }
 
 func (this *notifier) NotifyAbout(userId uuid.UUID, chat *domainchat.Chat) *errors.Error {
 	events := chat.Events()
+
+	rmqCh, err := errors.Using(this.rmqConn.Channel())
+  defer rmqCh.Close()
+  
+	err = errors.From(rmqCh.ExchangeDeclare(
+		"notifications",
+		"direct",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	))
+	if err != nil {
+		return err
+	}
 
 	for _, event := range events {
 		if event.Type() == domainchat.MESSAGE_SENT {
@@ -46,20 +62,7 @@ func (this *notifier) NotifyAbout(userId uuid.UUID, chat *domainchat.Chat) *erro
 				return err
 			}
 
-			err = errors.From(this.rmqCh.ExchangeDeclare(
-				"notifications",
-				"direct",
-				false,
-				false,
-				false,
-				false,
-				nil,
-			))
-			if err != nil {
-				return err
-			}
-
-			err = errors.From(this.rmqCh.Publish(
+			err = errors.From(rmqCh.Publish(
 				"notifications",
 				userId.String(),
 				false,

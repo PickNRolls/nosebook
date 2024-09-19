@@ -7,12 +7,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func New(db *sqlx.DB, rmqCh *rabbitmq.Channel) *conversation.Service {
-	service := conversation.New(
+func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *conversation.Service {
+	return conversation.New(
 		newChatRepository(db),
-		newNotifier(db, rmqCh),
+		newNotifier(db, rmqConn),
 		newUserRepository(db),
 	)
-
-	return service
 }

@@ -5,7 +5,7 @@ import (
 )
 
 func (this *RootHTTP) addConversationHandlers() {
-	service := rootconvservice.New(this.db, this.rmqCh)
+	service := rootconvservice.New(this.db, this.rmqConn)
 
 	group := this.authRouter.Group("/conversations")
 

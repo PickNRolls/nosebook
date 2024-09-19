@@ -5,7 +5,7 @@ import (
 )
 
 func (this *RootHTTP) addLikeHandlers() {
-	service := rootlikeservice.New(this.db, this.rmqCh)
+	service := rootlikeservice.New(this.db, this.rmqConn)
 
 	group := this.authRouter.Group("/like")
 	group.POST("/post", execDefaultHandler(service.LikePost))

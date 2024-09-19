@@ -16,16 +16,16 @@ import (
 )
 
 type RootHTTP struct {
-	db           *sqlx.DB
-	rmqCh        *rabbitmq.Channel
-	router       *gin.Engine
-	authRouter   *gin.RouterGroup
-	unauthRouter *gin.RouterGroup
-  traceProvider *trace.TracerProvider
-  tracer oteltrace.Tracer
+	db            *sqlx.DB
+	rmqConn       *rabbitmq.Connection
+	router        *gin.Engine
+	authRouter    *gin.RouterGroup
+	unauthRouter  *gin.RouterGroup
+	traceProvider *trace.TracerProvider
+	tracer        oteltrace.Tracer
 }
 
-func New(db *sqlx.DB, rmqCh *rabbitmq.Channel) *RootHTTP {
+func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *RootHTTP {
 	router := gin.New()
 
 	router.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
@@ -57,21 +57,21 @@ func New(db *sqlx.DB, rmqCh *rabbitmq.Channel) *RootHTTP {
 	})
 
 	output := &RootHTTP{
-		db:     db,
-		router: router,
-		rmqCh:  rmqCh,
+		db:      db,
+		router:  router,
+		rmqConn: rmqConn,
 	}
 
 	userAuthService := userauth.New(repos.NewUserRepository(db), repos.NewSessionRepository(db))
-  
+
 	router.Use(middleware.NewRequestMetrics())
 
 	router.GET("/ping", func(ctx *gin.Context) {
 		ctx.Status(200)
 		ctx.Writer.Write([]byte("pong"))
 	})
-  
-  output.enableTracing()
+
+	output.enableTracing()
 
 	router.Use(middleware.NewPresenter())
 	router.NoRoute(middleware.NewNoRouteHandler())
@@ -80,7 +80,7 @@ func New(db *sqlx.DB, rmqCh *rabbitmq.Channel) *RootHTTP {
 	output.unauthRouter = router.Group("/", middleware.NewNotAuth())
 	output.authRouter = router.Group("/", middleware.NewAuth())
 
-  output.addAuthHandlers(userAuthService)
+	output.addAuthHandlers(userAuthService)
 	output.addLikeHandlers()
 	output.addPostHandlers()
 	output.addCommentHandlers()
@@ -97,7 +97,7 @@ func New(db *sqlx.DB, rmqCh *rabbitmq.Channel) *RootHTTP {
 }
 
 func (this *RootHTTP) Run(port string) error {
-  err := this.router.Run(port)
-  defer this.shutdown()
-  return err
+	err := this.router.Run(port)
+	defer this.shutdown()
+	return err
 }

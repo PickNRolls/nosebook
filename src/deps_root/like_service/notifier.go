@@ -15,19 +15,25 @@ import (
 
 type notifier struct {
 	db            *sqlx.DB
-	rmqCh         *rabbitmq.Channel
+	rmqConn       *rabbitmq.Connection
 	userPresenter *presenteruser.Presenter
 }
 
-func newNotifier(rmqCh *rabbitmq.Channel, db *sqlx.DB, userPresenter *presenteruser.Presenter) *notifier {
+func newNotifier(rmqConn *rabbitmq.Connection, db *sqlx.DB, userPresenter *presenteruser.Presenter) *notifier {
 	return &notifier{
 		db:            db,
 		userPresenter: userPresenter,
-		rmqCh:         rmqCh,
+		rmqConn:       rmqConn,
 	}
 }
 
 func (this *notifier) notify(resourceName string, eventType string, userId uuid.UUID, like *domainlike.Like) *errors.Error {
+  rmqCh, err := errors.Using(this.rmqConn.Channel())
+  defer rmqCh.Close()
+	if err != nil {
+		return err
+	}
+
 	qb := querybuilder.New()
 	resourceId := like.Resource.Id()
 	payload := struct {
@@ -40,7 +46,7 @@ func (this *notifier) notify(resourceName string, eventType string, userId uuid.
 		From(resourceName).
 		Where("id = ?", resourceId).
 		ToSql()
-	err := errors.From(this.db.Get(&payload, sql, args...))
+	err = errors.From(this.db.Get(&payload, sql, args...))
 	if err != nil {
 		return err
 	}
@@ -60,7 +66,7 @@ func (this *notifier) notify(resourceName string, eventType string, userId uuid.
 		return err
 	}
 
-	err = errors.From(this.rmqCh.ExchangeDeclare(
+	err = errors.From(rmqCh.ExchangeDeclare(
 		"notifications",
 		"direct",
 		false,
@@ -73,7 +79,7 @@ func (this *notifier) notify(resourceName string, eventType string, userId uuid.
 		return err
 	}
 
-	err = errors.From(this.rmqCh.Publish(
+	err = errors.From(rmqCh.Publish(
 		"notifications",
 		userId.String(),
 		false,
@@ -81,6 +87,7 @@ func (this *notifier) notify(resourceName string, eventType string, userId uuid.
 		rabbitmq.Publishing{
 			ContentType: "text/json",
 			Body:        json,
+      Expiration: "0",
 		}))
 	if err != nil {
 		return err

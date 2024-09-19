@@ -15,8 +15,7 @@ func failOnError[T any](data T, err error) T {
 	return data
 }
 
-func Connect() (*amqp.Connection, *amqp.Channel) {
+func Connect() *amqp.Connection {
 	conn := failOnError(amqp.Dial("amqp://guest:guest@rabbitmq:5672/"))
-	ch := failOnError(conn.Channel())
-	return conn, ch
+	return conn
 }

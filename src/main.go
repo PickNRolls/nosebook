@@ -11,10 +11,9 @@ import (
 
 func main() {
 	db := postgres.Connect()
-	rmqConn, rmqCh := rabbitmq.Connect()
+	rmqConn:= rabbitmq.Connect()
 	defer rmqConn.Close()
-	defer rmqCh.Close()
 
-	rootHttp := roothttp.New(db, rmqCh)
+	rootHttp := roothttp.New(db, rmqConn)
 	rootHttp.Run("0.0.0.0:8080")
 }
