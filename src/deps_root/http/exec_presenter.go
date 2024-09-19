@@ -34,7 +34,7 @@ func execDefaultPresenter[In any, Out any](
 ) func(*gin.Context) {
 	return func(ctx *gin.Context) {
 		c, span := tracer.Start(ctx.Request.Context(), "presenter_handler")
-    defer span.End()
+		defer span.End()
 
 		reqctx := reqcontext.From(ctx)
 

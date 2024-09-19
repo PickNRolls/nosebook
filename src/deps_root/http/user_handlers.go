@@ -34,4 +34,13 @@ func (this *RootHTTP) addUserHandlers() {
 		reqctx.SetResponseData(user)
 		reqctx.SetResponseOk(true)
 	})
+
+	group.GET("", execDefaultPresenter(presenter.FindByText, map[string]presenterOption{
+		"text": {
+			Type: STRING,
+		},
+		"next": {
+			Type: STRING,
+		},
+	}, &presenteruser.FindByTextInput{}, this.tracer))
 }

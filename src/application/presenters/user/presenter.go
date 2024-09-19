@@ -2,10 +2,12 @@ package presenteruser
 
 import (
 	"context"
+	"nosebook/src/application/services/auth"
 	domainuser "nosebook/src/domain/user"
 	"nosebook/src/errors"
 	querybuilder "nosebook/src/infra/query_builder"
 	"nosebook/src/lib/clock"
+	cursorquery "nosebook/src/lib/cursor_query"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -14,29 +16,47 @@ import (
 	"go.opentelemetry.io/otel/trace/noop"
 )
 
-type startCallback = func(name string, ctx context.Context) func ()
+type startCallback = func(name string, ctx context.Context) func()
 
 type Presenter struct {
-	db      *sqlx.DB
-  tracer trace.Tracer
+	db     *sqlx.DB
+	tracer trace.Tracer
 }
 
 func New(db *sqlx.DB) *Presenter {
 	return &Presenter{
-		db: db,
-    tracer: noop.Tracer{},
+		db:     db,
+		tracer: noop.Tracer{},
 	}
 }
 
 func (this *Presenter) WithTracer(tracer trace.Tracer) *Presenter {
-  this.tracer = tracer
+	this.tracer = tracer
 
-  return this
+	return this
+}
+
+func (this *Presenter) mapDests(dests []*dest) map[uuid.UUID]*User {
+	out := make(map[uuid.UUID]*User, len(dests))
+  
+	now := clock.Now()
+	for _, dest := range dests {
+		out[dest.Id] = &User{
+			Id:           dest.Id,
+			FirstName:    dest.FirstName,
+			LastName:     dest.LastName,
+			Nick:         dest.Nick,
+			LastOnlineAt: dest.LastActivityAt,
+			Online:       dest.LastActivityAt.After(now.Add(-domainuser.ONLINE_DURATION)),
+		}
+	}
+  
+  return out
 }
 
 func (this *Presenter) FindByIds(ctx context.Context, ids uuid.UUIDs) (map[uuid.UUID]*User, *errors.Error) {
-  nextCtx, span := this.tracer.Start(ctx, "user_presenter.find_by_filter")
-  defer span.End()
+	nextCtx, span := this.tracer.Start(ctx, "user_presenter.find_by_filter")
+	defer span.End()
 
 	qb := querybuilder.New()
 	sql, args, _ := qb.Select(
@@ -48,24 +68,77 @@ func (this *Presenter) FindByIds(ctx context.Context, ids uuid.UUIDs) (map[uuid.
 	).ToSql()
 
 	dests := []*dest{}
-  nextCtx, span = this.tracer.Start(nextCtx, "user_presenter.sql_query")
+	nextCtx, span = this.tracer.Start(nextCtx, "user_presenter.sql_query")
 	err := errors.From(this.db.Select(&dests, sql, args...))
-  span.End()
+	span.End()
 	if err != nil {
 		return nil, err
 	}
 
-	m := make(map[uuid.UUID]*User, len(dests))
-	now := clock.Now()
-	for _, dest := range dests {
-		m[dest.Id] = &User{
-			Id:           dest.Id,
-			FirstName:    dest.FirstName,
-			LastName:     dest.LastName,
-			Nick:         dest.Nick,
-			LastOnlineAt: dest.LastActivityAt,
-			Online:       dest.LastActivityAt.After(now.Add(-domainuser.ONLINE_DURATION)),
-		}
+  return this.mapDests(dests), nil
+}
+
+func outErr(err error) *FindOutUser {
+	return outMsgErr(err.Error())
+}
+
+func outMsgErr(message string) *FindOutUser {
+	return &FindOutUser{
+		Err: newError(message),
 	}
-	return m, nil
+}
+
+func outZero() *FindOutUser {
+	return &FindOutUser{
+		Data: make([]*User, 0),
+	}
+}
+
+func (this *Presenter) FindByText(parent context.Context, input FindByTextInput, _ *auth.Auth) *FindOutUser {
+	ctx, span := this.tracer.Start(parent, "user_presenter.find_by_text")
+	defer span.End()
+  
+  if input.Text == "" {
+    return outZero()
+  }
+
+	qb := querybuilder.New()
+	query := qb.Select(
+		"id", "first_name", "last_name", "nick", "last_activity_at", "created_at",
+	).From(
+		"users",
+	).Where(
+		"(first_name || ' ' || last_name || ' ' || nick) ilike '%' || ? || '%'",
+		input.Text,
+	)
+
+	dests := []*dest{}
+	_, span = this.tracer.Start(ctx, "sql_query")
+  cursorOut, err := cursorquery.Do(this.db, &cursorquery.Input[*dest]{
+    Query: query,
+    Order: &order{},
+    Next: input.Next,
+    Limit: 20,
+  }, &dests)
+	span.End()
+	if err != nil {
+		return outErr(err)
+	}
+
+  users := func() []*User {
+    m := this.mapDests(dests)
+    out := make([]*User, len(dests))
+    
+    for i, dest := range dests {
+      out[i] = m[dest.Id] 
+    }
+    
+    return out
+  }()
+
+  return &FindOutUser{
+    Data: users,
+    Next: cursorOut.Next,
+    TotalCount: cursorOut.TotalCount,
+  }
 }

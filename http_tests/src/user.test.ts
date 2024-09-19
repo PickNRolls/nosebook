@@ -22,5 +22,28 @@ describe('users', () => {
       expect(response.body).toMatchSnapshot();
     });
   });
+
+  describe('GET /', () => {
+    test('fuzzy text', async () => {
+      let response = await users
+        .get('')
+        .query({
+          text: 'tester',
+        })
+        .expect(200);
+
+      expect(response.body).toMatchSnapshot();
+
+      
+      response = await users
+        .get('')
+        .query({
+          text: 'drug',
+        })
+        .expect(200);
+
+      expect(response.body).toMatchSnapshot();
+    });
+  });
 });
 
