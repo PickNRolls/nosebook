@@ -17,24 +17,11 @@ export const sendMessage = (opts, auth) => {
   });
 };
 
-const RESEND_INTERVAL = 1000 * 20;
-
 export const runMessagingScenario = (opts, auth) => {
   const { sessionId } = auth;
   const { duration, logging = true, userId, interlocutorId, shouldMessageFirst } = opts;
 
   const ws = connectWebSocket({ sessionId });
-
-  let timerId = null;
-  if (shouldMessageFirst) {
-    timerId = setInterval(() => {
-      logging && console.log(`VU ${__VU} userId:${userId} is resending message, because he did not get answer.`);
-      sendMessage({
-        interlocutorId,
-        text: faker.lorem.sentences(),
-      }, { sessionId });
-    }, RESEND_INTERVAL);
-  }
 
   ws.onopen = () => {
     logging && console.log(`VU ${__VU} userId:${userId} connects websocket.`);
@@ -58,11 +45,6 @@ export const runMessagingScenario = (opts, auth) => {
       const message = JSON.parse(event.data);
 
       if (message.type === 'new_message' && message.payload.author.id === interlocutorId) {
-        if (timerId != null) {
-          clearInterval(timerId);
-          timerId = null;
-        }
-
         logging && console.log(`VU ${__VU} userId:${userId} received message.`);
         sleep(random.intBetween(1, 10));
 
@@ -80,7 +62,7 @@ export const runMessagingScenario = (opts, auth) => {
   };
 
   ws.onclose = () => {
-    logging && console.log(`VU ${__VU} userId:${userId} disconnects websocket.`);
+    logging && console.log(`VU ${__VU - 1} disconnects websocket.`);
   };
 };
 
