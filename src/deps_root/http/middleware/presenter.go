@@ -15,12 +15,12 @@ func NewPresenter() func(ctx *gin.Context) {
 			return
 		}
 
-		reqContext := reqcontext.From(ctx)
+		reqctx := reqcontext.From(ctx)
 
 		ctx.JSON(ctx.Writer.Status(), &commandresult.Result{
-			Ok:     reqContext.ResponseOk(),
-			Errors: reqContext.Errors(),
-			Data:   reqContext.ResponseData(),
+			Ok:     reqctx.ResponseOk(),
+			Errors: reqctx.Errors(),
+			Data:   reqctx.ResponseData(),
 		})
 	}
 }
