@@ -2,7 +2,7 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { NOSEBOOK_URL } from '../const';
 
-const vus = 6;
+const vus = 10;
 const iterationsPerVu = 200;
 const alreadyExistingInDbSqlInitCount = 5;
 export const options = {

@@ -4,8 +4,8 @@ import * as chats from '../lib/chats';
 import { rampUpWs, rampUpWsOptions } from '../lib/ws';
 
 const stages = [
-  { duration: 1000 * 60 * 5, target: 1000 },
-  { duration: 1000 * 60 * 5, target: 1000 },
+  { duration: 1000 * 60 * 3, target: 1000 },
+  { duration: 1000 * 60 * 3, target: 1000 },
   { duration: 1000 * 60 * 3, target: 0 },
 ];
 
@@ -29,7 +29,7 @@ export const teardown = () => {
 export default () => {
   const { vuIndex, duration } = rampUpWs(stages);
   
-  const offset = 200;
+  const offset = 300;
   const userIndex = offset + vuIndex;
   const nick = `virtual_user_${userIndex}`
   if (loginJson == null) {
