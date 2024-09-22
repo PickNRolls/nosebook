@@ -10,13 +10,13 @@ import (
 )
 
 func NewSession(service *userauth.Service, tracer trace.Tracer) func(ctx *gin.Context) {
-	return func(ginCtx *gin.Context) {
-		defer ginCtx.Next()
+	return func(ginctx *gin.Context) {
+		defer ginctx.Next()
 
-		ctx, span := tracer.Start(ginCtx.Request.Context(), "session_middleware")
+		ctx, span := tracer.Start(ginctx.Request.Context(), "session_middleware")
 		defer span.End()
 
-		sessionHeader := ginCtx.GetHeader("X-Auth-Session-Id")
+		sessionHeader := ginctx.GetHeader("X-Auth-Session-Id")
 		if sessionHeader == "" {
 			return
 		}
@@ -35,13 +35,13 @@ func NewSession(service *userauth.Service, tracer trace.Tracer) func(ctx *gin.Co
 			return
 		}
 
-		reqCtx := reqcontext.From(ginCtx)
-		reqCtx.SetUser(user)
-		reqCtx.SetSessionId(sessionId)
+		reqctx := reqcontext.From(ginctx)
+		reqctx.SetUser(user)
+		reqctx.SetSessionId(sessionId)
 
     _, span = tracer.Start(ctx, "mark_session_active")
 		if err := service.MarkSessionActive(ctx, sessionId); err != nil {
-			ginCtx.Error(err)
+			ginctx.Error(err)
 		}
     span.End()
 	}

@@ -3,6 +3,7 @@ package repos
 import (
 	userauth "nosebook/src/application/services/user_auth"
 	"nosebook/src/domain/user"
+	"nosebook/src/lib/cache"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,12 +11,14 @@ import (
 )
 
 type UserRepository struct {
-	db *sqlx.DB
+	db  *sqlx.DB
+	lru *cache.LRU[string, *domainuser.User]
 }
 
 func NewUserRepository(db *sqlx.DB) userauth.UserRepository {
 	return &UserRepository{
-		db: db,
+		db:  db,
+		lru: cache.NewLRU[string, *domainuser.User](2048),
 	}
 }
 
@@ -52,8 +55,13 @@ func (repo *UserRepository) Create(user *domainuser.User) (*domainuser.User, err
 	return user, nil
 }
 
-func (repo *UserRepository) UpdateActivity(userId uuid.UUID, t time.Time) error {
-	_, err := repo.db.Exec(`UPDATE users SET
+func (this *UserRepository) UpdateActivity(userId uuid.UUID, t time.Time) error {
+	if cached, has := this.lru.Get(userId.String()); has {
+		cached.LastActivityAt = t
+		return nil
+	}
+
+	_, err := this.db.Exec(`UPDATE users SET
 		last_activity_at = $1
 			WHERE
 		id = $2
@@ -62,9 +70,9 @@ func (repo *UserRepository) UpdateActivity(userId uuid.UUID, t time.Time) error 
 	return err
 }
 
-func (repo *UserRepository) FindAll() ([]*domainuser.User, error) {
+func (this *UserRepository) FindAll() ([]*domainuser.User, error) {
 	var all []*domainuser.User
-	err := repo.db.Select(&all, `SELECT
+	err := this.db.Select(&all, `SELECT
 		id,
 		first_name,
 		last_name,
@@ -103,9 +111,13 @@ func (repo *UserRepository) FindByNick(nick string) *domainuser.User {
 	return &user
 }
 
-func (repo *UserRepository) FindById(id uuid.UUID) *domainuser.User {
-	user := domainuser.User{}
-	err := repo.db.Get(&user, `SELECT
+func (this *UserRepository) FindById(id uuid.UUID) *domainuser.User {
+	if cached, has := this.lru.Get(id.String()); has {
+		return cached
+	}
+
+	dest := domainuser.User{}
+	err := this.db.Get(&dest, `SELECT
 		id,
 		first_name,
 		last_name,
@@ -121,5 +133,7 @@ func (repo *UserRepository) FindById(id uuid.UUID) *domainuser.User {
 		return nil
 	}
 
-	return &user
+	this.lru.Set(id.String(), &dest)
+
+	return &dest
 }

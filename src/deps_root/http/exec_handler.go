@@ -1,6 +1,7 @@
 package roothttp
 
 import (
+	"context"
 	"nosebook/src/application/services/auth"
 	reqcontext "nosebook/src/deps_root/http/req_context"
 	"nosebook/src/errors"
@@ -11,11 +12,20 @@ import (
 
 type execHandlerOption interface {
 	ShouldAvoidBinding() bool
+  Context() context.Context
 }
 
 type execHandlerAvoidBinding struct{}
 
 func (this *execHandlerAvoidBinding) ShouldAvoidBinding() bool { return true }
+
+type execHandlerWithContext struct{
+  Ctx context.Context
+}
+
+func (this *execHandlerWithContext) Context() context.Context {
+  return this.Ctx
+}
 
 func execDefaultHandler[C any, T any](
 	serviceMethod func(C, *auth.Auth) (T, *errors.Error),
