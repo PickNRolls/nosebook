@@ -1,9 +1,7 @@
 package repos
 
 import (
-	userauth "nosebook/src/application/services/user_auth"
 	"nosebook/src/domain/sessions"
-	"nosebook/src/lib/cache"
 	"nosebook/src/lib/clock"
 
 	"github.com/google/uuid"
@@ -11,14 +9,12 @@ import (
 )
 
 type SessionRepository struct {
-	db  *sqlx.DB
-	lru *cache.LRU[string, *sessions.Session]
+	db *sqlx.DB
 }
 
-func NewSessionRepository(db *sqlx.DB) userauth.SessionRepository {
+func NewSessionRepository(db *sqlx.DB) *SessionRepository {
 	return &SessionRepository{
-		db:  db,
-		lru: cache.NewLRU[string, *sessions.Session](2048),
+		db: db,
 	}
 }
 
@@ -59,12 +55,6 @@ func (repo *SessionRepository) Remove(id uuid.UUID) (*sessions.Session, error) {
 }
 
 func (this *SessionRepository) Update(session *sessions.Session) (*sessions.Session, error) {
-	_, has := this.lru.Get(session.SessionId.String())
-	if has {
-		this.lru.Set(session.SessionId.String(), session)
-		return session, nil
-	}
-
 	_, err := this.db.NamedExec(`UPDATE user_sessions SET
 		expires_at = :expires_at
 			WHERE
@@ -73,8 +63,6 @@ func (this *SessionRepository) Update(session *sessions.Session) (*sessions.Sess
 	if err != nil {
 		return nil, err
 	}
-
-  this.lru.Set(session.SessionId.String(), session)
 
 	return session, nil
 }
@@ -98,11 +86,6 @@ func (repo *SessionRepository) FindByUserId(userId uuid.UUID) *sessions.Session 
 }
 
 func (this *SessionRepository) FindById(id uuid.UUID) *sessions.Session {
-	cached, has := this.lru.Get(id.String())
-	if has {
-		return cached
-	}
-
 	dest := sessions.Session{}
 	err := this.db.Get(&dest, `SELECT
 		session_id,
@@ -116,8 +99,6 @@ func (this *SessionRepository) FindById(id uuid.UUID) *sessions.Session {
 	if err != nil {
 		return nil
 	}
-
-	this.lru.Set(id.String(), &dest)
 
 	return &dest
 }

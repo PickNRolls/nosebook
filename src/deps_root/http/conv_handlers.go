@@ -9,5 +9,5 @@ func (this *RootHTTP) addConversationHandlers() {
 
 	group := this.authRouter.Group("/conversations")
 
-	group.POST("/send-message", execDefaultHandler(service.SendMessage))
+	group.POST("/send-message", execCommand(service.SendMessage, this))
 }

@@ -1,4 +1,4 @@
-package roothttp
+package exec
 
 import (
 	"context"
@@ -21,14 +21,14 @@ const (
 	UINT64 declarationType = "UINT64"
 )
 
-type presenterOption struct {
+type PresenterOption struct {
 	Type     declarationType
 	Required bool
 }
 
-func execDefaultPresenter[In any, Out any](
+func Presenter[In any, Out any](
 	fn func(context.Context, In, *auth.Auth) *presenterdto.FindOut[Out],
-	declarations map[string]presenterOption,
+	declarations map[string]PresenterOption,
 	builder MapBuilder[In],
 	tracer trace.Tracer,
 ) func(*gin.Context) {
@@ -64,7 +64,7 @@ func execDefaultPresenter[In any, Out any](
 		input := builder.BuildFromMap(m)
 		output := fn(c, input, reqctx.Auth())
 
-		_, ok := handle(output, output.Err)(reqctx)
+		_, ok := reqcontext.Handle(output, output.Err)(reqctx)
 		if !ok {
 			return
 		}

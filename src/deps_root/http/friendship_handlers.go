@@ -4,6 +4,7 @@ import (
 	presenterfriendship "nosebook/src/application/presenters/friendship"
 	rootfriendshippresenter "nosebook/src/deps_root/friendship_presenter"
 	rootfriendshipservice "nosebook/src/deps_root/friendship_service"
+	"nosebook/src/deps_root/http/exec"
 	reqcontext "nosebook/src/deps_root/http/req_context"
 
 	"github.com/gin-gonic/gin"
@@ -14,10 +15,10 @@ func (this *RootHTTP) addFriendshipHandlers() {
 	presenter := rootfriendshippresenter.New(this.db)
 
 	group := this.authRouter.Group("/friendship")
-	group.POST("/send-request", execDefaultHandler(service.SendRequest))
-	group.POST("/accept-request", execDefaultHandler(service.AcceptRequest))
-	group.POST("/deny-request", execDefaultHandler(service.DenyRequest))
-	group.POST("/remove-friend", execDefaultHandler(service.RemoveFriend))
+	group.POST("/send-request", exec.Command(service.SendRequest))
+	group.POST("/accept-request", exec.Command(service.AcceptRequest))
+	group.POST("/deny-request", exec.Command(service.DenyRequest))
+	group.POST("/remove-friend", exec.Command(service.RemoveFriend))
 
 	group.GET("", func(ctx *gin.Context) {
 		reqctx := reqcontext.From(ctx)

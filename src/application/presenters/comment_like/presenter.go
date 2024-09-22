@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Presenter struct {
@@ -16,10 +17,10 @@ type Presenter struct {
 	likePresenter *presenterlike.Presenter
 }
 
-func New(db *sqlx.DB, userPresenter presenterlike.UserPresenter) *Presenter {
+func New(db *sqlx.DB, userPresenter presenterlike.UserPresenter, tracer trace.Tracer) *Presenter {
 	return &Presenter{
 		db:            db,
-		likePresenter: presenterlike.New(db, userPresenter),
+		likePresenter: presenterlike.New(db, userPresenter).WithTracer(tracer),
 	}
 }
 

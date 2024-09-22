@@ -1,4 +1,3 @@
-import supertest from 'supertest';
 import request from './request';
 
 describe('comments', () => {

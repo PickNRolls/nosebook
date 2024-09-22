@@ -1,7 +1,7 @@
 package sessions
 
 import (
-	"errors"
+	"nosebook/src/errors"
 	"nosebook/src/lib/clock"
 	"time"
 
@@ -26,11 +26,11 @@ func NewSession(userId uuid.UUID) *Session {
 	}
 }
 
-func (s *Session) Refresh() error {
+func (s *Session) Refresh() *errors.Error {
 	now := clock.Now()
 
 	if s.ExpiresAt.Before(now) {
-		return errors.New("Can't refresh session, it is expired.")
+		return errors.New("Domain Session Error", "Can't refresh session, it is expired")
 	}
 
 	s.ExpiresAt = now.Add(48 * time.Hour)

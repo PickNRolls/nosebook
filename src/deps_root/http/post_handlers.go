@@ -2,6 +2,7 @@ package roothttp
 
 import (
 	presenterpost "nosebook/src/application/presenters/post"
+	"nosebook/src/deps_root/http/exec"
 	reqcontext "nosebook/src/deps_root/http/req_context"
 	rootpostpresenter "nosebook/src/deps_root/post_presenter"
 	rootpostservice "nosebook/src/deps_root/post_service"
@@ -14,8 +15,8 @@ func (this *RootHTTP) addPostHandlers() {
 	presenter := rootpostpresenter.New(this.db, this.tracer)
 
 	group := this.authRouter.Group("/posts")
-	group.POST("/publish", execResultHandler(service.Publish))
-	group.POST("/remove", execResultHandler(service.Remove))
+	group.POST("/publish", execCommand(service.Publish, this, exec.WithUuidMapper))
+	group.POST("/remove", execCommand(service.Remove, this, exec.WithUuidMapper))
 
 	group.GET("", func(ctx *gin.Context) {
 		authorId := ctx.Query("authorId")

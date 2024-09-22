@@ -3,6 +3,7 @@ package roothttp
 import (
 	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/application/presenters/user"
+	"nosebook/src/deps_root/http/exec"
 	reqcontext "nosebook/src/deps_root/http/req_context"
 
 	"github.com/gin-gonic/gin"
@@ -35,12 +36,12 @@ func (this *RootHTTP) addUserHandlers() {
 		reqctx.SetResponseOk(true)
 	})
 
-	group.GET("", execDefaultPresenter(presenter.FindByText, map[string]presenterOption{
+	group.GET("", exec.Presenter(presenter.FindByText, map[string]exec.PresenterOption{
 		"text": {
-			Type: STRING,
+			Type: exec.STRING,
 		},
 		"next": {
-			Type: STRING,
+			Type: exec.STRING,
 		},
 	}, &presenteruser.FindByTextInput{}, this.tracer))
 }

@@ -16,13 +16,13 @@ import (
 )
 
 type RootHTTP struct {
-	db            *sqlx.DB
-	rmqConn       *rabbitmq.Connection
-	router        *gin.Engine
-	authRouter    *gin.RouterGroup
-	unauthRouter  *gin.RouterGroup
-	traceProvider *trace.TracerProvider
-	tracer        oteltrace.Tracer
+	db             *sqlx.DB
+	rmqConn        *rabbitmq.Connection
+	router         *gin.Engine
+	authRouter     *gin.RouterGroup
+	unauthRouter   *gin.RouterGroup
+	traceProvider  *trace.TracerProvider
+	tracer         oteltrace.Tracer
 }
 
 func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *RootHTTP {
@@ -61,7 +61,6 @@ func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *RootHTTP {
 		router:  router,
 		rmqConn: rmqConn,
 	}
-
 
 	router.Use(middleware.NewRequestMetrics())
 

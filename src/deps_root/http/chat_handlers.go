@@ -5,6 +5,7 @@ import (
 	presenterdto "nosebook/src/application/presenters/dto"
 	presentermessage "nosebook/src/application/presenters/message"
 	presenteruser "nosebook/src/application/presenters/user"
+	"nosebook/src/deps_root/http/exec"
 	reqcontext "nosebook/src/deps_root/http/req_context"
 
 	"github.com/gin-gonic/gin"
@@ -15,22 +16,22 @@ func (this *RootHTTP) addChatHandlers() {
 		WithTracer(this.tracer)
 
 	messagePresenter := presentermessage.New(this.db, userPresenter).
-    WithTracer(this.tracer)
-  
+		WithTracer(this.tracer)
+
 	presenter := presenterchat.New(this.db, userPresenter, messagePresenter).
-    WithTracer(this.tracer) 
+		WithTracer(this.tracer)
 
 	group := this.authRouter.Group("/chats")
 
-	group.GET("", execDefaultPresenter(presenter.FindByFilter, map[string]presenterOption{
+	group.GET("", exec.Presenter(presenter.FindByFilter, map[string]exec.PresenterOption{
 		"interlocutorId": {
-			Type: STRING,
+			Type: exec.STRING,
 		},
 		"next": {
-			Type: STRING,
+			Type: exec.STRING,
 		},
 		"limit": {
-			Type: UINT64,
+			Type: exec.UINT64,
 		},
 	}, &presenterchat.FindByFilterInput{}, this.tracer))
 

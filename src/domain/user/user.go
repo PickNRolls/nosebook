@@ -28,3 +28,7 @@ func New(firstName string, lastName string, nick string, passhash string) *User 
 		LastActivityAt: clock.Now(),
 	}
 }
+
+func (this *User) MarkActivity() {
+  this.LastActivityAt = clock.Now()
+}

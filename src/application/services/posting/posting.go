@@ -1,10 +1,11 @@
 package posting
 
 import (
+	"context"
 	"nosebook/src/application/services/auth"
 	"nosebook/src/domain/post"
+	"nosebook/src/errors"
 	"nosebook/src/lib/clock"
-	commandresult "nosebook/src/lib/command_result"
 
 	"github.com/google/uuid"
 )
@@ -19,7 +20,7 @@ func New(repository Repository) *Service {
 	}
 }
 
-func (this *Service) Publish(c PublishPostCommand, a *auth.Auth) *commandresult.Result {
+func (this *Service) Publish(parent context.Context, c PublishPostCommand, a *auth.Auth) (uuid.UUID, *errors.Error) {
 	post := domainpost.NewBuilder().
 		Id(uuid.New()).
 		AuthorId(a.UserId).
@@ -31,46 +32,46 @@ func (this *Service) Publish(c PublishPostCommand, a *auth.Auth) *commandresult.
 
 	err := this.repository.Save(post)
 	if err != nil {
-		return commandresult.Fail(err)
+		return uuid.Nil, err
 	}
 
-	return commandresult.Ok().WithId(post.Id)
+	return post.Id, nil
 }
 
-func (this *Service) Remove(c RemovePostCommand, a *auth.Auth) *commandresult.Result {
+func (this *Service) Remove(parent context.Context, c RemovePostCommand, a *auth.Auth) (uuid.UUID, *errors.Error) {
 	post := this.repository.FindById(c.Id)
 	if post == nil {
-		return commandresult.Fail(NewNotFoundError())
+		return uuid.Nil, NewNotFoundError()
 	}
 
 	err := post.RemoveBy(a.UserId)
 	if err != nil {
-		return commandresult.Fail(err)
+		return uuid.Nil, err
 	}
 
 	err = this.repository.Save(post)
 	if err != nil {
-		return commandresult.Fail(err)
+		return uuid.Nil, err
 	}
 
-	return commandresult.Ok().WithId(post.Id)
+	return post.Id, nil
 }
 
-func (this *Service) Edit(c EditPostCommand, a *auth.Auth) *commandresult.Result {
+func (this *Service) Edit(c EditPostCommand, a *auth.Auth) (uuid.UUID, *errors.Error) {
 	post := this.repository.FindById(c.Id)
 	if post == nil {
-		return commandresult.Fail(NewNotFoundError())
+		return uuid.Nil, NewNotFoundError()
 	}
 
 	err := post.EditBy(a.UserId, c.Message)
 	if err != nil {
-		return commandresult.Fail(err)
+		return uuid.Nil, err
 	}
 
 	err = this.repository.Save(post)
 	if err != nil {
-		return commandresult.Fail(err)
+		return uuid.Nil, err
 	}
 
-	return commandresult.Ok().WithId(post.Id)
+	return post.Id, nil
 }

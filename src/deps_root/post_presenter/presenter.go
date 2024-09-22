@@ -16,7 +16,7 @@ func New(db *sqlx.DB, tracer trace.Tracer) *presenterpost.Presenter {
 	presenter := presenterpost.New(
 		db,
 		userPresenter,
-		rootcommentpresenter.New(db).WithTracer(tracer),
+		rootcommentpresenter.New(db, tracer),
 		likePresenter,
 		&permissions{},
 	).WithTracer(tracer)

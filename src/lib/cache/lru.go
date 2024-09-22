@@ -64,3 +64,18 @@ func (this *LRU[K, T]) Get(key K) (T, bool) {
   value := node.value.(T)
 	return value, true
 }
+
+func (this *LRU[K, T]) GetAll(keys []K) []T {
+  out := make([]T, len(keys))
+  
+  for i, key := range keys {
+    value, has := this.Get(key)
+    if !has {
+      return []T{}
+    }
+
+    out[i] = value
+  } 
+
+  return out
+}

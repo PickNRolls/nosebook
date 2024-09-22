@@ -103,7 +103,7 @@ func (this *Presenter) FindByFilter(parent context.Context, input FindByFilterIn
 	}
 
 	dest := []*Dest{}
-	_, span = this.tracer.Start(ctx, "comment_presenter.sql_query")
+	_, span = this.tracer.Start(ctx, "sql_query")
 	cursorQueryOut, error := cursorquery.Do(this.db, &cursorquery.Input[*Dest]{
 		Query: query,
 		Next:  input.Next,
@@ -117,25 +117,29 @@ func (this *Presenter) FindByFilter(parent context.Context, input FindByFilterIn
 		return errOut(error)
 	}
 
-	likesMap, err := this.likePresenter.FindByCommentIds(ctx, func() uuid.UUIDs {
+  likeCtx, span := this.tracer.Start(ctx, "like_presenter.find_by_comment_ids")
+	likesMap, err := this.likePresenter.FindByCommentIds(likeCtx, func() uuid.UUIDs {
 		ids := make(uuid.UUIDs, len(dest))
 		for i, destComment := range dest {
 			ids[i] = destComment.Id
 		}
 		return ids
 	}(), auth)
+  span.End()
 	if err != nil {
 		return errOut(err)
 	}
 
+  userCtx, span := this.tracer.Start(ctx, "user_presenter.find_by_ids")
 	userMap, err := func() (map[uuid.UUID]*presenterdto.User, *errors.Error) {
 		ids := uuid.UUIDs{}
 		for _, destComment := range dest {
 			ids = append(ids, destComment.AuthorId)
 		}
 
-		return this.userPresenter.FindByIds(ctx, ids)
+		return this.userPresenter.FindByIds(userCtx, ids)
 	}()
+  span.End()
 	if err != nil {
 		errOut(err)
 	}

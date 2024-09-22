@@ -4,6 +4,7 @@ import (
 	presentercomment "nosebook/src/application/presenters/comment"
 	rootcommentpresenter "nosebook/src/deps_root/comment_presenter"
 	rootcommentservice "nosebook/src/deps_root/comment_service"
+	"nosebook/src/deps_root/http/exec"
 	reqcontext "nosebook/src/deps_root/http/req_context"
 
 	"github.com/gin-gonic/gin"
@@ -11,12 +12,12 @@ import (
 
 func (this *RootHTTP) addCommentHandlers() {
 	service := rootcommentservice.New(this.db)
-	presenter := rootcommentpresenter.New(this.db)
+	presenter := rootcommentpresenter.New(this.db, this.tracer)
 
 	group := this.authRouter.Group("/comments")
 
-	group.POST("/publish-on-post", execResultHandler(service.PublishOnPost))
-	group.POST("/remove", execResultHandler(service.Remove))
+	group.POST("/publish-on-post", exec.Command(service.PublishOnPost, exec.WithUuidMapper))
+	group.POST("/remove", exec.Command(service.Remove, exec.WithUuidMapper))
 
 	group.GET("", func(ctx *gin.Context) {
 		reqctx := reqcontext.From(ctx)

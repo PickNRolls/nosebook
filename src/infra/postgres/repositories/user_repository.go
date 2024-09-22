@@ -1,9 +1,7 @@
 package repos
 
 import (
-	userauth "nosebook/src/application/services/user_auth"
 	"nosebook/src/domain/user"
-	"nosebook/src/lib/cache"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,13 +10,11 @@ import (
 
 type UserRepository struct {
 	db  *sqlx.DB
-	lru *cache.LRU[string, *domainuser.User]
 }
 
-func NewUserRepository(db *sqlx.DB) userauth.UserRepository {
+func NewUserRepository(db *sqlx.DB) *UserRepository {
 	return &UserRepository{
 		db:  db,
-		lru: cache.NewLRU[string, *domainuser.User](2048),
 	}
 }
 
@@ -56,11 +52,6 @@ func (repo *UserRepository) Create(user *domainuser.User) (*domainuser.User, err
 }
 
 func (this *UserRepository) UpdateActivity(userId uuid.UUID, t time.Time) error {
-	if cached, has := this.lru.Get(userId.String()); has {
-		cached.LastActivityAt = t
-		return nil
-	}
-
 	_, err := this.db.Exec(`UPDATE users SET
 		last_activity_at = $1
 			WHERE
@@ -112,10 +103,6 @@ func (repo *UserRepository) FindByNick(nick string) *domainuser.User {
 }
 
 func (this *UserRepository) FindById(id uuid.UUID) *domainuser.User {
-	if cached, has := this.lru.Get(id.String()); has {
-		return cached
-	}
-
 	dest := domainuser.User{}
 	err := this.db.Get(&dest, `SELECT
 		id,
@@ -132,8 +119,6 @@ func (this *UserRepository) FindById(id uuid.UUID) *domainuser.User {
 	if err != nil {
 		return nil
 	}
-
-	this.lru.Set(id.String(), &dest)
 
 	return &dest
 }
