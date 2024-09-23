@@ -24,5 +24,8 @@ func Connect() *sqlx.DB {
 		log.Fatalln(err)
 	}
 
+  db.SetMaxIdleConns(20)
+  db.SetConnMaxLifetime(0)
+
 	return db
 }

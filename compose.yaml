@@ -5,7 +5,7 @@ services:
     container_name: db
     restart: always
     user: postgres
-    # command: ["postgres", "-c", "log_statement=all"]
+    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
     secrets:
       - db-password
     environment:
@@ -29,9 +29,10 @@ services:
     secrets:
       - db-password
     environment:
-      - DATA_SOURCE_URI=db:5432?sslmode=disable
+      - DATA_SOURCE_URI=db:5432/nosebook?sslmode=disable
       - DATA_SOURCE_USER=postgres
       - DATA_SOURCE_PASS_FILE=/run/secrets/db-password
+    command: --collector.stat_statements
     expose:
       - 9187
 

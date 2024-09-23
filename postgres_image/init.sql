@@ -1,3 +1,5 @@
+CREATE EXTENSION pg_stat_statements SCHEMA public;
+
 -- Definitions
 CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
