@@ -2,21 +2,24 @@ package repos
 
 import (
 	"nosebook/src/domain/sessions"
+	querybuilder "nosebook/src/infra/query_builder"
 	"nosebook/src/lib/clock"
 	"nosebook/src/lib/worker"
 	"strconv"
 	"time"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 type SessionRepository struct {
-	db     *sqlx.DB
-	ticker *time.Ticker
-	buffer *worker.Buffer[*sessions.Session, error, time.Time]
-	done   chan struct{}
+	db             *sqlx.DB
+	ticker         *time.Ticker
+	bufferUpdate   *worker.Buffer[*sessions.Session, error, time.Time]
+	bufferFindById *worker.Buffer[uuid.UUID, map[uuid.UUID]*sessions.Session, time.Time]
+	done           chan struct{}
 }
 
 var SessionsInWorkerTotal = prometheus.NewCounter(
@@ -52,7 +55,7 @@ func NewSessionRepository(db *sqlx.DB) *SessionRepository {
 		ticker: time.NewTicker(time.Millisecond * 20),
 	}
 
-	buffer := worker.NewBuffer(func(sessions []*sessions.Session) error {
+	bufferUpdate := worker.NewBuffer(func(sessions []*sessions.Session) error {
 		SessionsInWorkerCurrent.Set(0)
 		SessionsInWorkerBatchSize.Observe(float64(len(sessions)))
 		before := clock.Now()
@@ -85,16 +88,41 @@ func NewSessionRepository(db *sqlx.DB) *SessionRepository {
 		return err
 	}, out.ticker.C, out.done, 256, worker.FlushEmpty)
 
-	out.buffer = buffer
+	out.bufferUpdate = bufferUpdate
+
+	out.bufferFindById = worker.NewBuffer(func(ids []uuid.UUID) map[uuid.UUID]*sessions.Session {
+		out := map[uuid.UUID]*sessions.Session{}
+		qb := querybuilder.New()
+
+		dests := []*sessions.Session{}
+		sql, args, _ := qb.Select("session_id", "user_id", "created_at", "expires_at").
+			From("user_sessions").
+			Where(squirrel.Eq{"session_id": ids}).
+			Where("expires_at > ?", clock.Now()).
+			ToSql()
+		err := db.Select(&dests, sql, args...)
+		if err != nil {
+			return out
+		}
+
+    for _, dest := range dests {
+      out[dest.SessionId] = dest
+    }
+
+    return out
+	}, out.ticker.C, out.done, 256)
 
 	return out
 }
 
 func (this *SessionRepository) Run() {
-	this.buffer.Run()
+	go this.bufferUpdate.Run()
+  go this.bufferFindById.Run()
+  
+  <- this.done
 }
 
-func (this *SessionRepository) OnDispose() {
+func (this *SessionRepository) OnDone() {
 	this.done <- struct{}{}
 	close(this.done)
 
@@ -141,7 +169,7 @@ func (this *SessionRepository) Update(session *sessions.Session) (*sessions.Sess
 	SessionsInWorkerTotal.Inc()
 	SessionsInWorkerCurrent.Inc()
 
-	err := this.buffer.Send(session)
+	err := this.bufferUpdate.Send(session)
 	if err != nil {
 		return nil, err
 	}
@@ -149,38 +177,7 @@ func (this *SessionRepository) Update(session *sessions.Session) (*sessions.Sess
 	return session, nil
 }
 
-func (repo *SessionRepository) FindByUserId(userId uuid.UUID) *sessions.Session {
-	session := sessions.Session{}
-	err := repo.db.Get(&session, `SELECT
-		session_id,
-		user_id,
-		created_at,
-		expires_at
-			FROM user_sessions WHERE
-		user_id = $1 AND expires_at > $2
-	`, userId, clock.Now())
-
-	if err != nil {
-		return nil
-	}
-
-	return &session
-}
-
 func (this *SessionRepository) FindById(id uuid.UUID) *sessions.Session {
-	dest := sessions.Session{}
-	err := this.db.Get(&dest, `SELECT
-		session_id,
-		user_id,
-		created_at,
-		expires_at
-			FROM user_sessions WHERE
-		session_id = $1 AND expires_at > $2
-	`, id, clock.Now())
-
-	if err != nil {
-		return nil
-	}
-
-	return &dest
+  m := this.bufferFindById.Send(id)
+  return m[id]
 }

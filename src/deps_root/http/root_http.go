@@ -76,9 +76,12 @@ func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *RootHTTP {
 	output.enableTracing()
 
 	sessionRepository := repos.NewSessionRepository(db)
-	go sessionRepository.Run()
-  output.shutdowns = append(output.shutdowns, sessionRepository.OnDispose)
-	userAuthService := userauth.New(repos.NewUserRepository(db), sessionRepository, output.tracer)
+  output.shutdownRun(sessionRepository)
+  
+  userRepository := repos.NewUserRepository(db)
+  output.shutdownRun(userRepository)
+  
+	userAuthService := userauth.New(userRepository, sessionRepository, output.tracer)
 
 	router.Use(middleware.NewPresenter())
 	router.NoRoute(middleware.NewNoRouteHandler())
@@ -88,8 +91,7 @@ func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *RootHTTP {
 	output.authRouter = router.Group("/", middleware.NewAuth())
   
   messagePresenter := presentermessage.New(output.db, presenteruser.New(output.db))
-  go messagePresenter.Run()
-  output.shutdowns = append(output.shutdowns, messagePresenter.OnDone)
+  output.shutdownRun(messagePresenter)
 
 	output.addAuthHandlers(userAuthService)
 	output.addLikeHandlers()
