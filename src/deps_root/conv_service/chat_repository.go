@@ -2,21 +2,77 @@ package rootconvservice
 
 import (
 	domainchat "nosebook/src/domain/chat"
+	domainmessage "nosebook/src/domain/message"
 	"nosebook/src/errors"
 	querybuilder "nosebook/src/infra/query_builder"
+	"nosebook/src/lib/worker"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
 type chatRepository struct {
-	db *sqlx.DB
+	db     *sqlx.DB
+	done   chan struct{}
+	buffer *worker.Buffer[*bufferedMessage, *errors.Error, time.Time]
+}
+
+type bufferedMessage struct {
+	message *domainmessage.Message
+	chatId  uuid.UUID
 }
 
 func newChatRepository(db *sqlx.DB) *chatRepository {
-	return &chatRepository{
-		db: db,
+	out := &chatRepository{
+		db:   db,
+		done: make(chan struct{}),
 	}
+
+	ticker := time.NewTicker(time.Millisecond * 300)
+	out.buffer = worker.NewBuffer(func(bufferedMessages []*bufferedMessage) *errors.Error {
+		qb := querybuilder.New()
+		query := qb.Insert("messages").
+			Columns(
+				"id",
+				"author_id",
+				"text",
+				"reply_to",
+				"chat_id",
+				"created_at",
+				"removed_at",
+			)
+
+		for _, buffered := range bufferedMessages {
+			message := buffered.message
+			chatId := buffered.chatId
+
+			query = query.Values(
+				message.Id,
+				message.AuthorId,
+				message.Text,
+				message.ReplyTo,
+				chatId,
+				message.CreatedAt,
+				message.RemovedAt,
+			)
+		}
+
+		sql, args, _ := query.ToSql()
+		_, err := db.Exec(sql, args...)
+		return errors.From(err)
+	}, ticker.C, out.done, 256)
+
+	return out
+}
+
+func (this *chatRepository) Run() {
+	this.buffer.Run()
+}
+
+func (this *chatRepository) OnDone() {
+	this.done <- struct{}{}
+  close(this.done)
 }
 
 func (this *chatRepository) FindByMemberIds(leftId uuid.UUID, rightId uuid.UUID) (*domainchat.Chat, *errors.Error) {
@@ -97,31 +153,12 @@ func (this *chatRepository) Save(chat *domainchat.Chat) *errors.Error {
 		case domainchat.MESSAGE_SENT:
 			messageSent := event.(*domainchat.MessageSentEvent)
 			message := messageSent.Message
-			sql, args, _ := qb.Insert("messages").
-				Columns(
-					"id",
-					"author_id",
-					"text",
-					"reply_to",
-					"chat_id",
-					"created_at",
-					"removed_at",
-				).
-				Values(
-					message.Id,
-					message.AuthorId,
-					message.Text,
-					message.ReplyTo,
-					chat.Id,
-					message.CreatedAt,
-					message.RemovedAt,
-				).
-				ToSql()
 
-			_, err := this.db.Exec(sql, args...)
-			if err != nil {
-				return errors.From(err)
-			}
+      err := this.buffer.Send(&bufferedMessage{
+        message: message,
+        chatId: chat.Id,
+      })
+      return err
 		}
 	}
 
