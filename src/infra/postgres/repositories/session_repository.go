@@ -1,12 +1,12 @@
 package repos
 
 import (
+	prometheusmetrics "nosebook/src/deps_root/worker"
 	"nosebook/src/domain/sessions"
 	querybuilder "nosebook/src/infra/query_builder"
 	"nosebook/src/lib/clock"
 	"nosebook/src/lib/worker"
 	"strconv"
-	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -16,9 +16,8 @@ import (
 
 type SessionRepository struct {
 	db             *sqlx.DB
-	ticker         *time.Ticker
-	bufferUpdate   *worker.Buffer[*sessions.Session, error, time.Time]
-	bufferFindById *worker.Buffer[uuid.UUID, map[uuid.UUID]*sessions.Session, time.Time]
+	bufferUpdate   *worker.Buffer[*sessions.Session, error]
+	bufferFindById *worker.Buffer[uuid.UUID, map[uuid.UUID]*sessions.Session]
 	done           chan struct{}
 }
 
@@ -51,11 +50,10 @@ var SessionsInWorkerUnitElapsed = prometheus.NewHistogram(
 
 func NewSessionRepository(db *sqlx.DB) *SessionRepository {
 	out := &SessionRepository{
-		db:     db,
-		ticker: time.NewTicker(time.Millisecond * 10),
+		db: db,
 	}
 
-	bufferUpdate := worker.NewBuffer(func(sessions []*sessions.Session) error {
+	out.bufferUpdate = worker.NewBuffer(func(sessions []*sessions.Session) error {
 		SessionsInWorkerCurrent.Set(0)
 		SessionsInWorkerBatchSize.Observe(float64(len(sessions)))
 		before := clock.Now()
@@ -86,9 +84,7 @@ func NewSessionRepository(db *sqlx.DB) *SessionRepository {
 		after := clock.Now()
 		SessionsInWorkerUnitElapsed.Observe(float64(after.Sub(before).Seconds()))
 		return err
-	}, out.ticker.C, out.done, 256, worker.FlushEmpty)
-
-	out.bufferUpdate = bufferUpdate
+	}, prometheusmetrics.UsePrometheusMetrics("sessions_update"))
 
 	out.bufferFindById = worker.NewBuffer(func(ids []uuid.UUID) map[uuid.UUID]*sessions.Session {
 		out := map[uuid.UUID]*sessions.Session{}
@@ -105,28 +101,26 @@ func NewSessionRepository(db *sqlx.DB) *SessionRepository {
 			return out
 		}
 
-    for _, dest := range dests {
-      out[dest.SessionId] = dest
-    }
+		for _, dest := range dests {
+			out[dest.SessionId] = dest
+		}
 
-    return out
-	}, out.ticker.C, out.done, 256)
+		return out
+	}, prometheusmetrics.UsePrometheusMetrics("sessions_find"))
 
 	return out
 }
 
 func (this *SessionRepository) Run() {
 	go this.bufferUpdate.Run()
-  go this.bufferFindById.Run()
-  
-  <- this.done
+	go this.bufferFindById.Run()
+
+	<-this.done
 }
 
 func (this *SessionRepository) OnDone() {
 	this.done <- struct{}{}
 	close(this.done)
-
-	this.ticker.Stop()
 }
 
 func (repo *SessionRepository) Create(session *sessions.Session) (*sessions.Session, error) {
@@ -178,6 +172,6 @@ func (this *SessionRepository) Update(session *sessions.Session) (*sessions.Sess
 }
 
 func (this *SessionRepository) FindById(id uuid.UUID) *sessions.Session {
-  m := this.bufferFindById.Send(id)
-  return m[id]
+	m := this.bufferFindById.Send(id)
+	return m[id]
 }

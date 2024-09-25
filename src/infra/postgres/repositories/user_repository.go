@@ -1,6 +1,7 @@
 package repos
 
 import (
+	prometheusmetrics "nosebook/src/deps_root/worker"
 	"nosebook/src/domain/user"
 	querybuilder "nosebook/src/infra/query_builder"
 	"nosebook/src/lib/worker"
@@ -14,8 +15,8 @@ import (
 
 type UserRepository struct {
 	db             *sqlx.DB
-	bufferUpdate   *worker.Buffer[*bufferUpdate, error, time.Time]
-	bufferFindById *worker.Buffer[uuid.UUID, map[uuid.UUID]*domainuser.User, time.Time]
+	bufferUpdate   *worker.Buffer[*bufferUpdate, error]
+	bufferFindById *worker.Buffer[uuid.UUID, map[uuid.UUID]*domainuser.User]
 	done           chan struct{}
 }
 
@@ -30,7 +31,6 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 		done: make(chan struct{}),
 	}
 
-	ticker := time.NewTicker(time.Millisecond * 10)
 	out.bufferUpdate = worker.NewBuffer(func(updates []*bufferUpdate) error {
 		sql := `UPDATE users as u SET last_activity_at = v.last_activity_at
     FROM (VALUES `
@@ -51,7 +51,7 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 		sql += ") v(id, last_activity_at) WHERE u.id = v.id"
 		_, err := db.Exec(sql, args...)
 		return err
-	}, ticker.C, out.done, 256)
+	}, prometheusmetrics.UsePrometheusMetrics("users_update"))
 
 	qb := querybuilder.New()
 	out.bufferFindById = worker.NewBuffer(func(ids []uuid.UUID) map[uuid.UUID]*domainuser.User {
@@ -73,7 +73,7 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 		}
 
 		return out
-	}, ticker.C, out.done, 256)
+	}, prometheusmetrics.UsePrometheusMetrics("users_find"))
 
 	return out
 }

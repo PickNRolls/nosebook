@@ -2,10 +2,10 @@ package presentermessage
 
 import (
 	"context"
+	prometheusmetrics "nosebook/src/deps_root/worker"
 	"nosebook/src/errors"
 	querybuilder "nosebook/src/infra/query_builder"
 	"nosebook/src/lib/worker"
-	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -16,7 +16,7 @@ import (
 type findByIdsQuery struct {
 	db            *sqlx.DB
 	userPresenter UserPresenter
-	buffer        *worker.Buffer[[]uuid.UUID, *findByIdsQueryBufferOut, time.Time]
+	buffer        *worker.Buffer[[]uuid.UUID, *findByIdsQueryBufferOut]
 	done          chan struct{}
 	tracer        trace.Tracer
 }
@@ -27,12 +27,12 @@ type findByIdsQueryBufferOut struct {
 }
 
 func newFindByIdsQuery(db *sqlx.DB, userPresenter UserPresenter, tracer trace.Tracer) *findByIdsQuery {
-  return &findByIdsQuery{
-    db: db,
-    userPresenter: userPresenter,
-    done: make(chan struct{}),
-    tracer: tracer,
-  }
+	return &findByIdsQuery{
+		db:            db,
+		userPresenter: userPresenter,
+		done:          make(chan struct{}),
+		tracer:        tracer,
+	}
 }
 
 func (this *findByIdsQuery) Do(parent context.Context, ids uuid.UUIDs) (map[uuid.UUID]*message, *errors.Error) {
@@ -40,32 +40,30 @@ func (this *findByIdsQuery) Do(parent context.Context, ids uuid.UUIDs) (map[uuid
 	defer span.End()
 
 	out := this.buffer.Send(ids)
-  filtered := map[uuid.UUID]*message{}
-  for _, id := range ids {
-    filtered[id] = out.data[id]
-  }
-  
+	filtered := map[uuid.UUID]*message{}
+	for _, id := range ids {
+		filtered[id] = out.data[id]
+	}
+
 	return filtered, out.err
 }
 
 func (this *findByIdsQuery) Run() {
-	ticker := time.NewTicker(time.Millisecond * 10)
-
 	this.buffer = worker.NewBuffer(func(values [][]uuid.UUID) *findByIdsQueryBufferOut {
-    unique := map[uuid.UUID]struct{}{}
-    for _, row := range values {
-      for _, id := range row {
-        if _, has := unique[id]; !has {
-          unique[id] = struct{}{}
-        } 
-      }
-    }
+		unique := map[uuid.UUID]struct{}{}
+		for _, row := range values {
+			for _, id := range row {
+				if _, has := unique[id]; !has {
+					unique[id] = struct{}{}
+				}
+			}
+		}
 
-    ids := []uuid.UUID{}
-    for id := range unique {
-      ids = append(ids, id)
-    }
-    
+		ids := []uuid.UUID{}
+		for id := range unique {
+			ids = append(ids, id)
+		}
+
 		qb := querybuilder.New()
 		sql, args, _ := qb.
 			Select("id", "author_id", "text", "chat_id", "reply_to", "created_at").
@@ -82,17 +80,17 @@ func (this *findByIdsQuery) Run() {
 			}
 		}
 
-    data, err := mapDests(context.TODO(), this.userPresenter, dests)
-    return &findByIdsQueryBufferOut{
-      err: err,
-      data: data,
-    }
-	}, ticker.C, this.done, 256)
+		data, err := mapDests(context.TODO(), this.userPresenter, dests)
+		return &findByIdsQueryBufferOut{
+			err:  err,
+			data: data,
+		}
+	}, prometheusmetrics.UsePrometheusMetrics("message_find"))
 
 	this.buffer.Run()
 }
 
 func (this *findByIdsQuery) OnDone() {
-  this.done <- struct{}{}
-  close(this.done)
+	this.done <- struct{}{}
+	close(this.done)
 }

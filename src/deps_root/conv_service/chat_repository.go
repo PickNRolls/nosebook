@@ -7,7 +7,6 @@ import (
 	"nosebook/src/errors"
 	querybuilder "nosebook/src/infra/query_builder"
 	worker "nosebook/src/lib/worker"
-	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -17,8 +16,8 @@ import (
 type chatRepository struct {
 	db           *sqlx.DB
 	done         chan struct{}
-	bufferInsert *worker.Buffer[*bufferInsertMessage, *errors.Error, time.Time]
-	bufferFind   *worker.Buffer[*bufferFindMessage, *bufferFindOut, time.Time]
+	bufferInsert *worker.Buffer[*bufferInsertMessage, *errors.Error]
+	bufferFind   *worker.Buffer[*bufferFindMessage, *bufferFindOut]
 }
 
 type bufferFindMessage struct {
@@ -42,7 +41,6 @@ func newChatRepository(db *sqlx.DB) *chatRepository {
 		done: make(chan struct{}),
 	}
 
-	ticker := time.NewTicker(time.Millisecond * 10)
 	out.bufferInsert = worker.NewBuffer(func(bufferedMessages []*bufferInsertMessage) *errors.Error {
 		qb := querybuilder.New()
 		query := qb.Insert("messages").
@@ -74,7 +72,7 @@ func newChatRepository(db *sqlx.DB) *chatRepository {
 		sql, args, _ := query.ToSql()
 		_, err := db.Exec(sql, args...)
 		return errors.From(err)
-	}, ticker.C, out.done, 256, prometheusmetrics.UsePrometheusMetrics("message_insert"))
+	}, prometheusmetrics.UsePrometheusMetrics("message_insert"))
 
 	qb := querybuilder.New(querybuilder.OmitPlaceholder)
 	out.bufferFind = worker.NewBuffer(func(bufferedMessages []*bufferFindMessage) *bufferFindOut {
@@ -133,7 +131,7 @@ func newChatRepository(db *sqlx.DB) *chatRepository {
 		}
 
 		return out
-	}, ticker.C, out.done, 256, prometheusmetrics.UsePrometheusMetrics("chat_find"))
+	}, prometheusmetrics.UsePrometheusMetrics("chat_find"))
 
 	return out
 }

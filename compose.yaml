@@ -5,7 +5,7 @@ services:
     container_name: db
     restart: always
     user: postgres
-    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
+    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements", "-c", "log_lock_waits=on", "-c", "deadlock_timeout=300ms"]
     secrets:
       - db-password
     environment:

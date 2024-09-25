@@ -3,7 +3,6 @@ package rootconvservice
 import (
 	querybuilder "nosebook/src/infra/query_builder"
 	"nosebook/src/lib/worker"
-	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -12,12 +11,11 @@ import (
 
 type userRepository struct {
 	db     *sqlx.DB
-	buffer *worker.Buffer[uuid.UUID, map[uuid.UUID]struct{}, time.Time]
+	buffer *worker.Buffer[uuid.UUID, map[uuid.UUID]struct{}]
 	done   chan struct{}
 }
 
 func newUserRepository(db *sqlx.DB) *userRepository {
-	ticker := time.NewTicker(time.Millisecond * 10)
 	done := make(chan struct{})
 	qb := querybuilder.New()
 
@@ -45,7 +43,7 @@ func newUserRepository(db *sqlx.DB) *userRepository {
 			}
 
 			return out
-		}, ticker.C, done, 256),
+		}),
 	}
 }
 

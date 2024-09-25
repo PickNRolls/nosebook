@@ -4,13 +4,11 @@ import (
 	"nosebook/src/lib/clock"
 )
 
-type Buffer[S any, R any, W any] struct {
-	metrics    Metrics
-	flushEmpty bool
-	doFlush    <-chan W
-	flush      Flush[S, R]
-	send       chan send[S, R]
-	done       <-chan struct{}
+type Buffer[S any, R any] struct {
+	metrics Metrics
+	flush   Flush[S, R]
+	send    chan send[S, R]
+	done    <-chan struct{}
 }
 
 type send[S any, R any] struct {
@@ -20,20 +18,30 @@ type send[S any, R any] struct {
 
 type Flush[S any, R any] func(values []S) R
 
-func NewBuffer[S any, R any, W any](flush Flush[S, R], doFlush <-chan W, done <-chan struct{}, bufferSize int, optFns ...func() BufferOpt) *Buffer[S, R, W] {
-	flushEmpty := false
+func NewBuffer[S any, R any](flush Flush[S, R], optFns ...func() BufferOpt) *Buffer[S, R] {
 	var metrics Metrics = nil
+	var done <-chan struct{}
+	bufferSize := 0
 
 	for _, optFn := range optFns {
 		opt := optFn()
 
-		if opt.FlushEmpty() {
-			flushEmpty = true
-		}
-
 		if opt.Metrics() != nil && metrics == nil {
 			metrics = opt.Metrics()
 		}
+
+		ch := opt.Done()
+		if ch != nil {
+			done = ch
+		}
+
+		if opt.BufferSize() != 0 {
+			bufferSize = opt.BufferSize()
+		}
+	}
+
+	if bufferSize == 0 {
+		bufferSize = 256
 	}
 
 	if metrics == nil {
@@ -42,31 +50,25 @@ func NewBuffer[S any, R any, W any](flush Flush[S, R], doFlush <-chan W, done <-
 
 	metrics.Register()
 
-	return &Buffer[S, R, W]{
-		metrics:    metrics,
-		flushEmpty: flushEmpty,
-		doFlush:    doFlush,
-		flush:      flush,
-		send:       make(chan send[S, R], bufferSize),
-		done:       done,
+	return &Buffer[S, R]{
+		metrics: metrics,
+		flush:   flush,
+		send:    make(chan send[S, R], bufferSize),
+		done:    done,
 	}
 }
 
-func (this *Buffer[S, R, W]) Run() {
+func (this *Buffer[S, R]) Run() {
 	for {
 		select {
 		case <-this.done:
 			break
 
-		case <-this.doFlush:
-			if len(this.send) == 0 && !this.flushEmpty {
-				continue
-			}
-
+		case value := <-this.send:
 			this.metrics.FlushedBufferSize(float64(len(this.send)))
 
-			values := []S{}
-			receivers := []chan<- R{}
+			values := []S{value.value}
+			receivers := []chan<- R{value.receiver}
 			for range len(this.send) {
 				send := <-this.send
 				values = append(values, send.value)
@@ -85,7 +87,7 @@ func (this *Buffer[S, R, W]) Run() {
 	}
 }
 
-func (this *Buffer[S, R, W]) Send(value S) R {
+func (this *Buffer[S, R]) Send(value S) R {
 	start := clock.Now()
 	defer func() {
 		this.metrics.ElapsedSeconds(clock.Now().Sub(start).Seconds())
