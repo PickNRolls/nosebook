@@ -1,11 +1,12 @@
 package rootconvservice
 
 import (
+	prometheusmetrics "nosebook/src/deps_root/worker"
 	domainchat "nosebook/src/domain/chat"
 	domainmessage "nosebook/src/domain/message"
 	"nosebook/src/errors"
 	querybuilder "nosebook/src/infra/query_builder"
-	"nosebook/src/lib/worker"
+	worker "nosebook/src/lib/worker"
 	"time"
 
 	"github.com/Masterminds/squirrel"
@@ -73,7 +74,7 @@ func newChatRepository(db *sqlx.DB) *chatRepository {
 		sql, args, _ := query.ToSql()
 		_, err := db.Exec(sql, args...)
 		return errors.From(err)
-	}, ticker.C, out.done, 256)
+	}, ticker.C, out.done, 256, prometheusmetrics.UsePrometheusMetrics("message_insert"))
 
 	qb := querybuilder.New(querybuilder.OmitPlaceholder)
 	out.bufferFind = worker.NewBuffer(func(bufferedMessages []*bufferFindMessage) *bufferFindOut {
@@ -132,7 +133,7 @@ func newChatRepository(db *sqlx.DB) *chatRepository {
 		}
 
 		return out
-	}, ticker.C, out.done, 256)
+	}, ticker.C, out.done, 256, prometheusmetrics.UsePrometheusMetrics("chat_find"))
 
 	return out
 }
