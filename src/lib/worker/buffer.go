@@ -1,6 +1,7 @@
 package worker
 
 type Buffer[S any, R any, W any] struct {
+  flushEmpty bool
 	doFlush <-chan W
 	flush   Flush[S, R]
 	send    chan send[S, R]
@@ -13,11 +14,34 @@ type send[S any, R any] struct {
 }
 type Flush[S any, R any] func(values []S) R
 
-func NewBuffer[S any, R any, W any](flush Flush[S, R], doFlush <-chan W, done <-chan struct{}, buffer int) *Buffer[S, R, W] {
+type BufferOpt interface {
+  FlushEmpty() bool
+}
+
+type flushEmptyOpt struct {}
+
+func (this *flushEmptyOpt) FlushEmpty() bool {return true}
+
+func FlushEmpty() BufferOpt {
+  return &flushEmptyOpt{} 
+}
+
+func NewBuffer[S any, R any, W any](flush Flush[S, R], doFlush <-chan W, done <-chan struct{}, bufferSize int, optFns ...func() BufferOpt) *Buffer[S, R, W] {
+  flushEmpty := false
+
+  for _, optFn := range optFns {
+    opt := optFn()
+
+    if opt.FlushEmpty() {
+      flushEmpty = true
+    }
+  }
+  
 	return &Buffer[S, R, W]{
+    flushEmpty: flushEmpty,
 		doFlush: doFlush,
 		flush:   flush,
-		send:    make(chan send[S, R], buffer),
+		send:    make(chan send[S, R], bufferSize),
 		done:    done,
 	}
 }
@@ -29,6 +53,10 @@ func (this *Buffer[S, R, W]) Run() {
 			break
 
 		case <-this.doFlush:
+      if len(this.send) == 0 && !this.flushEmpty {
+        continue
+      }
+      
 			values := []S{}
 			receivers := []chan<- R{}
 			for range len(this.send) {

@@ -83,7 +83,7 @@ func NewSessionRepository(db *sqlx.DB) *SessionRepository {
 		after := clock.Now()
 		SessionsInWorkerUnitElapsed.Observe(float64(after.Sub(before).Seconds()))
 		return err
-	}, out.ticker.C, out.done, 256)
+	}, out.ticker.C, out.done, 256, worker.FlushEmpty)
 
 	out.buffer = buffer
 

@@ -11,11 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (this *RootHTTP) addChatHandlers() {
+func (this *RootHTTP) addChatHandlers(messagePresenter *presentermessage.Presenter) {
 	userPresenter := presenteruser.New(this.db).
-		WithTracer(this.tracer)
-
-	messagePresenter := presentermessage.New(this.db, userPresenter).
 		WithTracer(this.tracer)
 
 	presenter := presenterchat.New(this.db, userPresenter, messagePresenter).

@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/sync/errgroup"
 )
 
 type Service struct {
@@ -33,21 +34,21 @@ func New(
 }
 
 func (this *Service) SendMessage(parent context.Context, command SendMessageCommand, auth *auth.Auth) (bool, *errors.Error) {
-  ctx, span := this.tracer.Start(parent, "conversation.send_message") 
-  defer span.End()
-  
+	ctx, span := this.tracer.Start(parent, "conversation.send_message")
+	defer span.End()
+
 	var err *errors.Error
 
-  _, span = this.tracer.Start(ctx, "user_repository.exists")
-	exists := this.userRepository.Exists(command.RecipientId) 
-  span.End()
-  if !exists {
+	_, span = this.tracer.Start(ctx, "user_repository.exists")
+	exists := this.userRepository.Exists(command.RecipientId)
+	span.End()
+	if !exists {
 		return false, newError("Пользователь с id:" + command.RecipientId.String() + " отсуствует")
 	}
 
-  _, span = this.tracer.Start(ctx, "chat_repository.find_by_member_ids")
+	_, span = this.tracer.Start(ctx, "chat_repository.find_by_member_ids")
 	chat, err := this.chatRepository.FindByMemberIds(command.RecipientId, auth.UserId)
-  span.End()
+	span.End()
 	if err != nil {
 		return false, err
 	}
@@ -73,23 +74,30 @@ func (this *Service) SendMessage(parent context.Context, command SendMessageComm
 		return false, err
 	}
 
-  _, span = this.tracer.Start(ctx, "chat_repository.save")
+	_, span = this.tracer.Start(ctx, "chat_repository.save")
 	err = this.chatRepository.Save(chat)
-  span.End()
+	span.End()
 	if err != nil {
 		return false, err
 	}
 
-  _, span = this.tracer.Start(ctx, "notifier.notify_sender")
-	err = this.notifier.NotifyAbout(auth.UserId, chat)
-  span.End()
-	if err != nil {
-		return false, err
-	}
+	group := errgroup.Group{}
 
-  _, span = this.tracer.Start(ctx, "notifier.notifier_recipient")
-	err = this.notifier.NotifyAbout(command.RecipientId, chat)
-  span.End()
+	group.Go(func() error {
+		_, span = this.tracer.Start(ctx, "notifier.notify_sender")
+		defer span.End()
+
+		return this.notifier.NotifyAbout(auth.UserId, chat)
+	})
+
+	group.Go(func() error {
+		_, span = this.tracer.Start(ctx, "notifier.notify_recipient")
+		defer span.End()
+
+		return this.notifier.NotifyAbout(command.RecipientId, chat)
+	})
+
+	err = errors.From(group.Wait())
 	if err != nil {
 		return false, err
 	}

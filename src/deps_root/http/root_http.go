@@ -2,6 +2,8 @@ package roothttp
 
 import (
 	"fmt"
+	presentermessage "nosebook/src/application/presenters/message"
+	presenteruser "nosebook/src/application/presenters/user"
 	userauth "nosebook/src/application/services/user_auth"
 	"nosebook/src/deps_root/http/middleware"
 	repos "nosebook/src/infra/postgres/repositories"
@@ -84,6 +86,10 @@ func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *RootHTTP {
 
 	output.unauthRouter = router.Group("/", middleware.NewNotAuth())
 	output.authRouter = router.Group("/", middleware.NewAuth())
+  
+  messagePresenter := presentermessage.New(output.db, presenteruser.New(output.db))
+  go messagePresenter.Run()
+  output.shutdowns = append(output.shutdowns, messagePresenter.OnDone)
 
 	output.addAuthHandlers(userAuthService)
 	output.addLikeHandlers()
@@ -92,9 +98,9 @@ func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *RootHTTP {
 	output.addFriendshipHandlers()
 	output.addUserHandlers()
 	output.addWebsocketHandlers()
-	output.addConversationHandlers()
-	output.addChatHandlers()
-	output.addMessageHandlers()
+	output.addConversationHandlers(messagePresenter)
+	output.addChatHandlers(messagePresenter)
+	output.addMessageHandlers(messagePresenter)
 
 	registerMetrics()
 

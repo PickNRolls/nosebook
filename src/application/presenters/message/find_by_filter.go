@@ -46,8 +46,8 @@ func errOut(err error) *FindByFilterOut {
 	return errMsgOut(err.Error())
 }
 
-func (this *Presenter) FindByFilter(ctx context.Context, input FindByFilterInput, auth *auth.Auth) *FindByFilterOut {
-  nextCtx, span := this.tracer.Start(ctx, "message_presenter.find_by_filter")
+func (this *Presenter) FindByFilter(parent context.Context, input FindByFilterInput, auth *auth.Auth) *FindByFilterOut {
+  ctx, span := this.tracer.Start(parent, "message_presenter.find_by_filter")
   defer span.End()
   
 	if input.ChatId == "" {
@@ -65,7 +65,7 @@ func (this *Presenter) FindByFilter(ctx context.Context, input FindByFilterInput
 		From("messages").
 		Where("chat_id = ?", chatId)
 
-  _, span = this.tracer.Start(nextCtx, "message_presenter.sql_query")
+  _, span = this.tracer.Start(ctx, "message_presenter.sql_query")
 	dests := []*dest{}
 	cursorQueryOut, err := cursorquery.Do(this.db, &cursorquery.Input[*dest]{
 		Query: query,
@@ -79,7 +79,7 @@ func (this *Presenter) FindByFilter(ctx context.Context, input FindByFilterInput
 		return errOut(err)
 	}
 
-	messageMap, err := this.mapDests(nextCtx, dests)
+	messageMap, err := mapDests(ctx, this.userPresenter, dests)
 	if err != nil {
 		return errOut(err)
 	}

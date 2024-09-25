@@ -4,13 +4,11 @@ import (
 	"context"
 	presenterdto "nosebook/src/application/presenters/dto"
 	presentermessage "nosebook/src/application/presenters/message"
-	presenteruser "nosebook/src/application/presenters/user"
 	domainchat "nosebook/src/domain/chat"
 	"nosebook/src/errors"
 	"nosebook/src/infra/rabbitmq"
 
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 )
 
 type notifier struct {
@@ -18,11 +16,13 @@ type notifier struct {
 	presenter *presentermessage.Presenter
 }
 
-func newNotifier(db *sqlx.DB, rmqConn *rabbitmq.Connection) *notifier {
-	return &notifier{
+func newNotifier(rmqConn *rabbitmq.Connection, presenter *presentermessage.Presenter) *notifier {
+  out := &notifier{
 		rmqConn:   rmqConn,
-		presenter: presentermessage.New(db, presenteruser.New(db)),
+		presenter: presenter,
 	}
+
+  return out
 }
 
 func (this *notifier) NotifyAbout(userId uuid.UUID, chat *domainchat.Chat) *errors.Error {

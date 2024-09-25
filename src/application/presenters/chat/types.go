@@ -14,7 +14,7 @@ type chat = presenterdto.Chat
 type conversation = presenterdto.Conversation
 
 type MessagePresenter interface {
-	FindByIds(ctx context.Context, ids uuid.UUIDs) (map[uuid.UUID]*message, *errors.Error)
+	FindByIds(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]*message, *errors.Error)
 }
 
 type UserPresenter interface {

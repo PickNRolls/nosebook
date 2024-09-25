@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (this *Presenter) mapDests(ctx context.Context, dests []*dest) (map[uuid.UUID]*message, *errors.Error) {
+func mapDests(ctx context.Context, userPresenter UserPresenter, dests []*dest) (map[uuid.UUID]*message, *errors.Error) {
 	userMap, err := func() (map[uuid.UUID]*user, *errors.Error) {
 		ids := []uuid.UUID{}
 		idMap := make(map[uuid.UUID]struct{})
@@ -19,7 +19,7 @@ func (this *Presenter) mapDests(ctx context.Context, dests []*dest) (map[uuid.UU
 			}
 		}
 
-		return this.userPresenter.FindByIds(ctx, ids)
+		return userPresenter.FindByIds(ctx, ids)
 	}()
 	if err != nil {
 		return nil, err
