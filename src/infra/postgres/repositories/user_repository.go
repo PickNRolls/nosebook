@@ -2,18 +2,21 @@ package repos
 
 import (
 	"nosebook/src/domain/user"
+	querybuilder "nosebook/src/infra/query_builder"
 	"nosebook/src/lib/worker"
 	"strconv"
 	"time"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
 type UserRepository struct {
-	db     *sqlx.DB
-	buffer *worker.Buffer[*bufferUpdate, error, time.Time]
-	done   chan struct{}
+	db             *sqlx.DB
+	bufferUpdate   *worker.Buffer[*bufferUpdate, error, time.Time]
+	bufferFindById *worker.Buffer[uuid.UUID, map[uuid.UUID]*domainuser.User, time.Time]
+	done           chan struct{}
 }
 
 type bufferUpdate struct {
@@ -27,8 +30,8 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 		done: make(chan struct{}),
 	}
 
-	ticker := time.NewTicker(time.Millisecond * 30)
-	out.buffer = worker.NewBuffer(func(updates []*bufferUpdate) error {
+	ticker := time.NewTicker(time.Millisecond * 10)
+	out.bufferUpdate = worker.NewBuffer(func(updates []*bufferUpdate) error {
 		sql := `UPDATE users as u SET last_activity_at = v.last_activity_at
     FROM (VALUES `
 		args := []any{}
@@ -50,16 +53,41 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 		return err
 	}, ticker.C, out.done, 256)
 
+	qb := querybuilder.New()
+	out.bufferFindById = worker.NewBuffer(func(ids []uuid.UUID) map[uuid.UUID]*domainuser.User {
+		out := map[uuid.UUID]*domainuser.User{}
+
+		dests := []*domainuser.User{}
+		sql, args, _ := qb.Select("id", "first_name", "last_name", "nick", "passhash", "created_at", "last_activity_at").
+			From("users").
+			Where(squirrel.Eq{"id": ids}).
+			ToSql()
+
+		err := db.Select(&dests, sql, args...)
+		if err != nil {
+			return out
+		}
+
+		for _, dest := range dests {
+			out[dest.Id] = dest
+		}
+
+		return out
+	}, ticker.C, out.done, 256)
+
 	return out
 }
 
 func (this *UserRepository) Run() {
-  this.buffer.Run()  
+	go this.bufferUpdate.Run()
+	go this.bufferFindById.Run()
+
+	<-this.done
 }
 
 func (this *UserRepository) OnDone() {
-  this.done <- struct{}{}
-  close(this.done)
+	this.done <- struct{}{}
+	close(this.done)
 }
 
 func (repo *UserRepository) Create(user *domainuser.User) (*domainuser.User, error) {
@@ -96,7 +124,7 @@ func (repo *UserRepository) Create(user *domainuser.User) (*domainuser.User, err
 }
 
 func (this *UserRepository) UpdateActivity(userId uuid.UUID, t time.Time) error {
-	return this.buffer.Send(&bufferUpdate{
+	return this.bufferUpdate.Send(&bufferUpdate{
 		userId:    userId,
 		timestamp: t,
 	})
@@ -144,22 +172,6 @@ func (repo *UserRepository) FindByNick(nick string) *domainuser.User {
 }
 
 func (this *UserRepository) FindById(id uuid.UUID) *domainuser.User {
-	dest := domainuser.User{}
-	err := this.db.Get(&dest, `SELECT
-		id,
-		first_name,
-		last_name,
-		nick,
-		passhash,
-		created_at,
-		last_activity_at
-			FROM users WHERE
-		id = $1
-	`, id)
-
-	if err != nil {
-		return nil
-	}
-
-	return &dest
+	m := this.bufferFindById.Send(id)
+	return m[id]
 }

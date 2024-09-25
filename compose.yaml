@@ -17,7 +17,7 @@ services:
       test: [ "CMD", "pg_isready" ]
       interval: 2s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   db-prometheus-exporter:
     image: quay.io/prometheuscommunity/postgres-exporter

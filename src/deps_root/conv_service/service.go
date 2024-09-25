@@ -10,13 +10,16 @@ import (
 )
 
 func New(db *sqlx.DB, rmqConn *rabbitmq.Connection, presenter *presentermessage.Presenter, tracer trace.Tracer) *conversation.Service {
-  chatRepository := newChatRepository(db)
-  go chatRepository.Run()
-  
+	chatRepository := newChatRepository(db)
+	go chatRepository.Run()
+
+	userRepository := newUserRepository(db)
+	go userRepository.Run()
+
 	return conversation.New(
 		chatRepository,
 		newNotifier(rmqConn, presenter),
-		newUserRepository(db),
-    tracer,
+		userRepository,
+		tracer,
 	)
 }
