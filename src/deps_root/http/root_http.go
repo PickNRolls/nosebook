@@ -16,13 +16,14 @@ import (
 )
 
 type RootHTTP struct {
-	db             *sqlx.DB
-	rmqConn        *rabbitmq.Connection
-	router         *gin.Engine
-	authRouter     *gin.RouterGroup
-	unauthRouter   *gin.RouterGroup
-	traceProvider  *trace.TracerProvider
-	tracer         oteltrace.Tracer
+	db            *sqlx.DB
+	rmqConn       *rabbitmq.Connection
+	router        *gin.Engine
+	authRouter    *gin.RouterGroup
+	unauthRouter  *gin.RouterGroup
+	traceProvider *trace.TracerProvider
+	tracer        oteltrace.Tracer
+	shutdowns     []ShutdownFn
 }
 
 func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *RootHTTP {
@@ -63,6 +64,7 @@ func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *RootHTTP {
 	}
 
 	router.Use(middleware.NewRequestMetrics())
+  router.Use(middleware.NewDbMetrics(db))
 
 	router.GET("/ping", func(ctx *gin.Context) {
 		ctx.Status(200)
@@ -71,7 +73,10 @@ func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *RootHTTP {
 
 	output.enableTracing()
 
-	userAuthService := userauth.New(repos.NewUserRepository(db), repos.NewSessionRepository(db), output.tracer)
+	sessionRepository := repos.NewSessionRepository(db)
+	go sessionRepository.Run()
+  output.shutdowns = append(output.shutdowns, sessionRepository.OnDispose)
+	userAuthService := userauth.New(repos.NewUserRepository(db), sessionRepository, output.tracer)
 
 	router.Use(middleware.NewPresenter())
 	router.NoRoute(middleware.NewNoRouteHandler())

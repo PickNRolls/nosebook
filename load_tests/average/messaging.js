@@ -4,9 +4,9 @@ import * as chats from '../lib/chats';
 import { rampUpWs, rampUpWsOptions } from '../lib/ws';
 
 const stages = [
-  { duration: 1000 * 60 * 3, target: 1000 },
-  { duration: 1000 * 60 * 3, target: 1000 },
-  { duration: 1000 * 60 * 3, target: 0 },
+  { duration: 1000 * 60 * 2, target: 1000 },
+  { duration: 1000 * 60 * 1, target: 1000 },
+  { duration: 1000 * 60 * 2, target: 0 },
 ];
 
 export const options = rampUpWsOptions(stages);
@@ -28,7 +28,7 @@ export const teardown = () => {
 
 export default () => {
   const { vuIndex, duration } = rampUpWs(stages);
-  
+
   const offset = 300;
   const userIndex = offset + vuIndex;
   const nick = `virtual_user_${userIndex}`
@@ -55,7 +55,7 @@ export default () => {
       throw new Error("Can't find 1-to-1 interlocutor by nickname");
     }
   }
-  
+
   const interlocutor = usersJson.data.data[0];
 
   chats.runMessagingScenario({

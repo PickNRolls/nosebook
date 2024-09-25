@@ -1,7 +1,6 @@
 import http from "k6/http";
 import { sleep } from "k6";
 import { AUTH_SESSION_HEADER, NOSEBOOK_URL } from "../const";
-import * as random from './random';
 import { connectWebSocket } from './connect-websocket';
 import { faker } from "@faker-js/faker";
 import execution from "k6/execution";
@@ -19,7 +18,7 @@ export const sendMessage = (opts, auth) => {
 
 export const runMessagingScenario = (opts, auth) => {
   const { sessionId } = auth;
-  const { duration, logging = true, userId, interlocutorId, shouldMessageFirst } = opts;
+  const { duration, logging = true, userId, interlocutorId, shouldMessageFirst, sleepBetween = 5 } = opts;
 
   const ws = connectWebSocket({ sessionId });
 
@@ -28,8 +27,6 @@ export const runMessagingScenario = (opts, auth) => {
     setTimeout(() => {
       ws.close();
     }, duration);
-
-    sleep(random.intBetween(2, 10));
 
     if (shouldMessageFirst) {
       logging && console.log(`VU ${__VU} userId:${userId} is sending message to ${interlocutorId} first.`);
@@ -46,7 +43,7 @@ export const runMessagingScenario = (opts, auth) => {
 
       if (message.type === 'new_message' && message.payload.author.id === interlocutorId) {
         logging && console.log(`VU ${__VU} userId:${userId} received message.`);
-        sleep(random.intBetween(1, 10));
+        sleep(sleepBetween);
 
         logging && console.log(`VU ${__VU} userId:${userId} is sending message.`);
         sendMessage({
