@@ -49,7 +49,7 @@ func (this *findByIdsQuery) Do(parent context.Context, ids uuid.UUIDs) (map[uuid
 }
 
 func (this *findByIdsQuery) Run() {
-	ticker := time.NewTicker(time.Millisecond * 300)
+	ticker := time.NewTicker(time.Millisecond * 20)
 
 	this.buffer = worker.NewBuffer(func(values [][]uuid.UUID) *findByIdsQueryBufferOut {
     unique := map[uuid.UUID]struct{}{}

@@ -29,7 +29,7 @@ func newChatRepository(db *sqlx.DB) *chatRepository {
 		done: make(chan struct{}),
 	}
 
-	ticker := time.NewTicker(time.Millisecond * 300)
+	ticker := time.NewTicker(time.Millisecond * 20)
 	out.buffer = worker.NewBuffer(func(bufferedMessages []*bufferedMessage) *errors.Error {
 		qb := querybuilder.New()
 		query := qb.Insert("messages").

@@ -49,7 +49,7 @@ var SessionsInWorkerUnitElapsed = prometheus.NewHistogram(
 func NewSessionRepository(db *sqlx.DB) *SessionRepository {
 	out := &SessionRepository{
 		db:     db,
-		ticker: time.NewTicker(time.Millisecond * 300),
+		ticker: time.NewTicker(time.Millisecond * 20),
 	}
 
 	buffer := worker.NewBuffer(func(sessions []*sessions.Session) error {

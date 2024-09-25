@@ -4,9 +4,9 @@ import * as chats from '../lib/chats';
 import { rampUpWs, rampUpWsOptions } from '../lib/ws';
 
 const stages = [
-  { duration: 1000 * 60 * 2, target: 1000 },
-  { duration: 1000 * 60 * 1, target: 1000 },
-  { duration: 1000 * 60 * 2, target: 0 },
+  { duration: 1000 * 60 * 3, target: 1000 },
+  { duration: 1000 * 60 * 10, target: 1000 },
+  { duration: 1000 * 60 * 5, target: 0 },
 ];
 
 export const options = rampUpWsOptions(stages);
