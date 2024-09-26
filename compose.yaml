@@ -87,6 +87,7 @@ services:
       - POSTGRES_DB=nosebook
       - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
       - APP_ENV=$APP_ENV
+      - TRACING_ENABLED=0
     develop:
       watch:
         - action: rebuild

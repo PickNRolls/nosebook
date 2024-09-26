@@ -14,8 +14,9 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
-  oteltrace "go.opentelemetry.io/otel/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
+	oteltrace "go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func initTracer() (*trace.TracerProvider, error) {
@@ -52,6 +53,11 @@ func initTracer() (*trace.TracerProvider, error) {
 }
 
 func (this *RootHTTP) enableTracing() {
+	if !config.Config.Tracing.Enabled() {
+		this.tracer = &noop.Tracer{}
+		return
+	}
+
 	tp, err := errors.Using(initTracer())
 	if err != nil {
 		log.Fatalln(err)
@@ -61,12 +67,11 @@ func (this *RootHTTP) enableTracing() {
 	this.tracer = tp.Tracer("application")
 
 	this.router.Use(otelgin.Middleware("middleware"))
-  this.router.Use(func(ctx *gin.Context) {
-    spanCtx := oteltrace.SpanContextFromContext(ctx.Request.Context())
-    if spanCtx.HasTraceID() {
-      traceId := spanCtx.TraceID()
-      ctx.Header("X-Trace-Id", traceId.String())
-    }
-  })
+	this.router.Use(func(ctx *gin.Context) {
+		spanCtx := oteltrace.SpanContextFromContext(ctx.Request.Context())
+		if spanCtx.HasTraceID() {
+			traceId := spanCtx.TraceID()
+			ctx.Header("X-Trace-Id", traceId.String())
+		}
+	})
 }
-
