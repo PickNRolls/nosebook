@@ -15,7 +15,6 @@ import (
 
 type chatRepository struct {
 	db           *sqlx.DB
-	done         chan struct{}
 	bufferInsert *worker.Buffer[*bufferInsertMessage, *errors.Error]
 	bufferFind   *worker.Buffer[*bufferFindMessage, *bufferFindOut]
 }
@@ -37,101 +36,99 @@ type bufferInsertMessage struct {
 
 func newChatRepository(db *sqlx.DB) *chatRepository {
 	out := &chatRepository{
-		db:   db,
-		done: make(chan struct{}),
-	}
+		db: db,
+		bufferInsert: worker.NewBuffer(func(bufferedMessages []*bufferInsertMessage) *errors.Error {
+			qb := querybuilder.New()
+			query := qb.Insert("messages").
+				Columns(
+					"id",
+					"author_id",
+					"text",
+					"reply_to",
+					"chat_id",
+					"created_at",
+					"removed_at",
+				)
 
-	out.bufferInsert = worker.NewBuffer(func(bufferedMessages []*bufferInsertMessage) *errors.Error {
-		qb := querybuilder.New()
-		query := qb.Insert("messages").
-			Columns(
-				"id",
-				"author_id",
-				"text",
-				"reply_to",
-				"chat_id",
-				"created_at",
-				"removed_at",
-			)
+			for _, buffered := range bufferedMessages {
+				message := buffered.message
+				chatId := buffered.chatId
 
-		for _, buffered := range bufferedMessages {
-			message := buffered.message
-			chatId := buffered.chatId
-
-			query = query.Values(
-				message.Id,
-				message.AuthorId,
-				message.Text,
-				message.ReplyTo,
-				chatId,
-				message.CreatedAt,
-				message.RemovedAt,
-			)
-		}
-
-		sql, args, _ := query.ToSql()
-		_, err := db.Exec(sql, args...)
-		return errors.From(err)
-	}, prometheusmetrics.UsePrometheusMetrics("message_insert"))
-
-	qb := querybuilder.New(querybuilder.OmitPlaceholder)
-	out.bufferFind = worker.NewBuffer(func(bufferedMessages []*bufferFindMessage) *bufferFindOut {
-		out := &bufferFindOut{
-			data: make(map[uuid.UUID]map[uuid.UUID]*chatDest),
-		}
-
-		leftUnique := map[uuid.UUID]struct{}{}
-		rightUnique := map[uuid.UUID]struct{}{}
-		for _, message := range bufferedMessages {
-			if _, has := leftUnique[message.leftId]; !has {
-				leftUnique[message.leftId] = struct{}{}
+				query = query.Values(
+					message.Id,
+					message.AuthorId,
+					message.Text,
+					message.ReplyTo,
+					chatId,
+					message.CreatedAt,
+					message.RemovedAt,
+				)
 			}
 
-			if _, has := rightUnique[message.rightId]; !has {
-				rightUnique[message.rightId] = struct{}{}
+			sql, args, _ := query.ToSql()
+			_, err := db.Exec(sql, args...)
+			return errors.From(err)
+		}, prometheusmetrics.UsePrometheusMetrics("message_insert")),
+
+		bufferFind: worker.NewBuffer(func(bufferedMessages []*bufferFindMessage) *bufferFindOut {
+			qb := querybuilder.New(querybuilder.OmitPlaceholder)
+			out := &bufferFindOut{
+				data: make(map[uuid.UUID]map[uuid.UUID]*chatDest),
 			}
-		}
 
-		leftIds := []uuid.UUID{}
-		for id := range leftUnique {
-			leftIds = append(leftIds, id)
-		}
-		rightIds := []uuid.UUID{}
-		for id := range rightUnique {
-			rightIds = append(rightIds, id)
-		}
+			leftUnique := map[uuid.UUID]struct{}{}
+			rightUnique := map[uuid.UUID]struct{}{}
+			for _, message := range bufferedMessages {
+				if _, has := leftUnique[message.leftId]; !has {
+					leftUnique[message.leftId] = struct{}{}
+				}
 
-		query := qb.Select("pc.chat_id, cm.user_id").
-			From("private_chats as pc").
-			Join("chat_members as cm on pc.chat_id = cm.chat_id")
+				if _, has := rightUnique[message.rightId]; !has {
+					rightUnique[message.rightId] = struct{}{}
+				}
+			}
 
-		leftSql, leftArgs, _ := query.Where(squirrel.Eq{"user_id": leftIds}).ToSql()
-		rightSql, rightArgs, _ := query.Where(squirrel.Eq{"user_id": rightIds}).ToSql()
+			leftIds := []uuid.UUID{}
+			for id := range leftUnique {
+				leftIds = append(leftIds, id)
+			}
+			rightIds := []uuid.UUID{}
+			for id := range rightUnique {
+				rightIds = append(rightIds, id)
+			}
 
-		sql, args, _ := qb.Select("l.chat_id as id", "l.user_id as left_user_id", "r.user_id as right_user_id", "c.created_at").
-			Suffix("from ("+leftSql, leftArgs...).
-			Suffix(") as l join ("+rightSql, rightArgs...).
-			Suffix(") as r on l.chat_id = r.chat_id join chats as c on l.chat_id = c.id").
-			PlaceholderFormat(squirrel.Dollar).
-			ToSql()
+			query := qb.Select("pc.chat_id, cm.user_id").
+				From("private_chats as pc").
+				Join("chat_members as cm on pc.chat_id = cm.chat_id")
 
-		dests := []*chatDest{}
-		err := errors.From(db.Select(&dests, sql, args...))
-		if err != nil {
-			out.err = err
+			leftSql, leftArgs, _ := query.Where(squirrel.Eq{"user_id": leftIds}).ToSql()
+			rightSql, rightArgs, _ := query.Where(squirrel.Eq{"user_id": rightIds}).ToSql()
+
+			sql, args, _ := qb.Select("l.chat_id as id", "l.user_id as left_user_id", "r.user_id as right_user_id", "c.created_at").
+				Suffix("from ("+leftSql, leftArgs...).
+				Suffix(") as l join ("+rightSql, rightArgs...).
+				Suffix(") as r on l.chat_id = r.chat_id join chats as c on l.chat_id = c.id").
+				PlaceholderFormat(squirrel.Dollar).
+				ToSql()
+
+			dests := []*chatDest{}
+			err := errors.From(db.Select(&dests, sql, args...))
+			if err != nil {
+				out.err = err
+				return out
+			}
+
+			for _, dest := range dests {
+				if _, has := out.data[dest.LeftUserId]; !has {
+					out.data[dest.LeftUserId] = make(map[uuid.UUID]*chatDest)
+				}
+
+				out.data[dest.LeftUserId][dest.RightUserId] = dest
+			}
+
 			return out
-		}
-
-		for _, dest := range dests {
-			if _, has := out.data[dest.LeftUserId]; !has {
-				out.data[dest.LeftUserId] = make(map[uuid.UUID]*chatDest)
-			}
-
-			out.data[dest.LeftUserId][dest.RightUserId] = dest
-		}
-
-		return out
-	}, prometheusmetrics.UsePrometheusMetrics("chat_find"))
+		}, prometheusmetrics.UsePrometheusMetrics("chat_find")),
+	}
 
 	return out
 }
@@ -139,12 +136,11 @@ func newChatRepository(db *sqlx.DB) *chatRepository {
 func (this *chatRepository) Run() {
 	go this.bufferInsert.Run()
 	go this.bufferFind.Run()
-	<-this.done
 }
 
 func (this *chatRepository) OnDone() {
-	this.done <- struct{}{}
-	close(this.done)
+	this.bufferInsert.Stop()
+	this.bufferFind.Stop()
 }
 
 func (this *chatRepository) FindByMemberIds(leftId uuid.UUID, rightId uuid.UUID) (*domainchat.Chat, *errors.Error) {

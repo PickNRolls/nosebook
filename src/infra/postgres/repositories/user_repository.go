@@ -17,7 +17,6 @@ type UserRepository struct {
 	db             *sqlx.DB
 	bufferUpdate   *worker.Buffer[*bufferUpdate, error]
 	bufferFindById *worker.Buffer[uuid.UUID, map[uuid.UUID]*domainuser.User]
-	done           chan struct{}
 }
 
 type bufferUpdate struct {
@@ -27,8 +26,7 @@ type bufferUpdate struct {
 
 func NewUserRepository(db *sqlx.DB) *UserRepository {
 	out := &UserRepository{
-		db:   db,
-		done: make(chan struct{}),
+		db: db,
 	}
 
 	out.bufferUpdate = worker.NewBuffer(func(updates []*bufferUpdate) error {
@@ -81,13 +79,11 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 func (this *UserRepository) Run() {
 	go this.bufferUpdate.Run()
 	go this.bufferFindById.Run()
-
-	<-this.done
 }
 
 func (this *UserRepository) OnDone() {
-	this.done <- struct{}{}
-	close(this.done)
+	this.bufferUpdate.Stop()
+	this.bufferFindById.Stop()
 }
 
 func (repo *UserRepository) Create(user *domainuser.User) (*domainuser.User, error) {

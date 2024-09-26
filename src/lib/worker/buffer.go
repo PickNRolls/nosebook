@@ -8,7 +8,7 @@ type Buffer[S any, R any] struct {
 	metrics Metrics
 	flush   Flush[S, R]
 	send    chan send[S, R]
-	done    <-chan struct{}
+	done    chan struct{}
 }
 
 type send[S any, R any] struct {
@@ -20,7 +20,6 @@ type Flush[S any, R any] func(values []S) R
 
 func NewBuffer[S any, R any](flush Flush[S, R], optFns ...func() BufferOpt) *Buffer[S, R] {
 	var metrics Metrics = nil
-	var done <-chan struct{}
 	bufferSize := 0
 
 	for _, optFn := range optFns {
@@ -28,11 +27,6 @@ func NewBuffer[S any, R any](flush Flush[S, R], optFns ...func() BufferOpt) *Buf
 
 		if opt.Metrics() != nil && metrics == nil {
 			metrics = opt.Metrics()
-		}
-
-		ch := opt.Done()
-		if ch != nil {
-			done = ch
 		}
 
 		if opt.BufferSize() != 0 {
@@ -54,7 +48,7 @@ func NewBuffer[S any, R any](flush Flush[S, R], optFns ...func() BufferOpt) *Buf
 		metrics: metrics,
 		flush:   flush,
 		send:    make(chan send[S, R], bufferSize),
-		done:    done,
+		done:    make(chan struct{}),
 	}
 }
 
@@ -65,8 +59,6 @@ func (this *Buffer[S, R]) Run() {
 			break
 
 		case value := <-this.send:
-			this.metrics.FlushedBufferSize(float64(len(this.send)))
-
 			values := []S{value.value}
 			receivers := []chan<- R{value.receiver}
 			for range len(this.send) {
@@ -74,6 +66,8 @@ func (this *Buffer[S, R]) Run() {
 				values = append(values, send.value)
 				receivers = append(receivers, send.receiver)
 			}
+
+			this.metrics.FlushedBufferSize(float64(len(values)))
 
 			beforeFlush := clock.Now()
 			out := this.flush(values)
@@ -87,16 +81,20 @@ func (this *Buffer[S, R]) Run() {
 	}
 }
 
+func (this *Buffer[S, R]) Stop() {
+	this.done <- struct{}{}
+}
+
 func (this *Buffer[S, R]) Send(value S) R {
 	start := clock.Now()
 	defer func() {
 		this.metrics.ElapsedSeconds(clock.Now().Sub(start).Seconds())
 	}()
 
-	ch := make(chan R)
+	receiver := make(chan R)
 	this.send <- send[S, R]{
 		value:    value,
-		receiver: ch,
+		receiver: receiver,
 	}
-	return <-ch
+	return <-receiver
 }

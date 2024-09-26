@@ -17,7 +17,6 @@ type findByIdsQuery struct {
 	db            *sqlx.DB
 	userPresenter UserPresenter
 	buffer        *worker.Buffer[[]uuid.UUID, *findByIdsQueryBufferOut]
-	done          chan struct{}
 	tracer        trace.Tracer
 }
 
@@ -30,7 +29,6 @@ func newFindByIdsQuery(db *sqlx.DB, userPresenter UserPresenter, tracer trace.Tr
 	return &findByIdsQuery{
 		db:            db,
 		userPresenter: userPresenter,
-		done:          make(chan struct{}),
 		tracer:        tracer,
 	}
 }
@@ -91,6 +89,5 @@ func (this *findByIdsQuery) Run() {
 }
 
 func (this *findByIdsQuery) OnDone() {
-	this.done <- struct{}{}
-	close(this.done)
+	this.buffer.Stop()
 }

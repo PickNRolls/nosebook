@@ -61,7 +61,6 @@ type prometheusMetricsOpt struct {
 	slug string
 }
 
-func (this *prometheusMetricsOpt) Done() <-chan struct{}   { return nil }
 func (this *prometheusMetricsOpt) Metrics() worker.Metrics { return newPrometheusMetrics(this.slug) }
 func (this *prometheusMetricsOpt) BufferSize() int         { return 0 }
 

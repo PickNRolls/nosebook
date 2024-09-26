@@ -12,16 +12,13 @@ import (
 type userRepository struct {
 	db     *sqlx.DB
 	buffer *worker.Buffer[uuid.UUID, map[uuid.UUID]struct{}]
-	done   chan struct{}
 }
 
 func newUserRepository(db *sqlx.DB) *userRepository {
-	done := make(chan struct{})
 	qb := querybuilder.New()
 
 	return &userRepository{
-		db:   db,
-		done: done,
+		db: db,
 		buffer: worker.NewBuffer(func(ids []uuid.UUID) map[uuid.UUID]struct{} {
 			out := map[uuid.UUID]struct{}{}
 
@@ -52,8 +49,7 @@ func (this *userRepository) Run() {
 }
 
 func (this *userRepository) OnDone() {
-	this.done <- struct{}{}
-	close(this.done)
+	this.buffer.Stop()
 }
 
 func (this *userRepository) Exists(id uuid.UUID) bool {
