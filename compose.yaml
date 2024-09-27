@@ -80,14 +80,18 @@ services:
 
     secrets:
       - db-password
+      - aws-access-key-id
+      - aws-secret-access-key
     build:
       context: .
       target: final
     environment:
       - POSTGRES_DB=nosebook
       - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+      - AWS_ACCESS_KEY_ID_FILE=/run/secrets/aws-access-key-id
+      - AWS_ACCESS_SECRET_KEY_FILE=/run/secrets/aws-secret-access-key
       - APP_ENV=$APP_ENV
-      - TRACING_ENABLED=0
+      - TRACING_ENABLED=$TRACING_ENABLED
     develop:
       watch:
         - action: rebuild
@@ -112,4 +116,8 @@ services:
 secrets:
   db-password:
     file: db-password.txt
+  aws-access-key-id:
+    file: aws-access-key-id.txt
+  aws-secret-access-key:
+    file: aws-secret-access-key.txt
 

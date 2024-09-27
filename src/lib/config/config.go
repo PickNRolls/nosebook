@@ -2,15 +2,11 @@ package config
 
 import "os"
 
-type config struct {
-	Env     appEnv
-	Tracing tracing
-}
+var Env = &appEnv{env: os.Getenv("APP_ENV")}
 
-var Config = config{
-	Env: appEnv{env: os.Getenv("APP_ENV")},
-	Tracing: tracing{enabled: func() bool {
-		variable := os.Getenv("TRACING_ENABLED")
-		return variable != "" && variable != "0"
-	}()},
-}
+var Tracing = &tracing{enabled: func() bool {
+	variable := os.Getenv("TRACING_ENABLED")
+	return variable != "" && variable != "0"
+}()}
+
+var DBName = os.Getenv("POSTGRES_DB")

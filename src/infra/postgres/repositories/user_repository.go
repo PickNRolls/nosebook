@@ -3,10 +3,10 @@ package repos
 import (
 	prometheusmetrics "nosebook/src/deps_root/worker"
 	"nosebook/src/domain/user"
+	"nosebook/src/errors"
 	querybuilder "nosebook/src/infra/query_builder"
 	"nosebook/src/lib/worker"
 	"strconv"
-	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -15,13 +15,8 @@ import (
 
 type UserRepository struct {
 	db             *sqlx.DB
-	bufferUpdate   *worker.Buffer[*bufferUpdate, error]
+	bufferUpdate   *worker.Buffer[*domainuser.User, error]
 	bufferFindById *worker.Buffer[uuid.UUID, map[uuid.UUID]*domainuser.User]
-}
-
-type bufferUpdate struct {
-	userId    uuid.UUID
-	timestamp time.Time
 }
 
 func NewUserRepository(db *sqlx.DB) *UserRepository {
@@ -29,24 +24,27 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 		db: db,
 	}
 
-	out.bufferUpdate = worker.NewBuffer(func(updates []*bufferUpdate) error {
-		sql := `UPDATE users as u SET last_activity_at = v.last_activity_at
+	out.bufferUpdate = worker.NewBuffer(func(users []*domainuser.User) error {
+		sql := `UPDATE users as u
+    SET
+      last_activity_at = v.last_activity_at,
+      avatar_url = v.avatar_url
     FROM (VALUES `
 		args := []any{}
 
-		for i, update := range updates {
-			last := i == len(updates)-1
+		for i, user := range users {
+			last := i == len(users)-1
 			argNum := len(args) + 1
-			suffix := "($" + strconv.Itoa(argNum) + "::uuid, $" + strconv.Itoa(argNum+1) + "::timestamp)"
+			suffix := "($" + strconv.Itoa(argNum) + "::uuid, $" + strconv.Itoa(argNum+1) + "::timestamp, $" + strconv.Itoa(argNum+2) + ")"
 			if !last {
 				suffix += ","
 			}
 
 			sql += suffix
-			args = append(args, update.userId, update.timestamp)
+			args = append(args, user.Id, user.LastActivityAt, user.AvatarUrl)
 		}
 
-		sql += ") v(id, last_activity_at) WHERE u.id = v.id"
+		sql += ") v(id, last_activity_at, avatar_url) WHERE u.id = v.id"
 		_, err := db.Exec(sql, args...)
 		return err
 	}, prometheusmetrics.UsePrometheusMetrics("users_update"))
@@ -56,7 +54,7 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 		out := map[uuid.UUID]*domainuser.User{}
 
 		dests := []*domainuser.User{}
-		sql, args, _ := qb.Select("id", "first_name", "last_name", "nick", "passhash", "created_at", "last_activity_at").
+		sql, args, _ := qb.Select("id", "first_name", "last_name", "nick", "passhash", "created_at", "avatar_url", "last_activity_at").
 			From("users").
 			Where(squirrel.Eq{"id": ids}).
 			ToSql()
@@ -94,6 +92,7 @@ func (repo *UserRepository) Create(user *domainuser.User) (*domainuser.User, err
 	  passhash,
 	  nick,
 	  created_at,
+    avatar_url,
 	  last_activity_at
 	) VALUES (
 		:id,
@@ -102,6 +101,7 @@ func (repo *UserRepository) Create(user *domainuser.User) (*domainuser.User, err
 	  :passhash,
 	  :nick,
 	  :created_at,
+    :avatar_url,
 	  :last_activity_at
 	) RETURNING (
 		id,
@@ -110,6 +110,7 @@ func (repo *UserRepository) Create(user *domainuser.User) (*domainuser.User, err
 		passhash,
 		nick,
 		created_at,
+    avatar_url,
 		last_activity_at
 	)`, user)
 	if err != nil {
@@ -117,13 +118,6 @@ func (repo *UserRepository) Create(user *domainuser.User) (*domainuser.User, err
 	}
 
 	return user, nil
-}
-
-func (this *UserRepository) UpdateActivity(userId uuid.UUID, t time.Time) error {
-	return this.bufferUpdate.Send(&bufferUpdate{
-		userId:    userId,
-		timestamp: t,
-	})
 }
 
 func (this *UserRepository) FindAll() ([]*domainuser.User, error) {
@@ -135,7 +129,8 @@ func (this *UserRepository) FindAll() ([]*domainuser.User, error) {
 		nick,
 		passhash,
 		created_at,
-		last_activity_at
+		last_activity_at,
+    avatar_url
 			FROM users
 	`)
 
@@ -155,6 +150,7 @@ func (repo *UserRepository) FindByNick(nick string) *domainuser.User {
 	  nick,
 	  passhash,
 	  created_at,
+    avatar_url,
 	  last_activity_at
 	    FROM users WHERE
     nick = $1
@@ -170,4 +166,8 @@ func (repo *UserRepository) FindByNick(nick string) *domainuser.User {
 func (this *UserRepository) FindById(id uuid.UUID) *domainuser.User {
 	m := this.bufferFindById.Send(id)
 	return m[id]
+}
+
+func (this *UserRepository) Save(user *domainuser.User) *errors.Error {
+	return errors.From(this.bufferUpdate.Send(user))
 }

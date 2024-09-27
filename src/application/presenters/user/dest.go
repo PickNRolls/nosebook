@@ -12,6 +12,7 @@ type dest struct {
 	LastName       string    `db:"last_name"`
 	Nick           string    `db:"nick"`
 	LastActivityAt time.Time `db:"last_activity_at"`
+	AvatarUrl      string    `db:"avatar_url"`
 	CreatedAt      time.Time `db:"created_at"`
 }
 

@@ -2,19 +2,14 @@ package postgres
 
 import (
 	"fmt"
-	"os"
+	"nosebook/src/lib/config"
+	"nosebook/src/lib/secret"
 
 	"github.com/jmoiron/sqlx"
 )
 
 func Connect() *sqlx.DB {
-	postgresPasswordBytes, err := os.ReadFile(os.Getenv("POSTGRES_PASSWORD_FILE"))
-	if err != nil {
-		panic(err)
-	}
-	postgresPassword := string(postgresPasswordBytes[:len(postgresPasswordBytes)-1])
-
-	db, err := sqlx.Connect("pgx", fmt.Sprintf("postgres://postgres:%s@db:5432/%s", postgresPassword, os.Getenv("POSTGRES_DB")))
+	db, err := sqlx.Connect("pgx", fmt.Sprintf("postgres://postgres:%s@db:5432/%s", secret.DBPassword, config.DBName))
 	if err != nil {
 		panic(err)
 	}

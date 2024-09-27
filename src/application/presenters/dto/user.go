@@ -14,4 +14,5 @@ type User struct {
 
 	LastOnlineAt time.Time `json:"lastOnlineAt"`
 	Online       bool      `json:"online"`
+	AvatarUrl    string    `json:"avatarUrl,omitempty"`
 }

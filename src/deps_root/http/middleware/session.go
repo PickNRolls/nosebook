@@ -39,10 +39,10 @@ func NewSession(service *userauth.Service, tracer trace.Tracer) func(ctx *gin.Co
 		reqctx.SetUser(user)
 		reqctx.SetSessionId(sessionId)
 
-    _, span = tracer.Start(ctx, "mark_session_active")
+		_, span = tracer.Start(ctx, "mark_session_active")
 		if err := service.MarkSessionActive(ctx, sessionId); err != nil {
 			ginctx.Error(err)
 		}
-    span.End()
+		span.End()
 	}
 }

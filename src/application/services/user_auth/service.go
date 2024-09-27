@@ -9,7 +9,6 @@ import (
 	"nosebook/src/domain/sessions"
 	"nosebook/src/domain/user"
 	"nosebook/src/errors"
-	"nosebook/src/lib/clock"
 )
 
 type Service struct {
@@ -37,7 +36,7 @@ func (this *Service) RegisterUser(parent context.Context, c RegisterUserCommand,
 		return nil, errors.From(err)
 	}
 
-	user := domainuser.New(c.FirstName, c.LastName, c.Nick, string(passhash))
+	user := domainuser.New(c.FirstName, c.LastName, c.Nick, string(passhash), "")
 	user, err = this.userRepo.Create(user)
 	if err != nil {
 		return nil, errors.From(err)
@@ -137,8 +136,16 @@ func (this *Service) MarkSessionActive(parent context.Context, sessionId uuid.UU
 		return nil
 	}
 
-	_, span = this.tracer.Start(ctx, "user_repo.update_activity")
-	err = errors.From(this.userRepo.UpdateActivity(session.UserId, clock.Now()))
+	_, span = this.tracer.Start(ctx, "user_repo.find_by_id")
+	user := this.userRepo.FindById(session.UserId)
 	span.End()
+	if user != nil {
+		user.MarkActivity()
+
+		_, span = this.tracer.Start(ctx, "user_repo.save")
+		err = this.userRepo.Save(user)
+		span.End()
+	}
+
 	return err
 }

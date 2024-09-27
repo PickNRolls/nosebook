@@ -14,10 +14,11 @@ type User struct {
 	Nick           string    `json:"nick" db:"nick"`
 	Passhash       string    `json:"passhash" db:"passhash"`
 	CreatedAt      time.Time `json:"createdAt" db:"created_at"`
+	AvatarUrl      string    `json:"avatarUrl,omitempty" db:"avatar_url"`
 	LastActivityAt time.Time `json:"lastActivityAt" db:"last_activity_at"`
 }
 
-func New(firstName string, lastName string, nick string, passhash string) *User {
+func New(firstName string, lastName string, nick string, passhash string, avatarUrl string) *User {
 	return &User{
 		Id:             uuid.New(),
 		FirstName:      firstName,
@@ -25,10 +26,15 @@ func New(firstName string, lastName string, nick string, passhash string) *User 
 		Nick:           nick,
 		Passhash:       passhash,
 		CreatedAt:      clock.Now(),
+		AvatarUrl:      avatarUrl,
 		LastActivityAt: clock.Now(),
 	}
 }
 
 func (this *User) MarkActivity() {
-  this.LastActivityAt = clock.Now()
+	this.LastActivityAt = clock.Now()
+}
+
+func (this *User) ChangeAvatar(url string) {
+	this.AvatarUrl = url
 }

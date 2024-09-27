@@ -1,1 +1,1 @@
-APP_ENV=dev docker compose up --build --watch
+APP_ENV=dev TRACING_ENABLED=1 docker compose up --build --watch

@@ -33,7 +33,7 @@ func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *RootHTTP {
 
 	router.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 		if param.ErrorMessage != "" {
-			return fmt.Sprintf("[%s] \"%s %s %d \"%s\" %s %s\"\n",
+			return fmt.Sprintf("[%s] \"%s %s %d \"%s\" %s %s\"",
 				param.TimeStamp.Format(time.RFC1123),
 				param.Method,
 				param.Path,
@@ -98,7 +98,7 @@ func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *RootHTTP {
 	output.addPostHandlers()
 	output.addCommentHandlers()
 	output.addFriendshipHandlers()
-	output.addUserHandlers()
+	output.addUserHandlers(userRepository)
 	output.addWebsocketHandlers()
 	output.addConversationHandlers(messagePresenter)
 	output.addChatHandlers(messagePresenter)

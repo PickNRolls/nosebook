@@ -10,12 +10,11 @@ import (
 )
 
 func execCommand[C any, V any](
-  serviceMethod func(context.Context, C, *auth.Auth) (V, *errors.Error),
-  root *RootHTTP,
-  opts... func() exec.CommandOption[V],
+	serviceMethod func(context.Context, C, *auth.Auth) (V, *errors.Error),
+	root *RootHTTP,
+	opts ...func() exec.CommandOption[C, V],
 ) func(*gin.Context) {
-  opts = append(opts, exec.WithTracer[V](root.tracer))
-  
-	return exec.Command(serviceMethod, opts...) 
-}
+	opts = append(opts, exec.WithTracer[C, V](root.tracer))
 
+	return exec.Command(serviceMethod, opts...)
+}

@@ -13,17 +13,24 @@ import (
 
 func Command[C any, T any](
 	serviceMethod func(context.Context, C, *auth.Auth) (T, *errors.Error),
-	opts ...func() CommandOption[T],
+	opts ...func() CommandOption[C, T],
 ) func(*gin.Context) {
 	return func(ginctx *gin.Context) {
 		reqctx := reqcontext.From(ginctx)
 		parent := ginctx.Request.Context()
 
 		avoidBinding := false
+		var binding Binding[C] = nil
 		var mapper func(out T) any
 		var tracer trace.Tracer = noop.Tracer{}
+
 		for _, fn := range opts {
 			opt := fn()
+
+			b := opt.Binding()
+			if b != nil && binding == nil {
+				binding = b
+			}
 
 			if opt.AvoidBinding() {
 				avoidBinding = true
@@ -38,16 +45,22 @@ func Command[C any, T any](
 			}
 		}
 
+		if binding == nil {
+			binding = JsonBinding
+		}
+
 		var command C
 		if !avoidBinding {
 			_, span := tracer.Start(parent, "exec_command.bind_json")
-			err := ginctx.ShouldBindJSON(&command)
+			c, err := binding(ginctx)
 			span.End()
 			if err != nil {
 				ginctx.Error(err)
 				ginctx.Abort()
 				return
 			}
+
+			command = *c
 		}
 
 		_, span := tracer.Start(parent, "exec_command.service_method")

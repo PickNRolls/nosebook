@@ -27,7 +27,7 @@ func initTracer() (*trace.TracerProvider, error) {
 		return nil, err
 	}
 
-	if config.Config.Env.IsDevelopment() {
+	if config.Env.IsDevelopment() {
 		exporter, err = otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL("http://jaeger:4318"))
 		if err != nil {
 			return nil, err
@@ -53,7 +53,7 @@ func initTracer() (*trace.TracerProvider, error) {
 }
 
 func (this *RootHTTP) enableTracing() {
-	if !config.Config.Tracing.Enabled() {
+	if !config.Tracing.Enabled() {
 		this.tracer = &noop.Tracer{}
 		return
 	}

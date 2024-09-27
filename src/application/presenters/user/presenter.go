@@ -16,8 +16,6 @@ import (
 	"go.opentelemetry.io/otel/trace/noop"
 )
 
-type startCallback = func(name string, ctx context.Context) func()
-
 type Presenter struct {
 	db     *sqlx.DB
 	tracer trace.Tracer
@@ -38,7 +36,7 @@ func (this *Presenter) WithTracer(tracer trace.Tracer) *Presenter {
 
 func (this *Presenter) mapDests(dests []*dest) map[uuid.UUID]*User {
 	out := make(map[uuid.UUID]*User, len(dests))
-  
+
 	now := clock.Now()
 	for _, dest := range dests {
 		out[dest.Id] = &User{
@@ -47,11 +45,12 @@ func (this *Presenter) mapDests(dests []*dest) map[uuid.UUID]*User {
 			LastName:     dest.LastName,
 			Nick:         dest.Nick,
 			LastOnlineAt: dest.LastActivityAt,
+			AvatarUrl:    dest.AvatarUrl,
 			Online:       dest.LastActivityAt.After(now.Add(-domainuser.ONLINE_DURATION)),
 		}
 	}
-  
-  return out
+
+	return out
 }
 
 func (this *Presenter) FindByIds(ctx context.Context, ids uuid.UUIDs) (map[uuid.UUID]*User, *errors.Error) {
@@ -60,7 +59,7 @@ func (this *Presenter) FindByIds(ctx context.Context, ids uuid.UUIDs) (map[uuid.
 
 	qb := querybuilder.New()
 	sql, args, _ := qb.Select(
-		"id", "first_name", "last_name", "nick", "last_activity_at",
+		"id", "first_name", "last_name", "nick", "avatar_url", "last_activity_at",
 	).From(
 		"users",
 	).Where(
@@ -75,7 +74,7 @@ func (this *Presenter) FindByIds(ctx context.Context, ids uuid.UUIDs) (map[uuid.
 		return nil, err
 	}
 
-  return this.mapDests(dests), nil
+	return this.mapDests(dests), nil
 }
 
 func outErr(err error) *FindOutUser {
@@ -97,14 +96,14 @@ func outZero() *FindOutUser {
 func (this *Presenter) FindByText(parent context.Context, input FindByTextInput, _ *auth.Auth) *FindOutUser {
 	ctx, span := this.tracer.Start(parent, "user_presenter.find_by_text")
 	defer span.End()
-  
-  if input.Text == "" {
-    return outZero()
-  }
+
+	if input.Text == "" {
+		return outZero()
+	}
 
 	qb := querybuilder.New()
 	query := qb.Select(
-		"id", "first_name", "last_name", "nick", "last_activity_at", "created_at",
+		"id", "first_name", "last_name", "nick", "avatar_url", "last_activity_at", "created_at",
 	).From(
 		"users",
 	).Where(
@@ -114,31 +113,31 @@ func (this *Presenter) FindByText(parent context.Context, input FindByTextInput,
 
 	dests := []*dest{}
 	_, span = this.tracer.Start(ctx, "sql_query")
-  cursorOut, err := cursorquery.Do(this.db, &cursorquery.Input[*dest]{
-    Query: query,
-    Order: &order{},
-    Next: input.Next,
-    Limit: 20,
-  }, &dests)
+	cursorOut, err := cursorquery.Do(this.db, &cursorquery.Input[*dest]{
+		Query: query,
+		Order: &order{},
+		Next:  input.Next,
+		Limit: 20,
+	}, &dests)
 	span.End()
 	if err != nil {
 		return outErr(err)
 	}
 
-  users := func() []*User {
-    m := this.mapDests(dests)
-    out := make([]*User, len(dests))
-    
-    for i, dest := range dests {
-      out[i] = m[dest.Id] 
-    }
-    
-    return out
-  }()
+	users := func() []*User {
+		m := this.mapDests(dests)
+		out := make([]*User, len(dests))
 
-  return &FindOutUser{
-    Data: users,
-    Next: cursorOut.Next,
-    TotalCount: cursorOut.TotalCount,
-  }
+		for i, dest := range dests {
+			out[i] = m[dest.Id]
+		}
+
+		return out
+	}()
+
+	return &FindOutUser{
+		Data:       users,
+		Next:       cursorOut.Next,
+		TotalCount: cursorOut.TotalCount,
+	}
 }
