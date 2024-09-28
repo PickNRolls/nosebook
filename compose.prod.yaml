@@ -18,30 +18,47 @@ services:
     volumes:
       - grafana:/var/lib/grafana
 
+  jaeger:
+    image: jaegertracing/all-in-one:1.35
+    container_name: jaeger
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - 4318:4318
+      - 5775:5775/udp
+      - 6831:6831/udp
+      - 6832:6832/udp
+      - 5778:5778
+      - 16686:16686
+      - 14268:14268
+      - 14250:14250
+      - 9411:9411
+
   db:
+    extends:
+      file: ./compose.yaml
+      service: db
     build:
       context: ./postgres_image/
     container_name: db
-    user: postgres
-    secrets:
-      - db-password
-    environment:
-      - POSTGRES_DB=nosebook
-      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
     volumes:
       - db:/data/postgres
     expose:
       - 5432
-    healthcheck:
-      test: [ "CMD", "pg_isready" ]
-      interval: 15s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
+    
+  db-prometheus-exporter:
+    extends:
+      file: ./compose.yaml
+      service: db-prometheus-exporter
 
   rabbitmq:
-    image: rabbitmq:3.13-management
-    container_name: rabbitmq
+    extends:
+      file: ./compose.yaml
+      service: rabbitmq
+    restart: unless-stopped
+    ports: []
     expose:
       - 5672
       - 15672
@@ -53,39 +70,23 @@ services:
       retries: 5
 
   notification:
+    extends:
+      file: './compose.yaml'
+      service: notification
     build:
       context: ../nosebook_notification
       target: final
-    container_name: notification
-    expose:
-      - 8081
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
+    restart: unless-stopped
+    ports: []
 
   backend:
-    build:
-      context: .
-      target: final
-    container_name: backend
-    depends_on:
-      db:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      notification:
-        condition: service_started
-    secrets:
-      - db-password
+    extends:
+      file: './compose.yaml'
+      service: backend
     environment:
-      - POSTGRES_DB=nosebook
-      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
       - APP_ENV=prod
       - TRACING_ENABLED=1
-    ports:
-      - 8080:8080
-    expose:
-      - 8080
+    develop:
     healthcheck:
       test: curl http://backend:8080/ping --fail
       interval: 10s
@@ -94,7 +95,7 @@ services:
 
   frontend:
     build:
-      context: ../nosebook_frontend/
+      context: ../nosebook_frontend
       target: prod
     container_name: frontend
     depends_on:
@@ -105,6 +106,10 @@ services:
 secrets:
   db-password:
     file: db-password.txt
+  aws-access-key-id:
+    file: aws-access-key-id.txt
+  aws-secret-access-key:
+    file: aws-secret-access-key.txt
 
 volumes:
   db:

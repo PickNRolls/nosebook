@@ -49,7 +49,7 @@ services:
       - 15672:15672
       - 15692:15692
     healthcheck:
-      test: rabbitmq-diagnostics -q ping
+      test: rabbitmq-diagnostics check_port_connectivity
       interval: 5s
       timeout: 5s
       retries: 3
@@ -77,7 +77,6 @@ services:
         condition: service_healthy
       notification:
         condition: service_started
-
     secrets:
       - db-password
       - aws-access-key-id
@@ -92,6 +91,7 @@ services:
       - AWS_ACCESS_SECRET_KEY_FILE=/run/secrets/aws-secret-access-key
       - APP_ENV=$APP_ENV
       - TRACING_ENABLED=$TRACING_ENABLED
+      - TRACING_EXPORTER=jaeger
     develop:
       watch:
         - action: rebuild
