@@ -28,23 +28,24 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 		sql := `UPDATE users as u
     SET
       last_activity_at = v.last_activity_at,
-      avatar_url = v.avatar_url
+      avatar_url = v.avatar_url,
+      avatar_updated_at = v.avatar_updated_at
     FROM (VALUES `
 		args := []any{}
 
 		for i, user := range users {
 			last := i == len(users)-1
 			argNum := len(args) + 1
-			suffix := "($" + strconv.Itoa(argNum) + "::uuid, $" + strconv.Itoa(argNum+1) + "::timestamp, $" + strconv.Itoa(argNum+2) + ")"
+			suffix := "($" + strconv.Itoa(argNum) + "::uuid, $" + strconv.Itoa(argNum+1) + "::timestamp, $" + strconv.Itoa(argNum+2) + ", $" + strconv.Itoa(argNum+3) + "::timestamp)"
 			if !last {
 				suffix += ","
 			}
 
 			sql += suffix
-			args = append(args, user.Id, user.LastActivityAt, user.AvatarUrl)
+			args = append(args, user.Id, user.LastActivityAt, user.AvatarUrl, user.AvatarUpdatedAt)
 		}
 
-		sql += ") v(id, last_activity_at, avatar_url) WHERE u.id = v.id"
+		sql += ") v(id, last_activity_at, avatar_url, avatar_updated_at) WHERE u.id = v.id"
 		_, err := db.Exec(sql, args...)
 		return err
 	}, prometheusmetrics.UsePrometheusMetrics("users_update"))
@@ -54,7 +55,7 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 		out := map[uuid.UUID]*domainuser.User{}
 
 		dests := []*domainuser.User{}
-		sql, args, _ := qb.Select("id", "first_name", "last_name", "nick", "passhash", "created_at", "avatar_url", "last_activity_at").
+		sql, args, _ := qb.Select("id", "first_name", "last_name", "nick", "passhash", "created_at", "avatar_url", "avatar_updated_at", "last_activity_at").
 			From("users").
 			Where(squirrel.Eq{"id": ids}).
 			ToSql()
@@ -130,7 +131,8 @@ func (this *UserRepository) FindAll() ([]*domainuser.User, error) {
 		passhash,
 		created_at,
 		last_activity_at,
-    avatar_url
+    avatar_url,
+    avatar_updated_at
 			FROM users
 	`)
 
@@ -151,6 +153,7 @@ func (repo *UserRepository) FindByNick(nick string) *domainuser.User {
 	  passhash,
 	  created_at,
     avatar_url,
+    avatar_updated_at,
 	  last_activity_at
 	    FROM users WHERE
     nick = $1

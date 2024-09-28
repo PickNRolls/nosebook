@@ -7,13 +7,14 @@ import (
 )
 
 type dest struct {
-	Id             uuid.UUID `db:"id"`
-	FirstName      string    `db:"first_name"`
-	LastName       string    `db:"last_name"`
-	Nick           string    `db:"nick"`
-	LastActivityAt time.Time `db:"last_activity_at"`
-	AvatarUrl      string    `db:"avatar_url"`
-	CreatedAt      time.Time `db:"created_at"`
+	Id              uuid.UUID  `db:"id"`
+	FirstName       string     `db:"first_name"`
+	LastName        string     `db:"last_name"`
+	Nick            string     `db:"nick"`
+	LastActivityAt  time.Time  `db:"last_activity_at"`
+	AvatarUrl       string     `db:"avatar_url"`
+	AvatarUpdatedAt *time.Time `db:"avatar_updated_at"`
+	CreatedAt       time.Time  `db:"created_at"`
 }
 
 type order struct{}

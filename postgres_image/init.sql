@@ -9,6 +9,7 @@ CREATE TABLE users (
   passhash VARCHAR(64) NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   avatar_url TEXT NOT NULL DEFAULT '',
+  avatar_updated_at TIMESTAMP,
   last_activity_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -2,6 +2,7 @@ package presenteruser
 
 import (
 	"context"
+	presenterdto "nosebook/src/application/presenters/dto"
 	"nosebook/src/application/services/auth"
 	domainuser "nosebook/src/domain/user"
 	"nosebook/src/errors"
@@ -45,8 +46,14 @@ func (this *Presenter) mapDests(dests []*dest) map[uuid.UUID]*User {
 			LastName:     dest.LastName,
 			Nick:         dest.Nick,
 			LastOnlineAt: dest.LastActivityAt,
-			AvatarUrl:    dest.AvatarUrl,
 			Online:       dest.LastActivityAt.After(now.Add(-domainuser.ONLINE_DURATION)),
+		}
+
+		if dest.AvatarUrl != "" {
+			out[dest.Id].Avatar = &presenterdto.UserAvatar{
+				Url:       dest.AvatarUrl,
+				UpdatedAt: *dest.AvatarUpdatedAt,
+			}
 		}
 	}
 
@@ -59,7 +66,7 @@ func (this *Presenter) FindByIds(ctx context.Context, ids uuid.UUIDs) (map[uuid.
 
 	qb := querybuilder.New()
 	sql, args, _ := qb.Select(
-		"id", "first_name", "last_name", "nick", "avatar_url", "last_activity_at",
+		"id", "first_name", "last_name", "nick", "avatar_url", "avatar_updated_at", "last_activity_at",
 	).From(
 		"users",
 	).Where(
@@ -103,7 +110,7 @@ func (this *Presenter) FindByText(parent context.Context, input FindByTextInput,
 
 	qb := querybuilder.New()
 	query := qb.Select(
-		"id", "first_name", "last_name", "nick", "avatar_url", "last_activity_at", "created_at",
+		"id", "first_name", "last_name", "nick", "avatar_url", "avatar_updated_at", "last_activity_at", "created_at",
 	).From(
 		"users",
 	).Where(
