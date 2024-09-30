@@ -4,7 +4,7 @@
 
 User                       |  Messages                   | Friends
 :-------------------------:|:---------------------------:|:-----
-![](https://github.com/PickNRolls/nosebook/readme/user_page.png)   |  ![](https://github.com/PickNRolls/nosebook/readme/messages_page.png)  |  ![](https://github.com/PickNRolls/nosebook/readme/friends_page.png)  
+![](https://github.com/PickNRolls/nosebook/blob/dev/readme/user_page.png?raw=true)   |  ![](https://github.com/PickNRolls/nosebook/blob/dev/readme/messages_page.png?raw=true)  |  ![](https://github.com/PickNRolls/nosebook/blob/dev/readme/friends_page.png?raw=true)  
 
 ### Фичи, реализованные на данный момент
 ##### Пользователи:
