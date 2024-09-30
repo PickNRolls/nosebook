@@ -2,6 +2,10 @@
 Пет-проект, который дал мне возможность познакомиться с языком Go.
 Проект задеплоен и его можно потрогать здесь: http://nosebook.ru (есть вероятность что виртуальная машина выключится в любой момент времени, так как все это крутится на самом дешевом тарифе в Yandex Cloud)
 
+User                       |  Messages                   | Friends
+:-------------------------:|:---------------------------:|:-----
+![](https://github.com/PickNRolls/nosebook/readme/user_page.png)   |  ![](https://github.com/PickNRolls/nosebook/readme/messages_page.png)  |  ![](https://github.com/PickNRolls/nosebook/readme/friends_page.png)  
+
 ### Фичи, реализованные на данный момент
 ##### Пользователи:
 - [x] Регистрация пользователя
