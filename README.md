@@ -61,7 +61,7 @@ RabbitMQ --> N[Notifications]
 
 Browser <-- WS --> N
 Frontend -- HTTP --> Monolith
-Browser --> Frontend
+Browser -- HTTP --> Frontend
 ```
 ### Observability
 - Prometheus
