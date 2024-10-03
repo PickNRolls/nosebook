@@ -15,13 +15,27 @@ import (
 
 type SessionRepository struct {
 	db             *sqlx.DB
+	cache          Cache
 	bufferUpdate   *worker.Buffer[*sessions.Session, error]
 	bufferFindById *worker.Buffer[uuid.UUID, map[uuid.UUID]*sessions.Session]
 }
 
+type Cache interface {
+	Set(id uuid.UUID, session *sessions.Session)
+	Get(id uuid.UUID) (*sessions.Session, bool)
+	Remove(id uuid.UUID)
+}
+
+type noopCache struct{}
+
+func (this *noopCache) Set(id uuid.UUID, session *sessions.Session) {}
+func (this *noopCache) Get(id uuid.UUID) (*sessions.Session, bool)  { return nil, false }
+func (this *noopCache) Remove(id uuid.UUID)                         {}
+
 func NewSessionRepository(db *sqlx.DB) *SessionRepository {
 	out := &SessionRepository{
-		db: db,
+		db:    db,
+		cache: &noopCache{},
 	}
 
 	out.bufferUpdate = worker.NewBuffer(func(sessions []*sessions.Session) error {
@@ -82,8 +96,13 @@ func (this *SessionRepository) OnDone() {
 	this.bufferFindById.Stop()
 }
 
-func (repo *SessionRepository) Create(session *sessions.Session) (*sessions.Session, error) {
-	_, err := repo.db.NamedExec(`INSERT INTO user_sessions (
+func (this *SessionRepository) CacheWith(cache Cache) *SessionRepository {
+	this.cache = cache
+	return this
+}
+
+func (this *SessionRepository) Create(session *sessions.Session) (*sessions.Session, error) {
+	_, err := this.db.NamedExec(`INSERT INTO user_sessions (
 	  session_id,
 	  user_id,
 	  created_at,
@@ -98,12 +117,14 @@ func (repo *SessionRepository) Create(session *sessions.Session) (*sessions.Sess
 		return nil, err
 	}
 
+	this.cache.Set(session.SessionId, session)
+
 	return session, nil
 }
 
-func (repo *SessionRepository) Remove(id uuid.UUID) (*sessions.Session, error) {
+func (this *SessionRepository) Remove(id uuid.UUID) (*sessions.Session, error) {
 	var session sessions.Session
-	err := repo.db.Get(&session, `DELETE FROM user_sessions WHERE
+	err := this.db.Get(&session, `DELETE FROM user_sessions WHERE
 		session_id = $1
 			RETURNING
 		session_id,
@@ -115,10 +136,20 @@ func (repo *SessionRepository) Remove(id uuid.UUID) (*sessions.Session, error) {
 		return nil, err
 	}
 
+	this.cache.Remove(session.SessionId)
+
 	return &session, nil
 }
 
 func (this *SessionRepository) Update(session *sessions.Session) (*sessions.Session, error) {
+	if _, has := this.cache.Get(session.SessionId); has {
+		this.cache.Set(session.SessionId, session)
+		go func() {
+			this.bufferUpdate.Send(session)
+		}()
+		return session, nil
+	}
+
 	err := this.bufferUpdate.Send(session)
 	if err != nil {
 		return nil, err
@@ -128,6 +159,12 @@ func (this *SessionRepository) Update(session *sessions.Session) (*sessions.Sess
 }
 
 func (this *SessionRepository) FindById(id uuid.UUID) *sessions.Session {
+	if session, has := this.cache.Get(id); has {
+		return session
+	}
+
 	m := this.bufferFindById.Send(id)
-	return m[id]
+	session := m[id]
+	this.cache.Set(id, session)
+	return session
 }

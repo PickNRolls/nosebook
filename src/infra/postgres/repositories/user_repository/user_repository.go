@@ -15,13 +15,27 @@ import (
 
 type UserRepository struct {
 	db             *sqlx.DB
+	cache          Cache
 	bufferUpdate   *worker.Buffer[*domainuser.User, error]
 	bufferFindById *worker.Buffer[uuid.UUID, map[uuid.UUID]*domainuser.User]
 }
 
-func NewUserRepository(db *sqlx.DB) *UserRepository {
+type Cache interface {
+	Set(id uuid.UUID, session *domainuser.User)
+	Get(id uuid.UUID) (*domainuser.User, bool)
+	Remove(id uuid.UUID)
+}
+
+type noopCache struct{}
+
+func (this *noopCache) Set(id uuid.UUID, session *domainuser.User) {}
+func (this *noopCache) Get(id uuid.UUID) (*domainuser.User, bool)  { return nil, false }
+func (this *noopCache) Remove(id uuid.UUID)                        {}
+
+func New(db *sqlx.DB) *UserRepository {
 	out := &UserRepository{
-		db: db,
+		db:    db,
+		cache: &noopCache{},
 	}
 
 	out.bufferUpdate = worker.NewBuffer(func(users []*domainuser.User) error {
@@ -83,6 +97,11 @@ func (this *UserRepository) Run() {
 func (this *UserRepository) OnDone() {
 	this.bufferUpdate.Stop()
 	this.bufferFindById.Stop()
+}
+
+func (this *UserRepository) CacheWith(cache Cache) *UserRepository {
+	this.cache = cache
+	return this
 }
 
 func (repo *UserRepository) Create(user *domainuser.User) (*domainuser.User, error) {
@@ -167,10 +186,26 @@ func (repo *UserRepository) FindByNick(nick string) *domainuser.User {
 }
 
 func (this *UserRepository) FindById(id uuid.UUID) *domainuser.User {
+	if user, has := this.cache.Get(id); has {
+		return user
+	}
+
 	m := this.bufferFindById.Send(id)
-	return m[id]
+	user := m[id]
+
+	this.cache.Set(id, user)
+
+	return user
 }
 
 func (this *UserRepository) Save(user *domainuser.User) *errors.Error {
+	if _, has := this.cache.Get(user.Id); has {
+		this.cache.Set(user.Id, user)
+		go func() {
+			this.bufferUpdate.Send(user)
+		}()
+		return nil
+	}
+
 	return errors.From(this.bufferUpdate.Send(user))
 }

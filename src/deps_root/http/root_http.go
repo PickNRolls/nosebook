@@ -6,11 +6,16 @@ import (
 	presenteruser "nosebook/src/application/presenters/user"
 	userauth "nosebook/src/application/services/user_auth"
 	"nosebook/src/deps_root/http/middleware"
+	"nosebook/src/domain/sessions"
+	domainuser "nosebook/src/domain/user"
 	repos "nosebook/src/infra/postgres/repositories"
+	userrepo "nosebook/src/infra/postgres/repositories/user_repository"
 	"nosebook/src/infra/rabbitmq"
+	"nosebook/src/lib/cache"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -66,7 +71,7 @@ func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *RootHTTP {
 	}
 
 	router.Use(middleware.NewRequestMetrics())
-  router.Use(middleware.NewDbMetrics(db))
+	router.Use(middleware.NewDbMetrics(db))
 
 	router.GET("/ping", func(ctx *gin.Context) {
 		ctx.Status(200)
@@ -75,12 +80,12 @@ func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *RootHTTP {
 
 	output.enableTracing()
 
-	sessionRepository := repos.NewSessionRepository(db)
-  output.shutdownRun(sessionRepository)
-  
-  userRepository := repos.NewUserRepository(db)
-  output.shutdownRun(userRepository)
-  
+	sessionRepository := repos.NewSessionRepository(db).CacheWith(cache.NewLRU[uuid.UUID, *sessions.Session](256))
+	output.shutdownRun(sessionRepository)
+
+	userRepository := userrepo.New(db).CacheWith(cache.NewLRU[uuid.UUID, *domainuser.User](256))
+	output.shutdownRun(userRepository)
+
 	userAuthService := userauth.New(userRepository, sessionRepository, output.tracer)
 
 	router.Use(middleware.NewPresenter())
@@ -89,9 +94,9 @@ func New(db *sqlx.DB, rmqConn *rabbitmq.Connection) *RootHTTP {
 
 	output.unauthRouter = router.Group("/", middleware.NewNotAuth())
 	output.authRouter = router.Group("/", middleware.NewAuth())
-  
-  messagePresenter := presentermessage.New(output.db, presenteruser.New(output.db))
-  output.shutdownRun(messagePresenter)
+
+	messagePresenter := presentermessage.New(output.db, presenteruser.New(output.db))
+	output.shutdownRun(messagePresenter)
 
 	output.addAuthHandlers(userAuthService)
 	output.addLikeHandlers()

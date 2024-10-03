@@ -39,13 +39,13 @@ func (this *LRU[K, V]) Set(key K, value V) {
 		value: value,
 	})
 	this.m[key] = new
-  
+
 	len := this.l.Len()
 	if len > this.cap {
 		back := this.l.Back()
 		this.l.Remove(back)
-    node := back.Value.(node[K])
-    delete(this.m, node.key)
+		node := back.Value.(node[K])
+		delete(this.m, node.key)
 	}
 }
 
@@ -55,27 +55,41 @@ func (this *LRU[K, T]) Get(key K) (T, bool) {
 
 	elem, has := this.m[key]
 	if !has {
-    var zero T
+		var zero T
 		return zero, false
 	}
 
 	this.l.MoveToFront(elem)
-  node := elem.Value.(node[K])
-  value := node.value.(T)
+	node := elem.Value.(node[K])
+	value := node.value.(T)
 	return value, true
 }
 
+func (this *LRU[K, T]) Remove(key K) {
+	this.mu.Lock()
+	defer this.mu.Unlock()
+
+	elem, has := this.m[key]
+	if !has {
+		return
+	}
+
+	this.l.Remove(elem)
+	node := elem.Value.(node[K])
+	delete(this.m, node.key)
+}
+
 func (this *LRU[K, T]) GetAll(keys []K) []T {
-  out := make([]T, len(keys))
-  
-  for i, key := range keys {
-    value, has := this.Get(key)
-    if !has {
-      return []T{}
-    }
+	out := make([]T, len(keys))
 
-    out[i] = value
-  } 
+	for i, key := range keys {
+		value, has := this.Get(key)
+		if !has {
+			return []T{}
+		}
 
-  return out
+		out[i] = value
+	}
+
+	return out
 }
