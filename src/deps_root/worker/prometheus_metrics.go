@@ -7,54 +7,57 @@ import (
 )
 
 type prometheusMetrics struct {
-	flushedBufferSize   prometheus.Histogram
-	elapsedSeconds      prometheus.Histogram
-	flushElapsedSeconds prometheus.Histogram
+	slug                string
+	flushedBufferSize   *prometheus.HistogramVec
+	elapsedSeconds      *prometheus.HistogramVec
+	flushElapsedSeconds *prometheus.HistogramVec
 }
 
+var FlushedBufferSize = prometheus.NewHistogramVec(
+	prometheus.HistogramOpts{
+		Name:    "app_worker_buffer_flushed_size",
+		Help:    "Buffer size flushed",
+		Buckets: prometheus.ExponentialBuckets(1, 2, 10),
+	},
+	[]string{
+		"slug",
+	},
+)
+
+var SendElapsedSeconds = prometheus.NewHistogramVec(
+	prometheus.HistogramOpts{
+		Name:    "app_worker_buffer_send_elapsed_seconds",
+		Help:    "Elapsed seconds buffer takes to complete one send",
+		Buckets: prometheus.ExponentialBuckets(0.001, 2, 12),
+	},
+	[]string{
+		"slug",
+	},
+)
+
+var FlushElapsedSeconds = prometheus.NewHistogramVec(
+	prometheus.HistogramOpts{
+		Name:    "app_worker_buffer_flush_elapsed_seconds",
+		Help:    "Elapsed seconds buffer flush implementation takes to complete",
+		Buckets: prometheus.ExponentialBuckets(0.001, 2, 12),
+	},
+	[]string{
+		"slug",
+	},
+)
+
 func newPrometheusMetrics(slug string) *prometheusMetrics {
-	out := &prometheusMetrics{
-		flushedBufferSize: prometheus.NewHistogram(
-			prometheus.HistogramOpts{
-				Name:    "app_" + slug + "_flushed_buffer_size",
-				Help:    "Buffer size flushed",
-				Buckets: prometheus.ExponentialBuckets(1, 2, 10),
-			},
-		),
-
-		elapsedSeconds: prometheus.NewHistogram(
-			prometheus.HistogramOpts{
-				Name:    "app_" + slug + "_buffer_elapsed_seconds",
-				Help:    "Elapsed seconds buffer takes to complete one send",
-				Buckets: prometheus.ExponentialBuckets(0.001, 2, 12),
-			},
-		),
-
-		flushElapsedSeconds: prometheus.NewHistogram(
-			prometheus.HistogramOpts{
-				Name:    "app_" + slug + "_buffer_flush_elapsed_seconds",
-				Help:    "Elapsed seconds buffer flush implementation takes to complete",
-				Buckets: prometheus.ExponentialBuckets(0.001, 2, 12),
-			},
-		),
-	}
-
-	return out
+	return &prometheusMetrics{slug: slug}
 }
 
 func (this *prometheusMetrics) FlushedBufferSize(size float64) {
-	this.flushedBufferSize.Observe(size)
+	FlushedBufferSize.WithLabelValues(this.slug).Observe(size)
 }
 func (this *prometheusMetrics) ElapsedSeconds(seconds float64) {
-	this.elapsedSeconds.Observe(seconds)
+	SendElapsedSeconds.WithLabelValues(this.slug).Observe(seconds)
 }
 func (this *prometheusMetrics) ElapsedFlushSeconds(seconds float64) {
-	this.flushElapsedSeconds.Observe(seconds)
-}
-func (this *prometheusMetrics) Register() {
-	prometheus.MustRegister(this.elapsedSeconds)
-	prometheus.MustRegister(this.flushedBufferSize)
-	prometheus.MustRegister(this.flushElapsedSeconds)
+	FlushElapsedSeconds.WithLabelValues(this.slug).Observe(seconds)
 }
 
 type prometheusMetricsOpt struct {

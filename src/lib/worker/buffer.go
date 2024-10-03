@@ -42,8 +42,6 @@ func NewBuffer[S any, R any](flush Flush[S, R], optFns ...func() BufferOpt) *Buf
 		metrics = &noopMetrics{}
 	}
 
-	metrics.Register()
-
 	return &Buffer[S, R]{
 		metrics: metrics,
 		flush:   flush,

@@ -2,6 +2,7 @@ package roothttp
 
 import (
 	"nosebook/src/deps_root/http/middleware"
+	"nosebook/src/deps_root/worker"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -17,4 +18,8 @@ func registerMetrics() {
 	prometheus.MustRegister(middleware.DBOpenConnectionsGauge)
 	prometheus.MustRegister(middleware.DBWaitCountGauge)
 	prometheus.MustRegister(middleware.DBWaitSecondsGauge)
+
+	prometheus.MustRegister(worker.FlushedBufferSize)
+	prometheus.MustRegister(worker.FlushElapsedSeconds)
+	prometheus.MustRegister(worker.SendElapsedSeconds)
 }
